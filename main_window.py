@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QIcon
 from ui.equipment_registration import EquipmentRegistrationWindow
 from ui.equipment_list import EquipmentListWindow
+from craftsmen import CraftsMenWindow
 from db_manager import DatabaseManager
 
 class CMMSMainWindow(QMainWindow):
@@ -31,7 +32,8 @@ class CMMSMainWindow(QMainWindow):
         self.welcome_page = self.create_welcome_page()
         self.equipment_registration = EquipmentRegistrationWindow(self.db_manager)
         self.equipment_list = EquipmentListWindow(self.db_manager)
-        
+        self.craftsmen_window = CraftsMenWindow(db_manager = self.db_manager)
+
         # Add pages to stacked widget
         self.stacked_widget.addWidget(self.welcome_page)
         self.stacked_widget.addWidget(self.equipment_registration)
@@ -86,10 +88,12 @@ class CMMSMainWindow(QMainWindow):
         home_btn = self.create_nav_button("Home", 0)
         equipment_btn = self.create_nav_button("Equipment Registration", 1)
         equipment_list_btn = self.create_nav_button("Equipments", 2)
-        
+        craftsmen_btn = self.create_nav_button("Craftsmen", 3)
+
         layout.addWidget(home_btn)
         layout.addWidget(equipment_btn)
         layout.addWidget(equipment_list_btn)
+        layout.addWidget(craftsmen_btn)
         
         # Add stretch to push buttons to top
         layout.addStretch()
@@ -106,6 +110,8 @@ class CMMSMainWindow(QMainWindow):
         return button
 
     def change_page(self, index, button):
+        if index == 3:  # Craftsmen page
+            self.stacked_widget.addWidget(self.craftsmen_window)
         self.stacked_widget.setCurrentIndex(index)
         # Update button states
         for btn in self.nav_buttons:
