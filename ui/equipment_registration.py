@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                                  QLineEdit, QDateEdit, QComboBox, QPushButton, 
                                  QScrollArea, QFrame, QMessageBox, QFormLayout,
-                                 QDialog, QTableWidget, QTableWidgetItem)
+                                 QDialog, QTableWidget, QTableWidgetItem, QSizePolicy)
 from PySide6.QtCore import Qt, QDate, Signal
 import json
 from typing import Dict, Any
@@ -20,6 +20,7 @@ class EquipmentRegistrationWindow(QWidget):
     def setup_ui(self):
         # Main layout
         main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(10, 10, 10, 10)
         
         # Add description at the top with dark theme styling
         description = QLabel(
@@ -41,6 +42,7 @@ class EquipmentRegistrationWindow(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)  # Ensure vertical scrollbar appears when needed
         scroll.setStyleSheet("""
             QScrollArea {
                 background-color: #1e1e1e;
@@ -59,9 +61,11 @@ class EquipmentRegistrationWindow(QWidget):
             }
         """)
         
-        # Create a widget to hold the form
-        form_widget = QWidget()
-        form_widget.setStyleSheet("""
+        # Create a widget to hold the form AND buttons
+        content_widget = QWidget()
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setSpacing(15)  # Add more spacing between elements
+        content_widget.setStyleSheet("""
             QWidget {
                 background-color: #1e1e1e;
                 color: #e0e0e0;
@@ -91,7 +95,11 @@ class EquipmentRegistrationWindow(QWidget):
             }
         """)
         
+        # Create form layout and add it to content layout
+        form_widget = QWidget()
         self.form_layout = QFormLayout(form_widget)
+        self.form_layout.setSpacing(10)  # Add more spacing in the form
+        content_layout.addWidget(form_widget)
         
         # Add standard fields
         self.fields = {}
@@ -177,9 +185,12 @@ class EquipmentRegistrationWindow(QWidget):
         
         self.form_layout.addRow(custom_fields_frame)
         
-        # Set the form widget as the scroll area's widget
-        scroll.setWidget(form_widget)
-        main_layout.addWidget(scroll)
+        # Add a separator line above buttons
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+        separator.setStyleSheet("background-color: #3a3a3a;")
+        content_layout.addWidget(separator)
         
         # Add buttons with improved styling and layout
         button_layout = QHBoxLayout()
@@ -253,17 +264,15 @@ class EquipmentRegistrationWindow(QWidget):
         button_layout.addWidget(clear_button)
         button_layout.addWidget(save_button)
         
-        # Add a separator line above buttons
-        separator = QFrame()
-        separator.setFrameShape(QFrame.Shape.HLine)
-        separator.setFrameShadow(QFrame.Shadow.Sunken)
-        separator.setStyleSheet("background-color: #3a3a3a;")
-        main_layout.addWidget(separator)
+        # Add button layout to content layout
+        content_layout.addLayout(button_layout)
         
-        main_layout.addLayout(button_layout)
+        # At the end, make sure we set a reasonable size hint
+        content_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         
-        # Set minimum size for the window
-        self.setMinimumSize(600, 800)
+        # Set the content widget as the scroll area's widget
+        scroll.setWidget(content_widget)
+        main_layout.addWidget(scroll, 1)  # Give the scroll area a stretch factor of 1
 
     def add_field(self, name: str, label: str, required: bool = False, tooltip: str = ""):
         field = QLineEdit()

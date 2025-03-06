@@ -2,9 +2,10 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                               QPushButton, QLabel, QTabWidget, QLineEdit,
                               QComboBox, QDateEdit, QTableWidget, QTableWidgetItem,
                               QDialog, QFormLayout, QMessageBox, QScrollArea,
-                              QSplitter, QTextEdit, QMenuBar, QMenu)
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPainter 
+                              QSplitter, QTextEdit, QMenuBar, QMenu, QSizePolicy,
+                              )
+from PySide6.QtCore import Qt, Signal, QRect
+from PySide6.QtGui import QPainter, QColor
 from PySide6.QtPrintSupport import QPrinter
 from datetime import datetime, timedelta
 import random
@@ -84,6 +85,21 @@ class CraftsMenWindow(QMainWindow):
             "ID", "Name", "Specialization", "Experience",
             "Phone", "Email", "Status", "Hire Date"
         ])
+        
+        # Set column widths proportionally
+        self.craftsmen_table.setColumnWidth(0, 60)   # ID
+        self.craftsmen_table.setColumnWidth(1, 150)  # Name
+        self.craftsmen_table.setColumnWidth(2, 120)  # Specialization
+        self.craftsmen_table.setColumnWidth(3, 100)  # Experience
+        self.craftsmen_table.setColumnWidth(4, 120)  # Phone
+        self.craftsmen_table.setColumnWidth(5, 180)  # Email
+        self.craftsmen_table.setColumnWidth(6, 80)   # Status
+        self.craftsmen_table.setColumnWidth(7, 100)  # Hire Date
+        
+        # Make table stretch to fill available space
+        self.craftsmen_table.horizontalHeader().setStretchLastSection(True)
+        self.craftsmen_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
         self.craftsmen_table.doubleClicked.connect(self.show_craftsman_details)
         
         list_layout.addWidget(self.craftsmen_table)
@@ -244,6 +260,16 @@ class CraftsMenWindow(QMainWindow):
         self.teams_table.setHorizontalHeaderLabels([
             "Team Name", "Team Leader", "Description"
         ])
+        
+        # Set column widths
+        self.teams_table.setColumnWidth(0, 150)  # Team Name
+        self.teams_table.setColumnWidth(1, 150)  # Team Leader
+        self.teams_table.setColumnWidth(2, 300)  # Description
+        
+        # Make table stretch to fill available space
+        self.teams_table.horizontalHeader().setStretchLastSection(True)
+        self.teams_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
         self.teams_table.itemSelectionChanged.connect(self.load_team_members)
         teams_list_layout.addWidget(self.teams_table)
         
@@ -266,6 +292,17 @@ class CraftsMenWindow(QMainWindow):
         self.members_table.setHorizontalHeaderLabels([
             "Name", "Specialization", "Role", "Joined Date"
         ])
+        
+        # Set column widths
+        self.members_table.setColumnWidth(0, 150)  # Name
+        self.members_table.setColumnWidth(1, 120)  # Specialization
+        self.members_table.setColumnWidth(2, 100)  # Role
+        self.members_table.setColumnWidth(3, 100)  # Joined Date
+        
+        # Make table stretch to fill available space
+        self.members_table.horizontalHeader().setStretchLastSection(True)
+        self.members_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
         members_layout.addWidget(self.members_table)
         
         # Member management buttons
@@ -281,6 +318,9 @@ class CraftsMenWindow(QMainWindow):
         # Add to splitter
         splitter.addWidget(teams_list_widget)
         splitter.addWidget(members_widget)
+        
+        # Set initial splitter sizes (40% for teams, 60% for members)
+        splitter.setSizes([400, 600])
         
         self.tab_widget.addTab(teams_widget, "Teams")
         self.load_teams()
@@ -351,75 +391,182 @@ class CraftsMenWindow(QMainWindow):
 
         row = selected_items[0].row()
         craftsman_id = self.craftsmen_table.item(row, 0).text()
-        craftsman = self.db_manager.get_craftsman_by_id(craftsman_id)
 
         try:
-            # Create reports directory
-            reports_dir = os.path.join(os.path.expanduser("~"), "Craftsmen_Reports")
-            os.makedirs(reports_dir, exist_ok=True)
+            # Use the new reporting module to generate the report
+            from reporting import create_craftsman_report, open_containing_folder, open_report_file
             
-            # Generate filename
-            filename = f"Complete_Report_{craftsman['employee_id']}_{datetime.now().strftime('%Y%m%d')}.pdf"
-            file_path = os.path.join(reports_dir, filename)
+            # Generate the report
+            report_path = create_craftsman_report(self.db_manager, craftsman_id, "complete")
             
-            printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-            printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
-            printer.setOutputFileName(file_path)
-            
-            painter = QPainter(printer)
-            self.draw_craftsman_report(painter, craftsman_id, printer)
-            painter.end()
-            
-            # Show success message with file path
-            msg = QMessageBox(self)
-            msg.setIcon(QMessageBox.Information)
-            msg.setWindowTitle("Report Generated")
-            msg.setText("Report generated successfully!")
-            msg.setInformativeText(f"The report has been saved to:\n{file_path}")
-            
-            # Add button to open containing folder
-            open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
-            msg.addButton(QMessageBox.Ok)
-            
-            msg.exec()
-            
-            # Handle button click
-            if msg.clickedButton() == open_folder_button:
-                self.open_containing_folder(file_path)
+            if report_path:
+                # Show success message with file path
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Information)
+                msg.setWindowTitle("Report Generated")
+                msg.setText("Report generated successfully!")
+                msg.setInformativeText(f"The report has been saved to:\n{report_path}")
+                
+                # Add button to open containing folder
+                open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
+                open_report_button = msg.addButton("Open Report", QMessageBox.ActionRole)
+                msg.addButton(QMessageBox.Ok)
+                
+                result = msg.exec()
+                
+                # Handle button clicks
+                if msg.clickedButton() == open_folder_button:
+                    open_containing_folder(report_path)
+                elif msg.clickedButton() == open_report_button:
+                    open_report_file(report_path)
+            else:
+                QMessageBox.warning(self, "Warning", "Failed to generate report!")
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to generate report: {str(e)}")
 
-    def draw_craftsman_report(self, painter, craftsman_id, printer):
-        """Draw the complete craftsman report"""
-        margin = 100
-        y_position = margin
-        line_height = painter.fontMetrics().height() + 15  # Increased line height for better spacing
+    def generate_craftsman_report(self, report_type):
+        """Generate specific type of craftsman report"""
+        selected_items = self.craftsmen_table.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "Warning", "Please select a craftsman first!")
+            return
+
+        row = selected_items[0].row()
+        craftsman_id = self.craftsmen_table.item(row, 0).text()
         
+        try:
+            # Use the new reporting module to generate the report
+            from reporting import create_craftsman_report, open_containing_folder, open_report_file
+            
+            # Generate the report
+            report_path = create_craftsman_report(self.db_manager, craftsman_id, report_type)
+            
+            if report_path:
+                # Show success message with file path
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Information)
+                msg.setWindowTitle("Report Generated")
+                msg.setText("Report generated successfully!")
+                msg.setInformativeText(f"The report has been saved to:\n{report_path}")
+                
+                # Add button to open containing folder
+                open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
+                open_report_button = msg.addButton("Open Report", QMessageBox.ActionRole)
+                msg.addButton(QMessageBox.Ok)
+                
+                result = msg.exec()
+                
+                # Handle button clicks
+                if msg.clickedButton() == open_folder_button:
+                    open_containing_folder(report_path)
+                elif msg.clickedButton() == open_report_button:
+                    open_report_file(report_path)
+            else:
+                QMessageBox.warning(self, "Warning", "Failed to generate report!")
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to generate report: {str(e)}")
+
+    def generate_team_report(self):
+        """Generate a summary report for the selected team"""
+        current_row = self.teams_table.currentRow()
+        if current_row < 0:
+            QMessageBox.warning(self, "Warning", "Please select a team first!")
+            return
+
+        team_name = self.teams_table.item(current_row, 0).text()
+        
+        try:
+            # Use the new reporting module to generate the report
+            from reporting import create_team_report, open_containing_folder, open_report_file
+            
+            # Generate the report
+            report_path = create_team_report(self.db_manager, team_name)
+            
+            if report_path:
+                # Show success message with file path
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Information)
+                msg.setWindowTitle("Report Generated")
+                msg.setText("Team report generated successfully!")
+                msg.setInformativeText(f"The report has been saved to:\n{report_path}")
+                
+                # Add button to open containing folder
+                open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
+                open_report_button = msg.addButton("Open Report", QMessageBox.ActionRole)
+                msg.addButton(QMessageBox.Ok)
+                
+                result = msg.exec()
+                
+                # Handle button clicks
+                if msg.clickedButton() == open_folder_button:
+                    open_containing_folder(report_path)
+                elif msg.clickedButton() == open_report_button:
+                    open_report_file(report_path)
+            else:
+                QMessageBox.warning(self, "Warning", "Failed to generate team report!")
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to generate team report: {str(e)}")
+
+    def draw_craftsman_report(self, painter, craftsman_id, printer):
+        """Draw the complete craftsman report with improved layout"""
+        # Set up page metrics
+        page_rect = printer.pageRect(QPrinter.Unit.DevicePixel)
+        margin = 100
+        content_width = page_rect.width() - (margin * 2)
+        y_position = margin
+        line_height = painter.fontMetrics().height() + 10
+        
+        # Get craftsman data
         craftsman = self.db_manager.get_craftsman_by_id(craftsman_id)
         skills = self.db_manager.get_craftsman_skills(craftsman_id)
         training = self.db_manager.get_craftsman_training(craftsman_id)
         work_history = self.db_manager.get_craftsman_work_history(craftsman_id)
         performance = self.db_manager.get_craftsman_performance(craftsman_id)
         
+        # Draw header with background
+        header_rect = QRect(50, 50, page_rect.width() - 100, 80)
+        painter.fillRect(header_rect, QColor("#2a2a2a"))
+        
         # Draw title
         title_font = painter.font()
-        title_font.setPointSize(14)
+        title_font.setPointSize(16)
         title_font.setBold(True)
         painter.setFont(title_font)
-        painter.drawText(margin, y_position, f"Craftsman Report - {craftsman['first_name']} {craftsman['last_name']}")
-        y_position += line_height * 2
-
+        painter.setPen(QColor("#ffffff"))
+        painter.drawText(header_rect, Qt.AlignmentFlag.AlignCenter, 
+                        f"Craftsman Report - {craftsman['first_name']} {craftsman['last_name']}")
+        
+        y_position = header_rect.bottom() + 30
+        
         # Reset font for content
         font = painter.font()
         font.setPointSize(10)
         font.setBold(False)
         painter.setFont(font)
-
-        # Basic Information Section
-        self.draw_section_header(painter, "Basic Information", margin, y_position)
+        painter.setPen(QColor("#000000"))
+        
+        # Draw report date
+        date_font = painter.font()
+        date_font.setItalic(True)
+        painter.setFont(date_font)
+        painter.drawText(margin, y_position, f"Report generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         y_position += line_height * 2
         
+        # Reset font
+        font.setItalic(False)
+        painter.setFont(font)
+        
+        # Basic Information Section
+        self.draw_section_header(painter, "Basic Information", margin, y_position)
+        y_position += line_height * 1.5
+        
+        # Draw a horizontal line
+        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+        
+        # Create a table-like layout for basic info
         basic_info = [
             ("Employee ID", craftsman['employee_id']),
             ("Name", f"{craftsman['first_name']} {craftsman['last_name']}"),
@@ -431,49 +578,151 @@ class CraftsMenWindow(QMainWindow):
             ("Status", craftsman['status'])
         ]
         
-        for label, value in basic_info:
-            self.draw_field(painter, label, value, margin, y_position)
+        # Calculate column widths
+        col1_width = 150
+        col2_width = content_width - col1_width
+        
+        # Draw basic info in two columns
+        left_items = basic_info[:4]
+        right_items = basic_info[4:]
+        
+        for i, (label, value) in enumerate(left_items):
+            self.draw_table_row(painter, label, value, margin, y_position, col1_width)
             y_position += line_height
-
-        # Add extra spacing between sections
-        y_position += line_height
-
+        
+        y_position = header_rect.bottom() + 30 + line_height * 2 + line_height * 1.5  # Reset to top of section
+        
+        for i, (label, value) in enumerate(right_items):
+            self.draw_table_row(painter, label, value, margin + col1_width + 50, y_position, col1_width)
+            y_position += line_height
+        
+        # Move to the bottom of the section
+        y_position = header_rect.bottom() + 30 + line_height * 2 + line_height * 1.5 + line_height * 4
+        
         # Skills Section
         y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
         self.draw_section_header(painter, "Skills & Certifications", margin, y_position)
-        y_position += line_height * 2
+        y_position += line_height * 1.5
         
-        for skill in skills:
-            self.draw_field(painter, "Skill", skill['skill_name'], margin, y_position)
+        # Draw a horizontal line
+        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+        
+        if skills:
+            # Draw table headers
+            skill_col_width = 150
+            level_col_width = 100
+            cert_col_width = content_width - skill_col_width - level_col_width
+            
+            header_font = painter.font()
+            header_font.setBold(True)
+            painter.setFont(header_font)
+            
+            painter.drawText(margin, y_position, "Skill")
+            painter.drawText(margin + skill_col_width, y_position, "Level")
+            painter.drawText(margin + skill_col_width + level_col_width, y_position, "Certification")
+            
             y_position += line_height
-            self.draw_field(painter, "Level", skill['skill_level'], margin + 20, y_position)
+            
+            # Draw a line under headers
+            painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+            
+            # Reset font
+            font.setBold(False)
+            painter.setFont(font)
+            
+            # Draw skills data
+            for skill in skills:
+                # Check if we need a page break
+                if y_position > page_rect.height() - margin - line_height * 2:
+                    printer.newPage()
+                    y_position = margin
+                
+                painter.drawText(margin, y_position, skill['skill_name'])
+                painter.drawText(margin + skill_col_width, y_position, skill['skill_level'])
+                
+                # Handle certification text that might be long
+                cert_text = skill.get('certification', '')
+                if cert_text:
+                    metrics = painter.fontMetrics()
+                    if metrics.horizontalAdvance(cert_text) > cert_col_width:
+                        # Text is too long, truncate with ellipsis
+                        cert_text = metrics.elidedText(cert_text, Qt.TextElideMode.ElideRight, cert_col_width)
+                
+                painter.drawText(margin + skill_col_width + level_col_width, y_position, cert_text)
+                
+                y_position += line_height
+                
+                # Draw a light separator line
+                painter.setPen(QColor("#dddddd"))
+                painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+                painter.setPen(QColor("#000000"))
+        else:
+            painter.drawText(margin, y_position, "No skills or certifications recorded.")
             y_position += line_height
-            self.draw_field(painter, "Certification", skill['certification'], margin + 20, y_position)
-            y_position += line_height * 2  # Extra spacing between skills
-
-        # Add extra spacing between sections
-        y_position += line_height
-
-        # Training Section
+        
+        y_position += line_height  # Extra space after section
+        
+        # Training Records Section
         y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
         self.draw_section_header(painter, "Training Records", margin, y_position)
-        y_position += line_height * 2
+        y_position += line_height * 1.5
         
-        for record in training:
-            self.draw_field(painter, "Training", record['training_name'], margin, y_position)
+        # Draw a horizontal line
+        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+        
+        if training:
+            # Draw table headers
+            training_col_width = 200
+            date_col_width = 100
+            status_col_width = content_width - training_col_width - date_col_width
+            
+            header_font = painter.font()
+            header_font.setBold(True)
+            painter.setFont(header_font)
+            
+            painter.drawText(margin, y_position, "Training")
+            painter.drawText(margin + training_col_width, y_position, "Completion Date")
+            painter.drawText(margin + training_col_width + date_col_width, y_position, "Status")
+            
             y_position += line_height
-            self.draw_field(painter, "Status", record['training_status'], margin + 20, y_position)
+            
+            # Draw a line under headers
+            painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+            
+            # Reset font
+            font.setBold(False)
+            painter.setFont(font)
+            
+            # Draw training data
+            for record in training:
+                # Check if we need a page break
+                if y_position > page_rect.height() - margin - line_height * 2:
+                    printer.newPage()
+                    y_position = margin
+                
+                painter.drawText(margin, y_position, record['training_name'])
+                painter.drawText(margin + training_col_width, y_position, str(record['completion_date']))
+                painter.drawText(margin + training_col_width + date_col_width, y_position, record['training_status'])
+                
+                y_position += line_height
+                
+                # Draw a light separator line
+                painter.setPen(QColor("#dddddd"))
+                painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+                painter.setPen(QColor("#000000"))
+        else:
+            painter.drawText(margin, y_position, "No training records available.")
             y_position += line_height
-            self.draw_field(painter, "Completion Date", str(record['completion_date']), margin + 20, y_position)
-            y_position += line_height * 2  # Extra spacing between training records
-
-        # Add extra spacing between sections
-        y_position += line_height
-
-        # Performance Section
+        
+        y_position += line_height  # Extra space after section
+        
+        # Performance Metrics Section
         y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
         self.draw_section_header(painter, "Performance Metrics", margin, y_position)
-        y_position += line_height * 2
+        y_position += line_height * 1.5
+        
+        # Draw a horizontal line
+        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
         
         if performance:
             metrics = [
@@ -483,37 +732,180 @@ class CraftsMenWindow(QMainWindow):
             ]
             
             for label, value in metrics:
-                self.draw_field(painter, label, value, margin, y_position)
+                self.draw_table_row(painter, label, value, margin, y_position, 250)
                 y_position += line_height
+        else:
+            painter.drawText(margin, y_position, "No performance metrics available.")
+            y_position += line_height
+        
+        # Footer - replace the pageNumber() call
+        footer_text = "Generated by CMMS"  # Alternative footer text
+        painter.drawText(
+            QRect(margin, page_rect.height() - margin, content_width, line_height),
+            Qt.AlignmentFlag.AlignCenter,
+            footer_text
+        )
 
-    def draw_section_header(self, painter, text, margin, y_position):
-        """Draw a section header with consistent styling"""
+    def draw_table_row(self, painter, label, value, x, y, label_width):
+        """Draw a table row with label and value"""
         font = painter.font()
-        font.setPointSize(12)
         font.setBold(True)
         painter.setFont(font)
-        painter.drawText(margin, y_position, text)
         
-        # Reset font
+        painter.drawText(x, y, label + ":")
+        
+        font.setBold(False)
+        painter.setFont(font)
+        
+        painter.drawText(x + label_width, y, str(value))
+
+    def draw_team_report(self, painter, team_name, team_leader, printer):
+        """Draw the team report with improved layout"""
+        # Set up page metrics
+        page_rect = printer.pageRect(QPrinter.Unit.DevicePixel)
+        margin = 100
+        content_width = page_rect.width() - (margin * 2)
+        y_position = margin
+        line_height = painter.fontMetrics().height() + 10
+        
+        # Get team data
+        members = self.db_manager.get_team_members(team_name)
+        team_performance = self.db_manager.get_team_performance(team_name)
+        
+        # Draw header with background
+        header_rect = QRect(50, 50, page_rect.width() - 100, 80)
+        painter.fillRect(header_rect, QColor("#2a2a2a"))
+        
+        # Draw title
+        title_font = painter.font()
+        title_font.setPointSize(16)
+        title_font.setBold(True)
+        painter.setFont(title_font)
+        painter.setPen(QColor("#ffffff"))
+        painter.drawText(header_rect, Qt.AlignmentFlag.AlignCenter, f"Team Report - {team_name}")
+        
+        y_position = header_rect.bottom() + 30
+        
+        # Reset font for content
+        font = painter.font()
         font.setPointSize(10)
         font.setBold(False)
         painter.setFont(font)
-
-    def draw_field(self, painter, label, value, margin, y_position):
-        """Draw a field with label and value"""
-        font = painter.font()
-        font.setBold(True)
+        painter.setPen(QColor("#000000"))
+        
+        # Draw report date
+        date_font = painter.font()
+        date_font.setItalic(True)
+        painter.setFont(date_font)
+        painter.drawText(margin, y_position, f"Report generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        y_position += line_height * 2
+        
+        # Reset font
+        font.setItalic(False)
         painter.setFont(font)
         
-        # Draw label with fixed width
-        label_rect = painter.boundingRect(margin, y_position, 200, 30, 0, f"{label}:")
-        painter.drawText(label_rect, 0, f"{label}:")
+        # Team Information Section
+        self.draw_section_header(painter, "Team Information", margin, y_position)
+        y_position += line_height * 1.5
         
-        # Draw value with proper spacing from label
-        font.setBold(False)
-        painter.setFont(font)
-        value_rect = painter.boundingRect(margin + 220, y_position, 400, 30, 0, str(value))
-        painter.drawText(value_rect, 0, str(value))
+        # Draw a horizontal line
+        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+        
+        team_info = [
+            ("Team Name", team_name),
+            ("Team Leader", team_leader),
+            ("Number of Members", str(len(members))),
+            ("Report Date", datetime.now().strftime("%Y-%m-%d"))
+        ]
+        
+        for label, value in team_info:
+            self.draw_table_row(painter, label, value, margin, y_position, 150)
+            y_position += line_height
+        
+        y_position += line_height  # Extra space after section
+        
+        # Team Members Section
+        y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
+        self.draw_section_header(painter, "Team Members", margin, y_position)
+        y_position += line_height * 1.5
+        
+        # Draw a horizontal line
+        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+        
+        if members:
+            # Draw table headers
+            name_col_width = 200
+            role_col_width = 150
+            spec_col_width = content_width - name_col_width - role_col_width
+            
+            header_font = painter.font()
+            header_font.setBold(True)
+            painter.setFont(header_font)
+            
+            painter.drawText(margin, y_position, "Name")
+            painter.drawText(margin + name_col_width, y_position, "Role")
+            painter.drawText(margin + name_col_width + role_col_width, y_position, "Specialization")
+            
+            y_position += line_height
+            
+            # Draw a line under headers
+            painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+            
+            # Reset font
+            font.setBold(False)
+            painter.setFont(font)
+            
+            # Draw members data
+            for member in members:
+                # Check if we need a page break
+                if y_position > page_rect.height() - margin - line_height * 2:
+                    printer.newPage()
+                    y_position = margin
+                
+                name = f"{member['first_name']} {member['last_name']}"
+                painter.drawText(margin, y_position, name)
+                painter.drawText(margin + name_col_width, y_position, member['role'])
+                painter.drawText(margin + name_col_width + role_col_width, y_position, member['specialization'])
+                
+                y_position += line_height
+                
+                # Draw a light separator line
+                painter.setPen(QColor("#dddddd"))
+                painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+                painter.setPen(QColor("#000000"))
+        else:
+            painter.drawText(margin, y_position, "No team members found.")
+            y_position += line_height
+        
+        y_position += line_height  # Extra space after section
+        
+        # Team Performance Section
+        if team_performance:
+            y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
+            self.draw_section_header(painter, "Team Performance", margin, y_position)
+            y_position += line_height * 1.5
+            
+            # Draw a horizontal line
+            painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
+            
+            performance_metrics = [
+                ("Tasks Completed (Last Month)", team_performance.get('tasks_completed', 'N/A')),
+                ("Average Completion Time", f"{team_performance.get('avg_completion_time', 'N/A')} hours"),
+                ("Team Efficiency Rate", f"{team_performance.get('efficiency_rate', 'N/A')}%"),
+                ("On-Time Completion Rate", f"{team_performance.get('on_time_rate', 'N/A')}%")
+            ]
+            
+            for label, value in performance_metrics:
+                self.draw_table_row(painter, label, value, margin, y_position, 250)
+                y_position += line_height
+        
+        # Footer - replace the pageNumber() call
+        footer_text = "Generated by CMMS"  # Alternative footer text
+        painter.drawText(
+            QRect(margin, page_rect.height() - margin, content_width, line_height),
+            Qt.AlignmentFlag.AlignCenter,
+            footer_text
+        )
 
     def check_page_break(self, current_y, needed_space, margin, printer):
         """Check if we need a new page and return the new y position"""
@@ -617,15 +1009,6 @@ class CraftsMenWindow(QMainWindow):
             # Count visible rows
             visible_rows = sum(1 for row in range(self.craftsmen_table.rowCount()) 
                              if not self.craftsmen_table.isRowHidden(row))
-            
-            # Show message if no results found
-            if visible_rows == 0:
-                QMessageBox.information(
-                    self,
-                    "Search Results",
-                    "No craftsmen found matching the search criteria."
-                )
-                
         except Exception as e:
             QMessageBox.warning(
                 self,
@@ -780,7 +1163,7 @@ class CraftsMenWindow(QMainWindow):
         }, dialog))
         cancel_btn.clicked.connect(dialog.reject)
         
-        dialog.exec_()
+        dialog.exec()
 
     def save_team(self, data, dialog):
         if self.db_manager.create_team(data):
@@ -796,79 +1179,118 @@ class CraftsMenWindow(QMainWindow):
         
         for row, team in enumerate(teams):
             self.teams_table.setItem(row, 0, QTableWidgetItem(team['team_name']))
-            leader_name = f"{team['first_name']} {team['last_name']}" if team['first_name'] else "Not Assigned"
+            
+            # Format team leader name
+            leader_name = "Not Assigned"
+            if team.get('first_name') and team.get('last_name'):
+                leader_name = f"{team['first_name']} {team['last_name']}"
             self.teams_table.setItem(row, 1, QTableWidgetItem(leader_name))
-            self.teams_table.setItem(row, 2, QTableWidgetItem(team['description']))
+            
+            self.teams_table.setItem(row, 2, QTableWidgetItem(team.get('description', '')))
 
     def load_team_members(self):
+        """Load members for the selected team"""
         current_row = self.teams_table.currentRow()
         if current_row < 0:
             return
         
+        # Get the team name from the selected row
         team_name = self.teams_table.item(current_row, 0).text()
-        members = self.db_manager.get_team_members(team_name)
-        self.members_table.setRowCount(len(members))
         
-        for row, member in enumerate(members):
-            self.members_table.setItem(row, 0, QTableWidgetItem(
-                f"{member['first_name']} {member['last_name']}"
-            ))
-            self.members_table.setItem(row, 1, QTableWidgetItem(member['specialization']))
-            self.members_table.setItem(row, 2, QTableWidgetItem(member['role']))
-            self.members_table.setItem(row, 3, QTableWidgetItem(str(member['joined_date'])))
+        # First get the team_id from the team_name
+        connection = self.db_manager.connect()
+        cursor = connection.cursor(dictionary=True)
+        
+        try:
+            cursor.execute("""
+                SELECT team_id FROM craftsmen_teams 
+                WHERE team_name = %s
+            """, (team_name,))
+            
+            result = cursor.fetchone()
+            if not result:
+                print(f"Could not find team ID for: {team_name}")
+                return
+            
+            team_id = result['team_id']
+            
+            # Now get the members using the team_id
+            members = self.db_manager.get_team_members(team_id)
+            self.members_table.setRowCount(len(members))
+            
+            for row, member in enumerate(members):
+                self.members_table.setItem(row, 0, QTableWidgetItem(
+                    f"{member['first_name']} {member['last_name']}"
+                ))
+                self.members_table.setItem(row, 1, QTableWidgetItem(member['specialization']))
+                self.members_table.setItem(row, 2, QTableWidgetItem(member['role']))
+                self.members_table.setItem(row, 3, QTableWidgetItem(str(member['joined_date'])))
+        except Exception as e:
+            print(f"Error loading team members: {e}")
+        finally:
+            self.db_manager.close(connection)
 
     def add_team_member_dialog(self):
+        """Open dialog to add a team member"""
+        # First check if a team is selected
         current_row = self.teams_table.currentRow()
         if current_row < 0:
-            QMessageBox.warning(self, "Error", "Please select a team first!")
+            QMessageBox.warning(self, "Warning", "Please select a team first!")
             return
+        
+        # Get the team name from the selected row
+        team_name = self.teams_table.item(current_row, 0).text()
         
         dialog = QDialog(self)
         dialog.setWindowTitle("Add Team Member")
         layout = QFormLayout(dialog)
         
-        # Create input fields
-        craftsman = QComboBox()
+        # Create craftsman selection
+        craftsman_combo = QComboBox()
         craftsmen = self.db_manager.get_all_craftsmen()
-        for c in craftsmen:
-            craftsman.addItem(
-                f"{c['first_name']} {c['last_name']}",
-                c['craftsman_id']
+        for craftsman in craftsmen:
+            craftsman_combo.addItem(
+                f"{craftsman['first_name']} {craftsman['last_name']}",
+                craftsman['craftsman_id']  # Store craftsman_id as item data
             )
         
-        role = QComboBox()
-        role.addItems(["Member", "Senior Member", "Specialist", "Supervisor"])
+        # Create role selection
+        role_combo = QComboBox()
+        role_combo.addItems(["Member", "Lead", "Specialist", "Trainee"])
         
         # Add fields to layout
-        layout.addRow("Craftsman:", craftsman)
-        layout.addRow("Role:", role)
+        layout.addRow("Craftsman:", craftsman_combo)
+        layout.addRow("Role:", role_combo)
         
         # Add buttons
         buttons = QHBoxLayout()
-        save_btn = QPushButton("Add")
+        add_btn = QPushButton("Add Member")
         cancel_btn = QPushButton("Cancel")
-        buttons.addWidget(save_btn)
+        buttons.addWidget(add_btn)
         buttons.addWidget(cancel_btn)
         layout.addRow("", buttons)
         
-        team_name = self.teams_table.item(current_row, 0).text()
-        
         # Connect buttons
-        save_btn.clicked.connect(lambda: self.save_team_member(
+        add_btn.clicked.connect(lambda: self.add_member_to_team(
             team_name,
-            craftsman.currentData(),
-            role.currentText(),
+            craftsman_combo.currentData(),  # Get the craftsman_id from item data
+            role_combo.currentText(),
             dialog
         ))
         cancel_btn.clicked.connect(dialog.reject)
         
-        dialog.exec_()
+        dialog.exec()
 
-    def save_team_member(self, team_name, craftsman_id, role, dialog):
+    def add_member_to_team(self, team_name, craftsman_id, role, dialog):
+        """Add member to the selected team"""
         if self.db_manager.add_team_member(team_name, craftsman_id, role):
             QMessageBox.information(self, "Success", "Team member added successfully!")
-            self.load_team_members()
             dialog.accept()
+            
+            # Refresh the members table to show the new member
+            current_row = self.teams_table.currentRow()
+            if current_row >= 0:
+                self.load_team_members()
         else:
             QMessageBox.warning(self, "Error", "Failed to add team member!")
 
@@ -1083,122 +1505,6 @@ class CraftsMenWindow(QMainWindow):
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Failed to export reports: {str(e)}")
 
-    def generate_team_report(self):
-        """Generate a summary report for the selected team"""
-        current_row = self.teams_table.currentRow()
-        if current_row < 0:
-            QMessageBox.warning(self, "Warning", "Please select a team first!")
-            return
-
-        team_name = self.teams_table.item(current_row, 0).text()
-        team_leader = self.teams_table.item(current_row, 1).text()
-
-        try:
-            # Create reports directory
-            reports_dir = os.path.join(os.path.expanduser("~"), "Craftsmen_Reports")
-            os.makedirs(reports_dir, exist_ok=True)
-            
-            # Generate filename
-            filename = f"Team_Report_{team_name}_{datetime.now().strftime('%Y%m%d')}.pdf"
-            file_path = os.path.join(reports_dir, filename)
-            
-            printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-            printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
-            printer.setOutputFileName(file_path)
-            
-            painter = QPainter(printer)
-            self.draw_team_report(painter, team_name, team_leader, printer)
-            painter.end()
-            
-            # Show success message with file path
-            msg = QMessageBox(self)
-            msg.setIcon(QMessageBox.Information)
-            msg.setWindowTitle("Report Generated")
-            msg.setText("Team report generated successfully!")
-            msg.setInformativeText(f"The report has been saved to:\n{file_path}")
-            
-            # Add button to open containing folder
-            open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
-            msg.addButton(QMessageBox.Ok)
-            
-            msg.exec()
-            
-            # Handle button click
-            if msg.clickedButton() == open_folder_button:
-                self.open_containing_folder(file_path)
-
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to generate team report: {str(e)}")
-
-    def draw_team_report(self, painter, team_name, team_leader, printer):
-        """Draw the team report content"""
-        margin = 100
-        y_position = margin
-        line_height = printer.fontMetrics().height() + 5
-        
-        # Get team data
-        members = self.db_manager.get_team_members(team_name)
-        team_performance = self.db_manager.get_team_performance(team_name)
-        
-        # Draw title
-        title_font = painter.font()
-        title_font.setPointSize(14)
-        title_font.setBold(True)
-        painter.setFont(title_font)
-        painter.drawText(margin, y_position, f"Team Report - {team_name}")
-        y_position += line_height * 2
-
-        # Reset font for content
-        font = painter.font()
-        font.setPointSize(10)
-        font.setBold(False)
-        painter.setFont(font)
-
-        # Team Information Section
-        self.draw_section_header(painter, "Team Information", margin, y_position)
-        y_position += line_height * 2
-        
-        team_info = [
-            ("Team Name", team_name),
-            ("Team Leader", team_leader),
-            ("Number of Members", str(len(members))),
-            ("Report Date", datetime.now().strftime("%Y-%m-%d"))
-        ]
-        
-        for label, value in team_info:
-            self.draw_field(painter, label, value, margin, y_position)
-            y_position += line_height
-
-        # Team Members Section
-        y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
-        self.draw_section_header(painter, "Team Members", margin, y_position)
-        y_position += line_height * 2
-        
-        for member in members:
-            self.draw_field(painter, "Name", f"{member['first_name']} {member['last_name']}", margin, y_position)
-            y_position += line_height
-            self.draw_field(painter, "Role", member['role'], margin + 20, y_position)
-            y_position += line_height
-            self.draw_field(painter, "Specialization", member['specialization'], margin + 20, y_position)
-            y_position += line_height * 1.5
-
-        # Team Performance Section
-        if team_performance:
-            y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
-            self.draw_section_header(painter, "Team Performance", margin, y_position)
-            y_position += line_height * 2
-            
-            performance_metrics = [
-                ("Tasks Completed (Last Month)", team_performance.get('tasks_completed', 'N/A')),
-                ("Average Completion Time", f"{team_performance.get('avg_completion_time', 'N/A')} hours"),
-                ("Team Efficiency Rate", f"{team_performance.get('efficiency_rate', 'N/A')}%"),
-                ("On-Time Completion Rate", f"{team_performance.get('on_time_rate', 'N/A')}%")
-            ]
-            
-            for label, value in performance_metrics:
-                self.draw_field(painter, label, value, margin, y_position)
-                y_position += line_height
-
     def export_all_data(self):
         """Export all craftsmen data to JSON files"""
         try:
@@ -1325,6 +1631,99 @@ class CraftsMenWindow(QMainWindow):
                 f"Failed to export {data_type} data: {str(e)}"
             )
 
+    def edit_team_dialog(self, row):
+        """Open dialog to edit an existing team"""
+        if row < 0:
+            QMessageBox.warning(self, "Warning", "Please select a team to edit!")
+            return
+        
+        # Get the team data from the selected row
+        team_name = self.teams_table.item(row, 0).text()
+        team_leader = self.teams_table.item(row, 1).text()
+        description = self.teams_table.item(row, 2).text()
+        
+        # Create dialog
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Edit Team")
+        layout = QFormLayout(dialog)
+        
+        # Create input fields
+        name_field = QLineEdit(team_name)
+        
+        # Create leader selection
+        leader_combo = QComboBox()
+        craftsmen = self.db_manager.get_all_craftsmen()
+        selected_index = 0
+        for i, craftsman in enumerate(craftsmen):
+            full_name = f"{craftsman['first_name']} {craftsman['last_name']}"
+            leader_combo.addItem(full_name, craftsman['craftsman_id'])
+            if full_name == team_leader:
+                selected_index = i
+        
+        leader_combo.setCurrentIndex(selected_index)
+        
+        description_field = QTextEdit()
+        description_field.setText(description)
+        description_field.setMinimumHeight(100)
+        
+        # Add fields to layout
+        layout.addRow("Team Name:", name_field)
+        layout.addRow("Team Leader:", leader_combo)
+        layout.addRow("Description:", description_field)
+        
+        # Add buttons
+        buttons = QHBoxLayout()
+        save_btn = QPushButton("Save Changes")
+        cancel_btn = QPushButton("Cancel")
+        buttons.addWidget(save_btn)
+        buttons.addWidget(cancel_btn)
+        layout.addRow("", buttons)
+        
+        # Connect buttons
+        save_btn.clicked.connect(lambda: self.update_team(
+            team_name,  # Original team name for identification
+            name_field.text(),
+            leader_combo.currentData(),
+            description_field.toPlainText(),
+            dialog
+        ))
+        cancel_btn.clicked.connect(dialog.reject)
+        
+        dialog.exec()
+
+    def update_team(self, original_name, new_name, leader_id, description, dialog):
+        """Update an existing team"""
+        # Create data dictionary
+        data = {
+            'original_name': original_name,
+            'team_name': new_name,
+            'team_leader_id': leader_id,
+            'description': description
+        }
+        
+        # Add method to db_manager to update team
+        if self.db_manager.update_team(data):
+            QMessageBox.information(self, "Success", "Team updated successfully!")
+            self.load_teams()  # Refresh the teams list
+            dialog.accept()
+        else:
+            QMessageBox.warning(self, "Error", "Failed to update team!")
+
+    def draw_section_header(self, painter, text, margin, y_position):
+        """Draw a section header with consistent styling"""
+        font = painter.font()
+        font.setPointSize(12)
+        font.setBold(True)
+        painter.setFont(font)
+        
+        # Draw the header text
+        painter.drawText(margin, y_position, text)
+        
+        # Reset font
+        font.setPointSize(10)
+        font.setBold(False)
+        painter.setFont(font)
+
 
 class CraftsmanDetailsDialog(QDialog):
     def __init__(self, craftsman_id, db_manager, parent=None):
@@ -1346,6 +1745,7 @@ class CraftsmanDetailsDialog(QDialog):
         self.setup_work_history_tab()
         self.setup_training_tab()
         self.setup_schedule_tab()
+        self.setup_teams_tab()
         
         # Add close button
         close_btn = QPushButton("Close")
@@ -1401,6 +1801,19 @@ class CraftsmanDetailsDialog(QDialog):
             "Skill Name", "Level", "Certification",
             "Cert. Date", "Expiry Date", "Authority"
         ])
+        
+        # Set column widths
+        self.skills_table.setColumnWidth(0, 120)  # Skill Name
+        self.skills_table.setColumnWidth(1, 80)   # Level
+        self.skills_table.setColumnWidth(2, 150)  # Certification
+        self.skills_table.setColumnWidth(3, 100)  # Cert. Date
+        self.skills_table.setColumnWidth(4, 100)  # Expiry Date
+        self.skills_table.setColumnWidth(5, 150)  # Authority
+        
+        # Make table stretch to fill available space
+        self.skills_table.horizontalHeader().setStretchLastSection(True)
+        self.skills_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
         layout.addWidget(self.skills_table)
         
         # Add new skill button
@@ -1462,6 +1875,79 @@ class CraftsmanDetailsDialog(QDialog):
         
         self.load_schedule()
         self.tab_widget.addTab(schedule_widget, "Schedule")
+
+    def setup_teams_tab(self):
+        """Setup tab showing teams the craftsman belongs to"""
+        teams_widget = QWidget()
+        layout = QVBoxLayout(teams_widget)
+        
+        # Add teams table
+        self.teams_table = QTableWidget()
+        self.teams_table.setColumnCount(5)
+        self.teams_table.setHorizontalHeaderLabels([
+            "Team Name", "Team Leader", "Role", "Joined Date", "Description"
+        ])
+        
+        # Set column widths
+        self.teams_table.setColumnWidth(0, 150)  # Team Name
+        self.teams_table.setColumnWidth(1, 150)  # Team Leader
+        self.teams_table.setColumnWidth(2, 100)  # Role
+        self.teams_table.setColumnWidth(3, 100)  # Joined Date
+        self.teams_table.setColumnWidth(4, 250)  # Description
+        
+        layout.addWidget(self.teams_table)
+        
+        self.tab_widget.addTab(teams_widget, "Teams")
+        self.load_teams()
+
+    def load_teams(self):
+        """Load teams that the craftsman belongs to"""
+        try:
+            # First, we need to get the craftsman's internal ID (craftsman_id) from the employee_id
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get the craftsman's internal ID if we received an employee_id
+            if not str(self.craftsman_id).isdigit():
+                cursor.execute("""
+                    SELECT craftsman_id FROM craftsmen 
+                    WHERE employee_id = %s
+                """, (self.craftsman_id,))
+                
+                result = cursor.fetchone()
+                if result:
+                    internal_id = result['craftsman_id']
+                else:
+                    print(f"Could not find craftsman with ID: {self.craftsman_id}")
+                    return
+            else:
+                internal_id = self.craftsman_id
+            
+            # Now get the teams using the internal ID
+            teams = self.db_manager.get_craftsman_teams(internal_id)
+            self.teams_table.setRowCount(len(teams))
+            
+            for row, team in enumerate(teams):
+                self.teams_table.setItem(row, 0, QTableWidgetItem(team['team_name']))
+                
+                # Format team leader name
+                leader_name = "Not Assigned"
+                if team.get('leader_first_name') and team.get('leader_last_name'):
+                    leader_name = f"{team['leader_first_name']} {team['leader_last_name']}"
+                self.teams_table.setItem(row, 1, QTableWidgetItem(leader_name))
+                
+                # Role and joined date
+                self.teams_table.setItem(row, 2, QTableWidgetItem(team['role']))
+                self.teams_table.setItem(row, 3, QTableWidgetItem(str(team['joined_date'])))
+                
+                # Description
+                self.teams_table.setItem(row, 4, QTableWidgetItem(team.get('description', '')))
+                
+        except Exception as e:
+            print(f"Error loading craftsman teams: {e}")
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
 
     # Add helper methods for loading data and handling updates
     def update_basic_info(self):
@@ -1529,7 +2015,7 @@ class CraftsmanDetailsDialog(QDialog):
         }, dialog))
         cancel_btn.clicked.connect(dialog.reject)
         
-        dialog.exec_()
+        dialog.exec()
 
     def save_skill(self, data, dialog):
         if self.db_manager.add_craftsman_skill(data):
@@ -1597,7 +2083,7 @@ class CraftsmanDetailsDialog(QDialog):
         }, dialog))
         cancel_btn.clicked.connect(dialog.reject)
         
-        dialog.exec_()
+        dialog.exec()
 
     def save_training(self, data, dialog):
         if self.db_manager.add_craftsman_training(data):

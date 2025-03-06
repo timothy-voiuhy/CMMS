@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMMS - Maintenance Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #34495e;
+        }
+        nav {
+            background-color: #34495e;
+            padding: 10px 20px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 5px 0;
+        }
+        nav a:hover, nav a.active {
+            border-bottom: 2px solid #3498db;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .report-title h1 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        .report-meta {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .data-item {
+            margin-bottom: 15px;
+        }
+        .data-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        .data-value {
+            color: #2c3e50;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .checkbox-icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+        .checkbox-checked {
+            background-color: #2ecc71;
+            position: relative;
+        }
+        .checkbox-checked::after {
+            content: "✓";
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+        }
+        .checkbox-unchecked {
+            background-color: #ecf0f1;
+            border: 1px solid #bdc3c7;
+        }
+        .attachments-list {
+            list-style: none;
+            padding: 0;
+        }
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .attachment-icon {
+            margin-right: 10px;
+            color: #3498db;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .flash-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .flash-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .comments-box {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>CMMS Craftsman Portal</h1>
+        <div class="user-info">
+            <img src="#" alt="User">
+            <span>{{ current_user.first_name }} {{ current_user.last_name }}</span>
+        </div>
+    </header>
+    
+    <nav>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('work_orders') }}">Work Orders</a>
+        <a href="{{ url_for('maintenance_history') }}" class="active">Maintenance History</a>
+        <a href="{{ url_for('skills') }}">Skills & Training</a>
+        <a href="{{ url_for('notifications') }}">Notifications</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </nav>
+    
+    <div class="container">
+        {% if get_flashed_messages() %}
+        <div class="flash-messages">
+            {% for category, message in get_flashed_messages(with_categories=true) %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="page-header">
+            <h1>Maintenance Report</h1>
+            <a href="{{ url_for('view_work_order', work_order_id=report.work_order_id) }}" class="btn btn-secondary">Back to Work Order</a>
+        </div>
+        
+        <div class="card">
+            <div class="report-header">
+                <div class="report-title">
+                    <h1>{{ report.work_order_title }}</h1>
+                    <div class="report-meta">
+                        <div>Report #{{ report.report_id }}</div>
+                        <div>Work Order #{{ report.work_order_id }}</div>
+                        <div>Equipment: {{ report.equipment_name }}</div>
+                    </div>
+                </div>
+                <div class="report-meta">
+                    <div>Report Date: {{ report.report_date }}</div>
+                    <div>Craftsman: {{ current_user.first_name }} {{ current_user.last_name }}</div>
+                </div>
+            </div>
+            
+            <!-- General Information Section -->
+            <div class="section">
+                <h2 class="section-title">General Information</h2>
+                <div class="data-grid">
+                    <div class="data-item">
+                        <div class="data-label">Maintenance Type</div>
+                        <div class="data-value">{{ report_data.general.maintenance_type }}</div>
+                    </div>
+                    
+                    <div class="data-item">
+                        <div class="data-label">Initial Condition</div>
+                        <div class="data-value">{{ report_data.general.initial_condition }}</div>
+                    </div>
+                    
+                    <div class="data-item">
+                        <div class="data-label">Final Condition</div>
+                        <div class="data-value">{{ report_data.general.final_condition }}</div>
+                    </div>
+                    
+                    {% if report_data.general.hours is defined or report_data.general.minutes is defined %}
+                    <div class="data-item">
+                        <div class="data-label">Duration</div>
+                        <div class="data-value">
+                            {% if report_data.general.hours %}{{ report_data.general.hours }} hours{% endif %}
+                            {% if report_data.general.minutes %} {{ report_data.general.minutes }} minutes{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Inspection Section -->
+            {% if report_data.inspection is defined %}
+            <div class="section">
+                <h2 class="section-title">Inspection</h2>
+                
+                {% if report_data.inspection.visual_external_damage is defined or 
+                      report_data.inspection.visual_corrosion is defined or 
+                      report_data.inspection.visual_leaks is defined or 
+                      report_data.inspection.visual_wear is defined %}
+                <h3>Visual Inspection</h3>
+                <div class="data-grid">
+                    {% if report_data.inspection.visual_external_damage is defined %}
+                    <div class="checkbox-item">
+                        <span class="checkbox-icon {% if report_data.inspection.visual_external_damage %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                        <span>External Damage</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if report_data.inspection.visual_corrosion is defined %}
+                    <div class="checkbox-item">
+                        <span class="checkbox-icon {% if report_data.inspection.visual_corrosion %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                        <span>Corrosion</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if report_data.inspection.visual_leaks is defined %}
+                    <div class="checkbox-item">
+                        <span class="checkbox-icon {% if report_data.inspection.visual_leaks %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                        <span>Leaks</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if report_data.inspection.visual_wear is defined %}
+                    <div class="checkbox-item">
+                        <span class="checkbox-icon {% if report_data.inspection.visual_wear %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                        <span>Wear and Tear</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if report_data.inspection.operational_unusual_noise is defined or 
+                      report_data.inspection.operational_vibration is defined or 
+                      report_data.inspection.operational_overheating is defined or 
+                      report_data.inspection.operational_performance is defined %}
+                <h3>Operational Inspection</h3>
+                <div class="data-grid">
+                    {% if report_data.inspection.operational_unusual_noise is defined %}
+                    <div class="checkbox-item">
+                        <span class="checkbox-icon {% if report_data.inspection.operational_unusual_noise %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                        <span>Unusual Noise</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if report_data.inspection.operational_vibration is defined %}
+                    <div class="checkbox-item">
+                        <span class="checkbox-icon {% if report_data.inspection.operational_vibration %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                        <span>Excessive Vibration</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if report_data.inspection.operational_overheating is defined %}
+                    <div class="checkbox-item">
+                        <span class="checkbox-icon {% if report_data.inspection.operational_overheating %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                        <span>Overheating</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if report_data.inspection.operational_performance is defined %}
+                    <div class="checkbox-item">
+                        <span class="checkbox-icon {% if report_data.inspection.operational_performance %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                        <span>Performance Issues</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if report_data.inspection.additional_findings %}
+                <div class="data-item">
+                    <div class="data-label">Additional Findings</div>
+                    <div class="data-value">{{ report_data.inspection.additional_findings }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- Equipment Specific Section -->
+            {% if report_data.mechanical is defined or report_data.electrical is defined or report_data.hvac is defined or report_data.plumbing is defined %}
+            <div class="section">
+                <h2 class="section-title">Equipment Specific</h2>
+                
+                {% if report_data.mechanical is defined %}
+                <h3>Mechanical Components</h3>
+                <div class="data-grid">
+                    {% for key, value in report_data.mechanical.items() %}
+                    <div class="data-item">
+                        {% if value is sameas true or value is sameas false %}
+                        <div class="checkbox-item">
+                            <span class="checkbox-icon {% if value %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                            <span>{{ key|replace('_', ' ')|title }}</span>
+                        </div>
+                        {% else %}
+                        <div class="data-label">{{ key|replace('_', ' ')|title }}</div>
+                        <div class="data-value">{{ value }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if report_data.electrical is defined %}
+                <h3>Electrical Components</h3>
+                <div class="data-grid">
+                    {% for key, value in report_data.electrical.items() %}
+                    <div class="data-item">
+                        {% if value is sameas true or value is sameas false %}
+                        <div class="checkbox-item">
+                            <span class="checkbox-icon {% if value %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                            <span>{{ key|replace('_', ' ')|title }}</span>
+                        </div>
+                        {% else %}
+                        <div class="data-label">{{ key|replace('_', ' ')|title }}</div>
+                        <div class="data-value">{{ value }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if report_data.hvac is defined %}
+                <h3>HVAC Components</h3>
+                <div class="data-grid">
+                    {% for key, value in report_data.hvac.items() %}
+                    <div class="data-item">
+                        {% if value is sameas true or value is sameas false %}
+                        <div class="checkbox-item">
+                            <span class="checkbox-icon {% if value %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                            <span>{{ key|replace('_', ' ')|title }}</span>
+                        </div>
+                        {% else %}
+                        <div class="data-label">{{ key|replace('_', ' ')|title }}</div>
+                        <div class="data-value">{{ value }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if report_data.plumbing is defined %}
+                <h3>Plumbing Components</h3>
+                <div class="data-grid">
+                    {% for key, value in report_data.plumbing.items() %}
+                    <div class="data-item">
+                        {% if value is sameas true or value is sameas false %}
+                        <div class="checkbox-item">
+                            <span class="checkbox-icon {% if value %}checkbox-checked{% else %}checkbox-unchecked{% endif %}"></span>
+                            <span>{{ key|replace('_', ' ')|title }}</span>
+                        </div>
+                        {% else %}
+                        <div class="data-label">{{ key|replace('_', ' ')|title }}</div>
+                        <div class="data-value">{{ value }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- Measurements Section -->
+            {% if report_data.measurements is defined %}
+            <div class="section">
+                <h2 class="section-title">Measurements</h2>
+                
+                {% if report_data.measurements.vibration_measured %}
+                <h3>Vibration Measurements</h3>
+                <div class="data-grid">
+                    {% if report_data.measurements.vibration_level %}
+                    <div class="data-item">
+                        <div class="data-label">Vibration Level</div>
+                        <div class="data-value">{{ report_data.measurements.vibration_level }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if report_data.measurements.vibration_location %}
+                    <div class="data-item">
+                        <div class="data-label">Measurement Location</div>
+                        <div class="data-value">{{ report_data.measurements.vibration_location }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if report_data.measurements.temperature_measured %}
+                <h3>Temperature Measurements</h3>
+                <div class="data-grid">
+                    {% for i in range(1, 4) %}
+                        {% set location_key = 'temp_location_' ~ i %}
+                        {% set temp_key = 'temperature_' ~ i %}
+                        {% if report_data.measurements[location_key] and report_data.measurements[temp_key] %}
+                        <div class="data-item">
+                            <div class="data-label">{{ report_data.measurements[location_key] }}</div>
+                            <div class="data-value">{{ report_data.measurements[temp_key] }}</div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if report_data.measurements.noise_measured %}
+                <h3>Noise Measurements</h3>
+                <div class="data-grid">
+                    {% if report_data.measurements.noise_level %}
+                    <div class="data-item">
+                        <div class="data-label">Noise Level</div>
+                        <div class="data-value">{{ report_data.measurements.noise_level }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if report_data.measurements.noise_description %}
+                    <div class="data-item">
+                        <div class="data-label">Noise Description</div>
+                        <div class="data-value">{{ report_data.measurements.noise_description }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% for i in range(1, 4) %}
+                    {% set name_key = 'custom_name_' ~ i %}
+                    {% set value_key = 'custom_value_' ~ i %}
+                    {% set unit_key = 'custom_unit_' ~ i %}
+                    {% if report_data.measurements[name_key] and report_data.measurements[value_key] %}
+                    <h3>Custom Measurements</h3>
+                    <div class="data-grid">
+                        <div class="data-item">
+                            <div class="data-label">{{ report_data.measurements[name_key] }}</div>
+                            <div class="data-value">
+                                {{ report_data.measurements[value_key] }}
+                                {% if report_data.measurements[unit_key] %}
+                                {{ report_data.measurements[unit_key] }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Parts Used Section -->
+            {% if report_data.parts is defined and report_data.parts|length > 0 %}
+            <div class="section">
+                <h2 class="section-title">Parts Used</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Part Name</th>
+                            <th>Part Number</th>
+                            <th>Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for part in report_data.parts %}
+                        <tr>
+                            <td>{{ part.name }}</td>
+                            <td>{{ part.part_number|default('N/A') }}</td>
+                            <td>{{ part.quantity }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            
+            <!-- Attachments Section -->
+            {% if attachments and attachments|length > 0 %}
+            <div class="section">
+                <h2 class="section-title">Attachments</h2>
+                <ul class="attachments-list">
+                    {% for attachment in attachments %}
+                    <li class="attachment-item">
+                        <span class="attachment-icon">📎</span>
+                        <a href="{{ url_for('download_attachment', attachment_id=attachment.attachment_id) }}" target="_blank">
+                            {{ attachment.filename }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- Comments Section -->
+            {% if report.comments %}
+            <div class="section">
+                <h2 class="section-title">Comments</h2>
+                <div class="comments-box">
+                    {{ report.comments|nl2br }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="action-buttons">
+                <a href="{{ url_for('print_report', report_id=report.report_id) }}" class="btn btn-primary" target="_blank">Print Report</a>
+                <a href="{{ url_for('maintenance_history') }}" class="btn btn-secondary">Back to History</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

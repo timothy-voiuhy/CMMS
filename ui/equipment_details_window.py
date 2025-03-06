@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                               QPushButton, QFormLayout, QScrollArea, QFrame,
                               QTableWidget, QTableWidgetItem, QDateEdit,
                               QSpinBox, QComboBox, QMessageBox, QDialog, QMenu,
-                              QFileDialog, QMenuBar, QStatusBar)
+                              QFileDialog, QMenuBar, QStatusBar, QSizePolicy)
 from PySide6.QtCore import Qt, QDate, QPoint
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 from PySide6.QtGui import QAction, QCursor, QPainter
@@ -256,12 +256,13 @@ class EquipmentDetailsWindow(QMainWindow):
         self.equipment_data = self.db_manager.get_equipment_by_id(equipment_id)
         
         self.setWindowTitle(f"Equipment Details - {self.equipment_data['equipment_name']}")
-        self.setMinimumSize(1000, 800)
         
         # Create central widget and main layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(10)
         
         # Create tab widget
         self.tab_widget = QTabWidget()
@@ -295,7 +296,8 @@ class EquipmentDetailsWindow(QMainWindow):
         self.setup_safety_tab()
         self.setup_additional_info_tab()
         
-        main_layout.addWidget(self.tab_widget)
+        # Give the tab widget a stretch factor to take available space
+        main_layout.addWidget(self.tab_widget, 1)
         
         # Create menu bar
         self.setup_menu_bar()
@@ -303,23 +305,44 @@ class EquipmentDetailsWindow(QMainWindow):
         # Add status bar
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
+        
+        # Set size policy for central widget to ensure it expands properly
+        central_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-    def create_scroll_area(self) -> tuple[QScrollArea, QWidget, QVBoxLayout]:
-        """Helper method to create a scroll area with a widget and layout"""
+    def create_scroll_area(self):
+        """Create a standardized scroll area with a widget and layout"""
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll.setStyleSheet("""
             QScrollArea {
                 background-color: #1e1e1e;
                 border: none;
             }
+            QScrollBar:vertical {
+                background: #2a2a2a;
+                width: 12px;
+            }
+            QScrollBar::handle:vertical {
+                background: #404040;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #4a4a4a;
+            }
         """)
         
-        content_widget = QWidget()
-        layout = QVBoxLayout(content_widget)
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(15)
         
-        scroll.setWidget(content_widget)
-        return scroll, content_widget, layout
+        # Set size policy to ensure the widget expands properly
+        widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        scroll.setWidget(widget)
+        return scroll, widget, layout
 
     def setup_registry_tab(self):
         """Basic equipment registration information"""
@@ -1114,385 +1137,177 @@ class EquipmentDetailsWindow(QMainWindow):
     def generate_complete_report(self):
         """Generate a comprehensive report of all equipment information"""
         try:
-            report_data = {
-                'equipment_info': self.equipment_data,
-                'technical_info': self.db_manager.get_technical_info(self.equipment_id),
-                'maintenance_history': self.db_manager.get_equipment_history(self.equipment_id),
-                'maintenance_schedule': self.db_manager.get_maintenance_schedule(self.equipment_id),
-                'tools': self.db_manager.get_special_tools(self.equipment_id),
-                'safety_info': self.db_manager.get_safety_info(self.equipment_id)
-            }
+            # Use the new reporting module to generate the report
+            from reporting import create_equipment_report, open_containing_folder, open_report_file
             
-            file_name = f"Complete_Report_{self.equipment_data['equipment_name']}_{datetime.now().strftime('%Y%m%d')}.pdf"
+            # Generate the report
+            report_path = create_equipment_report(self.db_manager, self.equipment_id, "complete")
             
-            self.generate_pdf_report(report_data, file_name, "complete")
-            self.status_bar.showMessage("Complete report generated successfully!", 5000)
+            if report_path:
+                # Show success message
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Information)
+                msg.setWindowTitle("Report Generated")
+                msg.setText("Complete report generated successfully!")
+                msg.setInformativeText(f"The report has been saved to:\n{report_path}")
+                
+                open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
+                open_report_button = msg.addButton("Open Report", QMessageBox.ActionRole)
+                msg.addButton(QMessageBox.Ok)
+                
+                result = msg.exec()
+                
+                if msg.clickedButton() == open_folder_button:
+                    open_containing_folder(report_path)
+                elif msg.clickedButton() == open_report_button:
+                    open_report_file(report_path)
+                    
+                self.status_bar.showMessage("Complete report generated successfully!", 5000)
+            else:
+                QMessageBox.critical(self, "Error", "Failed to generate report!")
+            
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to generate complete report: {str(e)}")
 
     def generate_technical_report(self, report_type="specs"):
         """Generate technical reports based on type"""
         try:
-            tech_info = self.db_manager.get_technical_info(self.equipment_id)
-            history = self.db_manager.get_equipment_history(self.equipment_id)
+            # Use the new reporting module to generate the report
+            from reporting import create_equipment_report, open_containing_folder, open_report_file
             
-            report_data = {
-                'equipment_info': self.equipment_data,
-                'technical_info': tech_info,
-                'history': history
-            }
+            # Generate the report
+            report_path = create_equipment_report(self.db_manager, self.equipment_id, "technical")
             
-            file_name = f"Technical_Report_{report_type}_{self.equipment_data['equipment_name']}_{datetime.now().strftime('%Y%m%d')}.pdf"
+            if report_path:
+                # Show success message
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Information)
+                msg.setWindowTitle("Report Generated")
+                msg.setText(f"Technical report ({report_type}) generated successfully!")
+                msg.setInformativeText(f"The report has been saved to:\n{report_path}")
+                
+                open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
+                open_report_button = msg.addButton("Open Report", QMessageBox.ActionRole)
+                msg.addButton(QMessageBox.Ok)
+                
+                result = msg.exec()
+                
+                if msg.clickedButton() == open_folder_button:
+                    open_containing_folder(report_path)
+                elif msg.clickedButton() == open_report_button:
+                    open_report_file(report_path)
+                    
+                self.status_bar.showMessage(f"Technical report ({report_type}) generated successfully!", 5000)
+            else:
+                QMessageBox.critical(self, "Error", "Failed to generate report!")
             
-            self.generate_pdf_report(report_data, file_name, f"technical_{report_type}")
-            self.status_bar.showMessage(f"Technical report ({report_type}) generated successfully!", 5000)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to generate technical report: {str(e)}")
 
     def generate_maintenance_report(self, report_type):
         """Generate maintenance reports based on type"""
         try:
-            maintenance_data = self.db_manager.get_maintenance_schedule(self.equipment_id)
-            history = self.db_manager.get_equipment_history(self.equipment_id)
+            # Use the new reporting module to generate the report
+            from reporting import create_equipment_report, open_containing_folder, open_report_file
             
-            # Filter data based on report type
-            if report_type == "upcoming":
-                maintenance_data = [task for task in maintenance_data 
-                                 if task['next_due'] > datetime.now().date()]
-            elif report_type == "overdue":
-                maintenance_data = [task for task in maintenance_data 
-                                 if task['next_due'] < datetime.now().date()]
+            # Generate the report
+            report_path = create_equipment_report(self.db_manager, self.equipment_id, "maintenance")
             
-            report_data = {
-                'equipment_info': self.equipment_data,
-                'maintenance_data': maintenance_data,
-                'history': history
-            }
+            if report_path:
+                # Show success message
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Information)
+                msg.setWindowTitle("Report Generated")
+                msg.setText(f"Maintenance report ({report_type}) generated successfully!")
+                msg.setInformativeText(f"The report has been saved to:\n{report_path}")
+                
+                open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
+                open_report_button = msg.addButton("Open Report", QMessageBox.ActionRole)
+                msg.addButton(QMessageBox.Ok)
+                
+                result = msg.exec()
+                
+                if msg.clickedButton() == open_folder_button:
+                    open_containing_folder(report_path)
+                elif msg.clickedButton() == open_report_button:
+                    open_report_file(report_path)
+                    
+                self.status_bar.showMessage(f"Maintenance report ({report_type}) generated successfully!", 5000)
+            else:
+                QMessageBox.critical(self, "Error", "Failed to generate report!")
             
-            file_name = f"Maintenance_Report_{report_type}_{self.equipment_data['equipment_name']}_{datetime.now().strftime('%Y%m%d')}.pdf"
-            
-            self.generate_pdf_report(report_data, file_name, f"maintenance_{report_type}")
-            self.status_bar.showMessage(f"Maintenance report ({report_type}) generated successfully!", 5000)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to generate maintenance report: {str(e)}")
 
     def generate_safety_report(self, report_type):
         """Generate safety reports based on type"""
         try:
-            safety_info = self.db_manager.get_safety_info(self.equipment_id)
-            history = self.db_manager.get_equipment_history(self.equipment_id)
+            # Use the new reporting module to generate the report
+            from reporting import create_equipment_report, open_containing_folder, open_report_file
             
-            # Filter incidents from history if needed
-            if report_type == "incidents":
-                history = [entry for entry in history 
-                         if entry['event_type'].lower() in ['incident', 'accident', 'safety']]
+            # Generate the report
+            report_path = create_equipment_report(self.db_manager, self.equipment_id, "safety")
             
-            report_data = {
-                'equipment_info': self.equipment_data,
-                'safety_info': safety_info,
-                'history': history
-            }
+            if report_path:
+                # Show success message
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Information)
+                msg.setWindowTitle("Report Generated")
+                msg.setText(f"Safety report ({report_type}) generated successfully!")
+                msg.setInformativeText(f"The report has been saved to:\n{report_path}")
+                
+                open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
+                open_report_button = msg.addButton("Open Report", QMessageBox.ActionRole)
+                msg.addButton(QMessageBox.Ok)
+                
+                result = msg.exec()
+                
+                if msg.clickedButton() == open_folder_button:
+                    open_containing_folder(report_path)
+                elif msg.clickedButton() == open_report_button:
+                    open_report_file(report_path)
+                    
+                self.status_bar.showMessage(f"Safety report ({report_type}) generated successfully!", 5000)
+            else:
+                QMessageBox.critical(self, "Error", "Failed to generate report!")
             
-            file_name = f"Safety_Report_{report_type}_{self.equipment_data['equipment_name']}_{datetime.now().strftime('%Y%m%d')}.pdf"
-            
-            self.generate_pdf_report(report_data, file_name, f"safety_{report_type}")
-            self.status_bar.showMessage(f"Safety report ({report_type}) generated successfully!", 5000)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to generate safety report: {str(e)}")
 
     def generate_custom_report(self):
         """Open dialog to create custom report"""
-        # This would open a dialog allowing users to select what to include in the report
-        # For now, we'll just show a message
-        QMessageBox.information(self, "Coming Soon", "Custom report builder coming soon!")
-
-    def generate_pdf_report(self, data, filename, report_type):
-        """Generate PDF report with the given data"""
         try:
-            # Create reports directory if it doesn't exist
-            reports_dir = os.path.join(os.path.expanduser("~"), "Equipment_Reports")
-            os.makedirs(reports_dir, exist_ok=True)
+            # Use the new reporting module to generate the report
+            from reporting import create_equipment_report, open_containing_folder, open_report_file
             
-            # Create full file path
-            file_path = os.path.join(reports_dir, filename)
+            # For now, just generate a complete report
+            report_path = create_equipment_report(self.db_manager, self.equipment_id, "complete")
             
-            printer = QPrinter(QPrinter.PrinterMode.HighResolution)
-            printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat)
-            printer.setOutputFileName(file_path)
-            
-            painter = QPainter(printer)
-            font = painter.font()
-            
-            # Get page metrics
-            page_rect = printer.pageRect(QPrinter.Unit.DevicePixel)
-            margin = 100
-            content_width = page_rect.width() - (margin * 2)
-            y_position = margin
-            
-            # Draw header
-            title_font = painter.font()
-            title_font.setPointSize(14)
-            title_font.setBold(True)
-            painter.setFont(title_font)
-            
-            # Draw title based on report type
-            title = self.get_report_title(report_type)
-            painter.drawText(margin, y_position, title)
-            
-            y_position += 50
-            
-            # Reset font for content
-            font.setPointSize(10)
-            font.setBold(False)
-            painter.setFont(font)
-            
-            # Draw content based on report type
-            self.draw_report_content(painter, data, report_type, margin, y_position, content_width, printer)
-            
-            painter.end()
-            
-            # Show success message with file path
-            msg = QMessageBox(self)
-            msg.setIcon(QMessageBox.Information)
-            msg.setWindowTitle("Report Generated")
-            msg.setText("Report generated successfully!")
-            msg.setInformativeText(f"The report has been saved to:\n{file_path}")
-            
-            # Add button to open containing folder
-            open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
-            msg.addButton(QMessageBox.Ok)
-            
-            msg.exec()
-            
-            # Handle button click
-            if msg.clickedButton() == open_folder_button:
-                self.open_containing_folder(file_path)
-            
-            # Update status bar
-            self.status_bar.showMessage(f"Report saved to: {file_path}", 5000)
-            
-            return file_path
-        
-        except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Error",
-                f"Failed to generate report: {str(e)}\nPlease check if you have write permissions in {reports_dir}"
-            )
-            return None
-
-    def open_containing_folder(self, file_path):
-        """Open the folder containing the file in the system's file explorer"""
-        import platform
-        import subprocess
-        
-        try:
-            if platform.system() == "Windows":
-                subprocess.run(['explorer', '/select,', file_path])
-            elif platform.system() == "Darwin":  # macOS
-                subprocess.run(['open', '-R', file_path])
-            else:  # Linux and other Unix-like
-                subprocess.run(['xdg-open', os.path.dirname(file_path)])
-        except Exception as e:
-            QMessageBox.warning(
-                self,
-                "Warning",
-                f"Could not open folder: {str(e)}"
-            )
-
-    def get_report_title(self, report_type):
-        """Get appropriate title for the report"""
-        titles = {
-            "complete": "Complete Equipment Report",
-            "technical_specs": "Technical Specifications Report",
-            "technical_performance": "Performance History Report",
-            "technical_calibration": "Calibration History Report",
-            "maintenance_schedule": "Maintenance Schedule Report",
-            "maintenance_history": "Maintenance History Report",
-            "maintenance_upcoming": "Upcoming Maintenance Report",
-            "maintenance_overdue": "Overdue Maintenance Report",
-            "safety_procedures": "Safety Procedures Report",
-            "safety_incidents": "Safety Incident History Report"
-        }
-        return titles.get(report_type, "Equipment Report")
-
-    def draw_report_content(self, painter, data, report_type, margin, y_position, content_width, printer):
-        """Draw report content based on type"""
-        line_height = painter.fontMetrics().height() + 5
-        
-        def draw_section_title(title):
-            nonlocal y_position
-            # Add some space before section
-            y_position += line_height
-            
-            # Draw section title
-            font = painter.font()
-            font.setBold(True)
-            font.setPointSize(12)
-            painter.setFont(font)
-            painter.drawText(margin, y_position, title)
-            y_position += line_height * 1.5
-            
-            # Reset font
-            font.setBold(False)
-            font.setPointSize(10)
-            painter.setFont(font)
-        
-        def draw_field(label, value, indent=0):
-            nonlocal y_position
-            
-            # Draw label
-            font = painter.font()
-            font.setBold(True)
-            painter.setFont(font)
-            painter.drawText(margin + indent, y_position, f"{label}:")
-            
-            # Reset font for value
-            font.setBold(False)
-            painter.setFont(font)
-            
-            # Handle multiline text
-            if value:
-                text = str(value)
-                remaining_text = text
-                first_line = True
+            if report_path:
+                # Show success message
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Information)
+                msg.setWindowTitle("Report Generated")
+                msg.setText("Custom report generated successfully!")
+                msg.setInformativeText(f"The report has been saved to:\n{report_path}")
                 
-                while remaining_text:
-                    # Calculate available width (considering label on first line)
-                    available_width = content_width
-                    if first_line:
-                        label_width = painter.fontMetrics().horizontalAdvance(f"{label}: ")
-                        available_width -= label_width
-                        x_position = margin + indent + label_width
-                    else:
-                        x_position = margin + indent + 20  # Indent continuation lines
+                open_folder_button = msg.addButton("Open Folder", QMessageBox.ActionRole)
+                open_report_button = msg.addButton("Open Report", QMessageBox.ActionRole)
+                msg.addButton(QMessageBox.Ok)
+                
+                result = msg.exec()
+                
+                if msg.clickedButton() == open_folder_button:
+                    open_containing_folder(report_path)
+                elif msg.clickedButton() == open_report_button:
+                    open_report_file(report_path)
                     
-                    # Calculate how many characters can fit
-                    metrics = painter.fontMetrics()
-                    chars_that_fit = 0
-                    for i in range(len(remaining_text)):
-                        if metrics.horizontalAdvance(remaining_text[:i+1]) > available_width:
-                            chars_that_fit = i
-                            break
-                    
-                    if chars_that_fit == 0:  # Entire text fits
-                        chars_that_fit = len(remaining_text)
-                    
-                    # Find last space before cut-off to avoid word breaks
-                    if chars_that_fit < len(remaining_text):
-                        last_space = remaining_text.rfind(' ', 0, chars_that_fit)
-                        if last_space != -1:
-                            chars_that_fit = last_space
-                    
-                    # Draw line
-                    line = remaining_text[:chars_that_fit].strip()
-                    if line:
-                        painter.drawText(x_position, y_position, line)
-                        y_position += line_height
-                    
-                    # Update remaining text
-                    remaining_text = remaining_text[chars_that_fit:].strip()
-                    first_line = False
+                self.status_bar.showMessage("Custom report generated successfully!", 5000)
             else:
-                # Handle empty values
-                painter.drawText(margin + indent + painter.fontMetrics().horizontalAdvance(f"{label}: "),
-                               y_position, "-")
-                y_position += line_height
-        
-        def check_page_space(needed_space, printer_obj):
-            nonlocal y_position
-            page_rect = printer_obj.pageRect(QPrinter.Unit.DevicePixel)
-            if y_position + needed_space > page_rect.height() - margin:
-                printer_obj.newPage()
-                y_position = margin
-                return True
-            return False
-        
-        if report_type == "complete":
-            # Basic Equipment Information
-            draw_section_title("Equipment Information")
-            for label, value in [
-                ("Equipment ID", data['equipment_info']['equipment_id']),
-                ("Equipment Name", data['equipment_info']['equipment_name']),
-                ("Part Number", data['equipment_info']['part_number']),
-                ("Manufacturer", data['equipment_info'].get('manufacturer')),
-                ("Model", data['equipment_info'].get('model')),
-                ("Serial Number", data['equipment_info'].get('serial_number')),
-                ("Location", data['equipment_info'].get('location')),
-                ("Installation Date", data['equipment_info'].get('installation_date')),
-                ("Status", data['equipment_info'].get('status'))
-            ]:
-                check_page_space(line_height * 2, printer)
-                draw_field(label, value)
+                QMessageBox.critical(self, "Error", "Failed to generate report!")
             
-            # Technical Information
-            check_page_space(line_height * 4, printer)
-            draw_section_title("Technical Specifications")
-            if data.get('technical_info'):
-                for label, value in data['technical_info'].items():
-                    check_page_space(line_height * 2, printer)
-                    draw_field(label.replace('_', ' ').title(), value)
-            else:
-                draw_field("No technical information available", "")
-            
-            # Maintenance Schedule
-            check_page_space(line_height * 4, printer)
-            draw_section_title("Maintenance Schedule")
-            if data.get('maintenance_schedule'):
-                for task in data['maintenance_schedule']:
-                    check_page_space(line_height * 6, printer)
-                    draw_field("Task", task['task_name'])
-                    draw_field("Frequency", f"{task['frequency']} {task['frequency_unit']}", 20)
-                    draw_field("Last Done", task['last_done'], 20)
-                    draw_field("Next Due", task['next_due'], 20)
-                    draw_field("Procedure", task['maintenance_procedure'], 20)
-                    y_position += line_height / 2  # Add small space between tasks
-            else:
-                draw_field("No maintenance schedule available", "")
-            
-            # Special Tools
-            check_page_space(line_height * 4, printer)
-            draw_section_title("Special Tools")
-            if data.get('tools'):
-                for tool in data['tools']:
-                    check_page_space(line_height * 5, printer)
-                    draw_field("Tool Name", tool['tool_name'])
-                    draw_field("Specification", tool['specification'], 20)
-                    draw_field("Purpose", tool['purpose'], 20)
-                    draw_field("Location", tool['location'], 20)
-                    y_position += line_height / 2  # Add small space between tools
-            else:
-                draw_field("No special tools listed", "")
-            
-            # Safety Information
-            check_page_space(line_height * 4, printer)
-            draw_section_title("Safety Information")
-            if data.get('safety_info'):
-                for label, value in data['safety_info'].items():
-                    check_page_space(line_height * 3, printer)
-                    draw_field(label.replace('_', ' ').title(), value)
-            else:
-                draw_field("No safety information available", "")
-            
-            # Maintenance History
-            check_page_space(line_height * 4, printer)
-            draw_section_title("Recent Maintenance History")
-            if data.get('maintenance_history'):
-                # Show last 5 maintenance entries
-                for entry in data['maintenance_history'][:5]:
-                    check_page_space(line_height * 5, printer)
-                    draw_field("Date", entry['date'])
-                    draw_field("Type", entry['event_type'], 20)
-                    draw_field("Description", entry['description'], 20)
-                    draw_field("Performed By", entry['performed_by'], 20)
-                    y_position += line_height / 2  # Add small space between entries
-            else:
-                draw_field("No maintenance history available", "")
-        
-        else:
-            # Handle other report types
-            draw_field("Report Type", report_type)
-            draw_field("Not implemented", "This report type is not yet implemented")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to generate custom report: {str(e)}")
 
     def export_all_data(self):
         """Export all equipment data to various formats"""
