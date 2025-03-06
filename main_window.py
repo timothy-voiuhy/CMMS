@@ -162,8 +162,8 @@ class CMMSMainWindow(QMainWindow):
              "icons/workorder.png", 3),  # Navigate to Work Orders tab
             ("Preventive Maintenance", "Schedule and manage routine maintenance tasks", 
              "icons/maintenance.png", 4),  # Navigate to PM tab (future)
-            ("Inventory", "Track spare parts and supplies for maintenance operations", 
-             "icons/inventory.png", 5),  # Navigate to Inventory tab (future)
+            ("Inventory Management", "Track spare parts, tools, and supplies for maintenance operations", 
+             "icons/inventory.png", 4),  # Navigate to Inventory tab
             ("Reports & Analytics", "Generate reports and analyze maintenance performance", 
              "icons/reports.png", 6),  # Navigate to Reports tab (future)
         ]
@@ -192,15 +192,6 @@ class CMMSMainWindow(QMainWindow):
         )
         grid_layout.addWidget(craftsman_portal_box, row+1, 0, 1, 2)  # Span two columns
         self.feature_boxes.append(craftsman_portal_box)
-        
-        # Add inventory feature box
-        inventory_box = self.create_feature_box(
-            "Inventory Management",
-            "Track spare parts, tools, and supplies for maintenance operations",
-            "icons/inventory.png",
-            5  # Page index for inventory
-        )
-        grid_layout.addWidget(inventory_box, row+1, 1, 1, 2)  # Add to grid at appropriate position
         
         features_layout.addLayout(grid_layout)
         
@@ -326,6 +317,8 @@ class CMMSMainWindow(QMainWindow):
             title = box.findChild(QLabel).text()
             if title == "Work Orders":
                 self.stacked_widget.setCurrentIndex(3)  # Work Orders index
+            elif title == "Inventory Management":
+                self.stacked_widget.setCurrentIndex(4)  # Inventory Management index
             else:
                 QMessageBox.information(
                     self,

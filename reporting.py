@@ -1549,6 +1549,324 @@ class WorkOrderReport(Report):
             self.add_paragraph("No detailed cost data available for work orders.")
 
 
+class InventoryReport(Report):
+    """Report for inventory information."""
+    
+    def __init__(self, report_data, filename=None):
+        """
+        Initialize an inventory report.
+        
+        Args:
+            report_data: Dictionary containing inventory data and summary
+            filename: Optional filename
+        """
+        self.items = report_data.get('items', [])
+        self.summary = report_data.get('summary', {})
+        
+        # Generate title
+        title = "Inventory Report"
+        
+        # Generate filename if not provided
+        if filename is None:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"inventory_report_{timestamp}.pdf"
+        
+        super().__init__(title, filename)
+    
+    def generate(self):
+        """Generate the inventory report."""
+        self.add_title()
+        
+        # Summary section
+        self.add_section("Summary")
+        
+        summary_info = {
+            "Total Items": self.summary.get('total_items', 0),
+            "Total Value": f"${self.summary.get('total_value', 0):.2f}",
+            "Low Stock Items": self.summary.get('low_stock_items', 0),
+            "Report Date": self.summary.get('report_date', datetime.now()).strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        self.add_info_box("Inventory Summary", summary_info)
+        self.add_spacer()
+        
+        # Inventory details section
+        self.add_section("Inventory Details")
+        
+        if self.items:
+            items_data = [["Item Code", "Name", "Category", "Quantity", "Unit", "Location", "Unit Cost", "Total Value"]]
+            for item in self.items:
+                total_value = float(item.get('quantity', 0)) * float(item.get('unit_cost', 0))
+                items_data.append([
+                    item.get('item_code', 'N/A'),
+                    item.get('name', 'N/A'),
+                    item.get('category', 'N/A'),
+                    str(item.get('quantity', 0)),
+                    item.get('unit', 'N/A'),
+                    item.get('location', 'N/A'),
+                    f"${float(item.get('unit_cost', 0)):.2f}",
+                    f"${total_value:.2f}"
+                ])
+            self.add_table(items_data)
+        else:
+            self.add_paragraph("No inventory items found.")
+        
+        self.add_footer()
+        return self.build()
+
+
+class InventoryValuationReport(Report):
+    """Report for inventory valuation analysis."""
+    
+    def __init__(self, report_data, filename=None):
+        """
+        Initialize an inventory valuation report.
+        
+        Args:
+            report_data: Dictionary containing inventory data and valuations
+            filename: Optional filename
+        """
+        self.items = report_data.get('items', [])
+        self.valuations = report_data.get('valuations', {})
+        self.summary = report_data.get('summary', {})
+        
+        # Generate title
+        title = "Inventory Valuation Report"
+        
+        # Generate filename if not provided
+        if filename is None:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"inventory_valuation_{timestamp}.pdf"
+        
+        super().__init__(title, filename)
+    
+    def generate(self):
+        """Generate the valuation report."""
+        self.add_title()
+        
+        # Summary section
+        self.add_section("Summary")
+        
+        summary_info = {
+            "Total Inventory Value": f"${self.summary.get('total_value', 0):.2f}",
+            "Report Date": self.summary.get('report_date', datetime.now()).strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        self.add_info_box("Valuation Summary", summary_info)
+        self.add_spacer()
+        
+        # Category valuation section
+        self.add_section("Valuation by Category")
+        
+        if self.valuations:
+            valuation_data = [["Category", "Item Count", "Total Value", "Percentage"]]
+            total_value = self.summary.get('total_value', 0)
+            
+            for category, data in self.valuations.items():
+                percentage = (data['value'] / total_value * 100) if total_value > 0 else 0
+                valuation_data.append([
+                    category,
+                    str(data['count']),
+                    f"${data['value']:.2f}",
+                    f"{percentage:.1f}%"
+                ])
+            
+            self.add_table(valuation_data)
+            
+            # Add pie chart of category values
+            values = [data['value'] for data in self.valuations.values()]
+            self.add_chart('pie', values, "Value Distribution by Category")
+        else:
+            self.add_paragraph("No valuation data available.")
+        
+        self.add_footer()
+        return self.build()
+
+
+class InventoryMovementReport(Report):
+    """Report for inventory movement analysis."""
+    
+    def __init__(self, report_data, filename=None):
+        """
+        Initialize an inventory movement report.
+        
+        Args:
+            report_data: Dictionary containing inventory data and movement information
+            filename: Optional filename
+        """
+        self.items = report_data.get('items', [])
+        self.movement_data = report_data.get('movement_data', [])
+        self.summary = report_data.get('summary', {})
+        
+        # Generate title
+        title = "Inventory Movement Report"
+        
+        # Generate filename if not provided
+        if filename is None:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"inventory_movement_{timestamp}.pdf"
+        
+        super().__init__(title, filename)
+    
+    def generate(self):
+        """Generate the movement report."""
+        self.add_title()
+        
+        # Summary section
+        self.add_section("Summary")
+        
+        summary_info = {
+            "Total Items": self.summary.get('total_items', 0),
+            "Low Stock Items": self.summary.get('low_stock_items', 0),
+            "Items to Reorder": self.summary.get('reorder_items', 0),
+            "Report Date": self.summary.get('report_date', datetime.now()).strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        self.add_info_box("Movement Summary", summary_info)
+        self.add_spacer()
+        
+        # Movement details section
+        self.add_section("Movement Details")
+        
+        if self.movement_data:
+            movement_data = [["Item Code", "Name", "Current Qty", "Min Qty", "Reorder Point", "Status"]]
+            for item in self.movement_data:
+                movement_data.append([
+                    item.get('item_code', 'N/A'),
+                    item.get('name', 'N/A'),
+                    f"{item.get('quantity', 0)} {item.get('unit', '')}",
+                    str(item.get('min_quantity', 0)),
+                    str(item.get('reorder_point', 0)),
+                    item.get('status', 'N/A')
+                ])
+            self.add_table(movement_data)
+            
+            # Add status distribution chart
+            status_counts = {}
+            for item in self.movement_data:
+                status = item.get('status', 'Unknown')
+                status_counts[status] = status_counts.get(status, 0) + 1
+            
+            if status_counts:
+                values = list(status_counts.values())
+                self.add_chart('pie', values, "Item Status Distribution")
+        else:
+            self.add_paragraph("No movement data available.")
+        
+        self.add_footer()
+        return self.build()
+
+
+class InventoryCustomReport(Report):
+    """Report for custom inventory analysis."""
+    
+    def __init__(self, report_data, filename=None):
+        """
+        Initialize a custom inventory report.
+        
+        Args:
+            report_data: Dictionary containing inventory data and selected options
+            filename: Optional filename
+        """
+        self.items = report_data.get('items', [])
+        self.options = report_data.get('options', {})
+        self.summary = report_data.get('summary', {})
+        
+        # Generate title
+        title = "Custom Inventory Report"
+        
+        # Generate filename if not provided
+        if filename is None:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"inventory_custom_{timestamp}.pdf"
+        
+        super().__init__(title, filename)
+    
+    def generate(self):
+        """Generate the custom report."""
+        self.add_title()
+        
+        # Add selected sections
+        if self.options.get('inventory_summary'):
+            self.add_section("Inventory Summary")
+            
+            summary_info = {
+                "Total Items": self.summary.get('total_items', 0),
+                "Total Value": f"${self.summary.get('total_value', 0):.2f}",
+                "Report Date": self.summary.get('report_date', datetime.now()).strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+            self.add_info_box("Summary", summary_info)
+            self.add_spacer()
+        
+        if self.options.get('low_stock'):
+            self.add_section("Low Stock Items")
+            
+            low_stock = [item for item in self.items if item.get('quantity', 0) <= item.get('minimum_quantity', 0)]
+            if low_stock:
+                low_stock_data = [["Item Code", "Name", "Current Qty", "Min Qty", "Location"]]
+                for item in low_stock:
+                    low_stock_data.append([
+                        item.get('item_code', 'N/A'),
+                        item.get('name', 'N/A'),
+                        str(item.get('quantity', 0)),
+                        str(item.get('minimum_quantity', 0)),
+                        item.get('location', 'N/A')
+                    ])
+                self.add_table(low_stock_data)
+            else:
+                self.add_paragraph("No items are currently below minimum quantity.")
+            
+            self.add_spacer()
+        
+        if self.options.get('valuation'):
+            self.add_section("Valuation Analysis")
+            
+            # Calculate valuations by category
+            valuations = {}
+            for item in self.items:
+                category = item.get('category', 'Uncategorized')
+                value = float(item.get('quantity', 0)) * float(item.get('unit_cost', 0))
+                
+                if category not in valuations:
+                    valuations[category] = 0.0
+                valuations[category] += value
+            
+            if valuations:
+                valuation_data = [["Category", "Total Value"]]
+                for category, value in valuations.items():
+                    valuation_data.append([category, f"${value:.2f}"])
+                self.add_table(valuation_data)
+                
+                # Add pie chart
+                values = list(valuations.values())
+                self.add_chart('pie', values, "Value Distribution by Category")
+            else:
+                self.add_paragraph("No valuation data available.")
+            
+            self.add_spacer()
+        
+        if self.options.get('movement'):
+            self.add_section("Movement Analysis")
+            
+            reorder_items = [item for item in self.items if item.get('quantity', 0) <= item.get('reorder_point', 0)]
+            if reorder_items:
+                reorder_data = [["Item Code", "Name", "Current Qty", "Reorder Point"]]
+                for item in reorder_items:
+                    reorder_data.append([
+                        item.get('item_code', 'N/A'),
+                        item.get('name', 'N/A'),
+                        str(item.get('quantity', 0)),
+                        str(item.get('reorder_point', 0))
+                    ])
+                self.add_table(reorder_data)
+            else:
+                self.add_paragraph("No items currently need reordering.")
+        
+        self.add_footer()
+        return self.build()
+
+
 # Helper functions for creating reports
 def create_craftsman_report(db_manager, craftsman_id, report_type="complete", filename=None, return_elements=False):
     """

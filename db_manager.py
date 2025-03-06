@@ -285,15 +285,42 @@ class DatabaseManager:
                     completed_date DATE,
                     estimated_hours FLOAT,
                     actual_hours FLOAT,
-                    parts_used TEXT,
-                    total_cost DECIMAL(10, 2),
+                    tools_required JSON,
+                    spares_required JSON,
                     notes TEXT,
                     last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     FOREIGN KEY (equipment_id) REFERENCES equipment_registry(equipment_id) ON DELETE SET NULL,
                     FOREIGN KEY (craftsman_id) REFERENCES craftsmen(craftsman_id) ON DELETE SET NULL
                 )
             """)
-            
+
+            # Add new columns to work_orders table if they don't exist
+            try:
+                cursor.execute("""
+                    ALTER TABLE work_orders
+                    ADD COLUMN IF NOT EXISTS tools_required JSON,
+                    ADD COLUMN IF NOT EXISTS spares_required JSON
+                """)
+                connection.commit()
+            except Error as e:
+                # Handle the case where IF NOT EXISTS is not supported
+                try:
+                    # Check if columns exist
+                    cursor.execute("SHOW COLUMNS FROM work_orders LIKE 'tools_required'")
+                    if not cursor.fetchone():
+                        cursor.execute("ALTER TABLE work_orders ADD COLUMN tools_required JSON")
+                    
+                    cursor.execute("SHOW COLUMNS FROM work_orders LIKE 'spares_required'")
+                    if not cursor.fetchone():
+                        cursor.execute("ALTER TABLE work_orders ADD COLUMN spares_required JSON")
+                    
+                    connection.commit()
+                except Error as e2:
+                    print(f"Error adding columns: {e2}")
+
+            # Migrate existing work orders
+            self.migrate_work_orders()
+
             # Create work order reports table
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS work_order_reports (
@@ -400,6 +427,34 @@ class DatabaseManager:
         except Error as e:      
             msg = f"Error initializing database: {e} Traceback: {traceback.format_exc()}"
             self.console_logger.error(msg)
+            return False
+        finally:
+            self.close(connection)
+
+    def migrate_work_orders(self):
+        """Migrate existing work orders to handle new columns"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            # Get all work orders
+            cursor.execute("SELECT work_order_id FROM work_orders")
+            work_orders = cursor.fetchall()
+            
+            # Update each work order with default JSON values
+            for work_order in work_orders:
+                cursor.execute("""
+                    UPDATE work_orders 
+                    SET tools_required = %s,
+                        spares_required = %s
+                    WHERE work_order_id = %s
+                    AND (tools_required IS NULL OR spares_required IS NULL)
+                """, ('[]', '[]', work_order[0]))
+            
+            connection.commit()
+            return True
+        except Error as e:
+            print(f"Error migrating work orders: {e}")
             return False
         finally:
             self.close(connection)
@@ -1612,8 +1667,8 @@ class DatabaseManager:
                 INSERT INTO work_orders (
                     title, description, equipment_id, craftsman_id,
                     priority, status, due_date, completed_date,
-                    estimated_hours, actual_hours, parts_used, notes
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    estimated_hours, actual_hours, tools_required, spares_required, notes
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 work_order_data['title'],
                 work_order_data['description'],
@@ -1625,7 +1680,8 @@ class DatabaseManager:
                 work_order_data['completed_date'],
                 work_order_data['estimated_hours'],
                 work_order_data['actual_hours'],
-                work_order_data['parts_used'],
+                json.dumps(work_order_data.get('tools_required', [])),
+                json.dumps(work_order_data.get('spares_required', [])),
                 work_order_data['notes']
             ))
             
@@ -1686,7 +1742,8 @@ class DatabaseManager:
                     completed_date = %s,
                     estimated_hours = %s,
                     actual_hours = %s,
-                    parts_used = %s,
+                    tools_required = %s,
+                    spares_required = %s,
                     notes = %s
                 WHERE work_order_id = %s
             """, (
@@ -1700,7 +1757,8 @@ class DatabaseManager:
                 work_order_data['completed_date'],
                 work_order_data['estimated_hours'],
                 work_order_data['actual_hours'],
-                work_order_data['parts_used'],
+                json.dumps(work_order_data.get('tools_required', [])),
+                json.dumps(work_order_data.get('spares_required', [])),
                 work_order_data['notes'],
                 work_order_data['work_order_id']
             ))
@@ -3480,6 +3538,305 @@ class DatabaseManager:
             return True
         except Error as e:
             self.console_logger.error(f"Error updating work order status: {e}")
+            return False
+        finally:
+            self.close(connection)
+
+    def get_inventory_items(self):
+        """Get all inventory items"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT i.*, c.name as category, s.name as supplier_name
+                FROM inventory_items i
+                LEFT JOIN inventory_categories c ON i.category_id = c.category_id
+                LEFT JOIN suppliers s ON i.supplier_id = s.supplier_id
+                ORDER BY i.last_modified DESC
+            """)
+            
+            return cursor.fetchall()
+        except Error as e:
+            print(f"Error getting inventory items: {e}")
+            return []
+        finally:
+            self.close(connection)
+
+    def get_inventory_item(self, item_id):
+        """Get a single inventory item by ID"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT i.*, c.name as category, s.name as supplier_name
+                FROM inventory_items i
+                LEFT JOIN inventory_categories c ON i.category_id = c.category_id
+                LEFT JOIN suppliers s ON i.supplier_id = s.supplier_id
+                WHERE i.item_id = %s
+            """, (item_id,))
+            
+            return cursor.fetchone()
+        except Error as e:
+            print(f"Error getting inventory item: {e}")
+            return None
+        finally:
+            self.close(connection)
+
+    def get_inventory_items_by_category(self, category_name):
+        """Get inventory items by category name"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT i.*, c.name as category, s.name as supplier_name
+                FROM inventory_items i
+                LEFT JOIN inventory_categories c ON i.category_id = c.category_id
+                LEFT JOIN suppliers s ON i.supplier_id = s.supplier_id
+                WHERE c.name = %s
+                ORDER BY i.last_modified DESC
+            """, (category_name,))
+            
+            return cursor.fetchall()
+        except Error as e:
+            print(f"Error getting inventory items by category: {e}")
+            return []
+        finally:
+            self.close(connection)
+
+    def add_inventory_item(self, data):
+        """Add a new inventory item"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            # Get category_id if category name is provided
+            category_id = data.get('category_id')
+            if not category_id and 'category' in data:
+                cursor.execute("""
+                    SELECT category_id FROM inventory_categories
+                    WHERE name = %s
+                """, (data['category'],))
+                result = cursor.fetchone()
+                if result:
+                    category_id = result[0]
+                else:
+                    # Create new category
+                    cursor.execute("""
+                        INSERT INTO inventory_categories (name)
+                        VALUES (%s)
+                    """, (data['category'],))
+                    category_id = cursor.lastrowid
+            
+            # Insert item
+            cursor.execute("""
+                INSERT INTO inventory_items (
+                    category_id, supplier_id, item_code, name,
+                    description, unit, unit_cost, quantity,
+                    minimum_quantity, reorder_point, location
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                category_id,
+                data.get('supplier_id'),
+                data['item_code'],
+                data['name'],
+                data.get('description'),
+                data.get('unit'),
+                data.get('unit_cost', 0.00),
+                data.get('quantity', 0),
+                data.get('minimum_quantity', 0),
+                data.get('reorder_point', 0),
+                data.get('location')
+            ))
+            
+            connection.commit()
+            return True
+        except Error as e:
+            print(f"Error adding inventory item: {e}")
+            return False
+        finally:
+            self.close(connection)
+
+    def get_tool_checkout_status(self, item_id):
+        """Get the current checkout status of a tool"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT tc.*, CONCAT(c.first_name, ' ', c.last_name) as craftsman_name
+                FROM tool_checkouts tc
+                JOIN craftsmen c ON tc.craftsman_id = c.craftsman_id
+                WHERE tc.item_id = %s
+                AND tc.status = 'Checked Out'
+                AND tc.actual_return_date IS NULL
+                ORDER BY tc.checkout_date DESC
+                LIMIT 1
+            """, (item_id,))
+            
+            return cursor.fetchone()
+        except Error as e:
+            print(f"Error getting tool checkout status: {e}")
+            return None
+        finally:
+            self.close(connection)
+
+    def checkout_tool(self, data):
+        """Check out a tool"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            cursor.execute("""
+                INSERT INTO tool_checkouts (
+                    item_id, craftsman_id, work_order_id,
+                    expected_return_date, notes
+                ) VALUES (%s, %s, %s, %s, %s)
+            """, (
+                data['item_id'],
+                data['craftsman_id'],
+                data.get('work_order_id'),
+                data['expected_return_date'],
+                data.get('notes')
+            ))
+            
+            connection.commit()
+            return True
+        except Error as e:
+            print(f"Error checking out tool: {e}")
+            return False
+        finally:
+            self.close(connection)
+
+    def checkin_tool(self, data):
+        """Check in a tool"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            cursor.execute("""
+                UPDATE tool_checkouts
+                SET actual_return_date = CURRENT_TIMESTAMP,
+                    status = 'Returned',
+                    notes = CONCAT(IFNULL(notes, ''), '\nReturn Condition: ', %s, '\nReturn Notes: ', %s)
+                WHERE item_id = %s
+                AND status = 'Checked Out'
+                AND actual_return_date IS NULL
+            """, (
+                data['condition'],
+                data.get('notes', ''),
+                data['item_id']
+            ))
+            
+            connection.commit()
+            return cursor.rowcount > 0
+        except Error as e:
+            print(f"Error checking in tool: {e}")
+            return False
+        finally:
+            self.close(connection)
+
+    def get_inventory_categories(self):
+        """Get all inventory categories"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("SELECT * FROM inventory_categories ORDER BY name")
+            return cursor.fetchall()
+        except Error as e:
+            print(f"Error getting inventory categories: {e}")
+            return []
+        finally:
+            self.close(connection)
+
+    def get_recent_transactions(self, limit=10):
+        """Get recent inventory transactions"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT tc.*, i.item_code, i.name as item_name,
+                       CONCAT(c.first_name, ' ', c.last_name) as performed_by
+                FROM tool_checkouts tc
+                JOIN inventory_items i ON tc.item_id = i.item_id
+                JOIN craftsmen c ON tc.craftsman_id = c.craftsman_id
+                ORDER BY tc.checkout_date DESC
+                LIMIT %s
+            """, (limit,))
+            
+            return cursor.fetchall()
+        except Error as e:
+            print(f"Error getting recent transactions: {e}")
+            return []
+        finally:
+            self.close(connection)
+
+    def get_suppliers(self):
+        """Get all suppliers"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT * FROM suppliers
+                WHERE status = 'Active'
+                ORDER BY name
+            """)
+            
+            return cursor.fetchall()
+        except Error as e:
+            print(f"Error getting suppliers: {e}")
+            return []
+        finally:
+            self.close(connection)
+
+    def get_supplier_by_name(self, name):
+        """Get a supplier by name"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT * FROM suppliers
+                WHERE name = %s
+            """, (name,))
+            
+            return cursor.fetchone()
+        except Error as e:
+            print(f"Error getting supplier: {e}")
+            return None
+        finally:
+            self.close(connection)
+
+    def add_supplier(self, data):
+        """Add a new supplier"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            cursor.execute("""
+                INSERT INTO suppliers (
+                    name, contact_person, phone, email,
+                    address, notes, status
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                data['name'],
+                data.get('contact_person'),
+                data.get('phone'),
+                data.get('email'),
+                data.get('address'),
+                data.get('notes'),
+                data.get('status', 'Active')
+            ))
+            
+            connection.commit()
+            return True
+        except Error as e:
+            print(f"Error adding supplier: {e}")
             return False
         finally:
             self.close(connection)
