@@ -3183,6 +3183,7 @@ class DatabaseManager:
         try:
             # For development, return some dummy notifications
             today = datetime.now()
+            connection = self.connect()
             
             notifications = [
                 {
