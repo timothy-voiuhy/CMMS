@@ -5,7 +5,8 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                               QSplitter, QTextEdit, QMenuBar, QMenu, QSizePolicy,
                               QTimeEdit, QCalendarWidget, QStackedWidget, QGridLayout,
                               QCheckBox, QSpinBox, QToolButton, QFrame, QListWidget,
-                              QListWidgetItem, QProgressBar, QFileDialog, QProgressDialog)
+                              QListWidgetItem, QProgressBar, QFileDialog, QProgressDialog,
+                              QInputDialog)
 from PySide6.QtCore import Qt, Signal, QDate, QTime, QDateTime, QSize, QTimer, QRect
 from PySide6.QtGui import QColor, QPainter, QFont, QIcon, QPixmap, QPalette, QBrush
 from datetime import datetime, timedelta
@@ -215,6 +216,10 @@ class WorkOrdersWindow(QMainWindow):
         self.wo_priority_filter.addItems(["All Priorities", "Low", "Medium", "High", "Critical"])
         self.wo_priority_filter.currentTextChanged.connect(self.filter_work_orders)
         
+        self.wo_assignment_filter = QComboBox()
+        self.wo_assignment_filter.addItems(["All Assignments", "Individual", "Team"])
+        self.wo_assignment_filter.currentTextChanged.connect(self.filter_work_orders)
+        
         self.wo_date_filter = QComboBox()
         self.wo_date_filter.addItems(["All Dates", "Today", "This Week", "This Month", "Overdue"])
         self.wo_date_filter.currentTextChanged.connect(self.filter_work_orders)
@@ -225,6 +230,8 @@ class WorkOrdersWindow(QMainWindow):
         filter_layout.addWidget(self.wo_status_filter, 1)
         filter_layout.addWidget(QLabel("Priority:"))
         filter_layout.addWidget(self.wo_priority_filter, 1)
+        filter_layout.addWidget(QLabel("Assignment:"))
+        filter_layout.addWidget(self.wo_assignment_filter, 1)
         filter_layout.addWidget(QLabel("Date:"))
         filter_layout.addWidget(self.wo_date_filter, 1)
         
@@ -232,9 +239,9 @@ class WorkOrdersWindow(QMainWindow):
         
         # Work orders table
         self.work_orders_table = QTableWidget()
-        self.work_orders_table.setColumnCount(8)
+        self.work_orders_table.setColumnCount(9)  # Added assignment type column
         self.work_orders_table.setHorizontalHeaderLabels([
-            "ID", "Title", "Equipment", "Assigned To", "Due Date", 
+            "ID", "Title", "Equipment", "Assignment Type", "Assigned To", "Due Date", 
             "Status", "Priority", "Created Date"
         ])
         
@@ -242,11 +249,12 @@ class WorkOrdersWindow(QMainWindow):
         self.work_orders_table.setColumnWidth(0, 60)   # ID
         self.work_orders_table.setColumnWidth(1, 200)  # Title
         self.work_orders_table.setColumnWidth(2, 150)  # Equipment
-        self.work_orders_table.setColumnWidth(3, 150)  # Assigned To
-        self.work_orders_table.setColumnWidth(4, 100)  # Due Date
-        self.work_orders_table.setColumnWidth(5, 100)  # Status
-        self.work_orders_table.setColumnWidth(6, 80)   # Priority
-        self.work_orders_table.setColumnWidth(7, 100)  # Created Date
+        self.work_orders_table.setColumnWidth(3, 100)  # Assignment Type
+        self.work_orders_table.setColumnWidth(4, 150)  # Assigned To
+        self.work_orders_table.setColumnWidth(5, 100)  # Due Date
+        self.work_orders_table.setColumnWidth(6, 100)  # Status
+        self.work_orders_table.setColumnWidth(7, 80)   # Priority
+        self.work_orders_table.setColumnWidth(8, 100)  # Created Date
         
         # Make table stretch to fill available space
         self.work_orders_table.horizontalHeader().setStretchLastSection(True)
@@ -661,6 +669,11 @@ class WorkOrdersWindow(QMainWindow):
         
         content_layout.addLayout(form_layout3)
         
+        # Add test email button
+        test_email_btn = QPushButton("Test Email Settings")
+        test_email_btn.clicked.connect(self.test_email_settings)
+        content_layout.addWidget(test_email_btn)
+        
         # Add save button
         save_btn = QPushButton("Save Settings")
         save_btn.clicked.connect(self.save_settings)
@@ -673,6 +686,86 @@ class WorkOrdersWindow(QMainWindow):
         layout.addWidget(scroll)
         
         self.tab_widget.addTab(settings_widget, "Settings")
+
+    def test_email_settings(self):
+        """Test email settings by sending a test email"""
+        # Get email settings from form
+        settings = {
+            'enabled': self.email_notifications.isChecked(),
+            'server': self.email_server.text(),
+            'port': self.email_port.text(),
+            'username': self.email_username.text(),
+            'password': self.email_password.text(),
+            'from_address': self.email_username.text(),
+            'use_tls': True
+        }
+        
+        # Validate settings
+        if not settings['enabled']:
+            QMessageBox.warning(self, "Warning", "Email notifications are not enabled.")
+            return
+        
+        if not settings['server'] or not settings['port'] or not settings['username'] or not settings['password']:
+            QMessageBox.warning(self, "Warning", "Please fill in all email settings fields.")
+            return
+        
+        # Ask for test recipient email
+        recipient, ok = QInputDialog.getText(
+            self, "Test Email", "Enter recipient email address:"
+        )
+        
+        if not ok or not recipient:
+            return
+        
+        try:
+            # Save settings temporarily
+            self.db_manager.save_email_settings(settings)
+            
+            # Send test email
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
+            # Create message
+            msg = MIMEMultipart()
+            msg['From'] = settings['from_address']
+            msg['To'] = recipient
+            msg['Subject'] = "CMMS Test Email"
+            
+            body = """
+            <html>
+            <body>
+                <h2>CMMS Email Test</h2>
+                <p>This is a test email from your CMMS system.</p>
+                <p>If you received this email, your email settings are configured correctly.</p>
+                <p><b>Congratulations!</b></p>
+            </body>
+            </html>
+            """
+            
+            msg.attach(MIMEText(body, 'html'))
+            
+            # Connect to server
+            server = smtplib.SMTP(settings['server'], int(settings['port']))
+            server.starttls()
+            server.login(settings['username'], settings['password'])
+            
+            # Send email
+            server.send_message(msg)
+            server.quit()
+            
+            QMessageBox.information(
+                self,
+                "Success",
+                f"Test email sent successfully to {recipient}!"
+            )
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to send test email: {str(e)}"
+            )
 
     def setup_menu_bar(self):
         """Setup the menu bar with various options"""
@@ -822,26 +915,38 @@ class WorkOrdersWindow(QMainWindow):
             self.work_orders_table.setItem(row, 0, QTableWidgetItem(str(order['work_order_id'])))
             self.work_orders_table.setItem(row, 1, QTableWidgetItem(order['title']))
             self.work_orders_table.setItem(row, 2, QTableWidgetItem(order['equipment_name']))
-            self.work_orders_table.setItem(row, 3, QTableWidgetItem(order['assigned_to']))
-            self.work_orders_table.setItem(row, 4, QTableWidgetItem(str(order['due_date'])))
+            
+            # Add assignment type
+            assignment_type = order.get('assignment_type', 'Individual')
+            self.work_orders_table.setItem(row, 3, QTableWidgetItem(assignment_type))
+            
+            # Set assigned to based on assignment type
+            if assignment_type == 'Team':
+                team_name = self.db_manager.get_team_name(order['team_id']) if order.get('team_id') else "Unknown Team"
+                self.work_orders_table.setItem(row, 4, QTableWidgetItem(f"Team: {team_name}"))
+            else:
+                self.work_orders_table.setItem(row, 4, QTableWidgetItem(order['assigned_to'] or "Unassigned"))
+            
+            self.work_orders_table.setItem(row, 5, QTableWidgetItem(str(order['due_date'])))
             
             # Set status with color
             status_item = QTableWidgetItem(order['status'])
             status_item.setBackground(self.get_status_color(order['status']))
-            self.work_orders_table.setItem(row, 5, status_item)
+            self.work_orders_table.setItem(row, 6, status_item)
             
             # Set priority with color
             priority_item = QTableWidgetItem(order['priority'])
             priority_item.setBackground(self.get_priority_color(order['priority']))
-            self.work_orders_table.setItem(row, 6, priority_item)
+            self.work_orders_table.setItem(row, 7, priority_item)
             
-            self.work_orders_table.setItem(row, 7, QTableWidgetItem(str(order['created_date'])))
+            self.work_orders_table.setItem(row, 8, QTableWidgetItem(str(order['created_date'])))
 
     def filter_work_orders(self):
         """Filter work orders based on search and filter criteria"""
         search_text = self.wo_search.text().lower()
         status_filter = self.wo_status_filter.currentText()
         priority_filter = self.wo_priority_filter.currentText()
+        assignment_filter = self.wo_assignment_filter.currentText()
         date_filter = self.wo_date_filter.currentText()
         
         # Get current date for date filtering
@@ -863,19 +968,25 @@ class WorkOrdersWindow(QMainWindow):
             
             # Apply status filter
             if status_filter != "All Statuses":
-                status_item = self.work_orders_table.item(row, 5)
+                status_item = self.work_orders_table.item(row, 6)
                 if status_item and status_item.text() != status_filter:
                     show_row = False
             
             # Apply priority filter
             if priority_filter != "All Priorities":
-                priority_item = self.work_orders_table.item(row, 6)
+                priority_item = self.work_orders_table.item(row, 7)
                 if priority_item and priority_item.text() != priority_filter:
+                    show_row = False
+            
+            # Apply assignment filter
+            if assignment_filter != "All Assignments":
+                assignment_item = self.work_orders_table.item(row, 3)
+                if assignment_item and assignment_item.text() != assignment_filter:
                     show_row = False
             
             # Apply date filter
             if date_filter != "All Dates":
-                due_date_item = self.work_orders_table.item(row, 4)
+                due_date_item = self.work_orders_table.item(row, 5)
                 if due_date_item:
                     due_date = QDate.fromString(due_date_item.text(), "yyyy-MM-dd")
                     

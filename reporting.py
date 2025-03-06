@@ -1926,35 +1926,89 @@ def create_craftsman_report(db_manager, craftsman_id, report_type="complete", fi
         return report.generate()
 
 
-def create_team_report(db_manager, team_name):
+def create_team_report(db_manager, team_name, report_type="summary"):
     """
     Create a team report using data from the database.
     
     Args:
         db_manager: Database manager instance
         team_name: Name of the team
+        report_type: Type of report ('summary' or 'complete')
         
     Returns:
-        Path to the generated report file
+        Path to the generated report file or None if team not found
     """
     # Get team data
     team = db_manager.get_team_by_name(team_name)
     
     if not team:
+        print(f"Could not generate report: Team '{team_name}' not found")
         return None
     
     # Get additional data
+    team_members = db_manager.get_team_members(team['team_id'])
+    team_performance = db_manager.get_team_performance(team['team_name'])
+    
+    # Prepare team data dictionary
     team_data = {
-        'team_name': team.get('team_name', 'Unknown Team'),
-        'team_leader': f"{team.get('leader_first_name', '')} {team.get('leader_last_name', '')}",
-        'description': team.get('description', ''),
-        'members': db_manager.get_team_members(team.get('team_id')),
-        'performance': db_manager.get_team_performance(team.get('team_id'))
+        'team_name': team['team_name'],
+        'team_leader': f"{team['leader_first_name']} {team['leader_last_name']}".strip() or 'Not Assigned',
+        'description': team['description'],
+        'members': team_members or [],
+        'performance': team_performance or {}
     }
     
-    # Create and generate report
-    report = TeamReport(team_data)
-    return report.generate()
+    # For complete reports, get additional data
+    if report_type == "complete":
+        # Get work orders assigned to the team
+        team_work_orders = db_manager.get_work_orders_by_team(team['team_id'])
+        team_data['work_orders'] = team_work_orders or []
+        
+        # Get team skills summary
+        team_skills = {}
+        for member in team_members or []:
+            member_skills = db_manager.get_craftsman_skills(member.get('craftsman_id'))
+            for skill in member_skills:
+                skill_name = skill.get('skill_name')
+                if skill_name not in team_skills:
+                    team_skills[skill_name] = []
+                team_skills[skill_name].append({
+                    'member_name': f"{member.get('first_name', '')} {member.get('last_name', '')}".strip(),
+                    'level': skill.get('skill_level', 'N/A')
+                })
+        team_data['skills'] = team_skills
+        
+        # Get team training summary
+        team_training = {}
+        for member in team_members or []:
+            member_training = db_manager.get_craftsman_training(member.get('craftsman_id'))
+            for training in member_training:
+                training_name = training.get('training_name')
+                if training_name not in team_training:
+                    team_training[training_name] = []
+                team_training[training_name].append({
+                    'member_name': f"{member.get('first_name', '')} {member.get('last_name', '')}".strip(),
+                    'status': training.get('training_status', 'Unknown'),
+                    'completion_date': training.get('completion_date', 'N/A')
+                })
+        team_data['training'] = team_training
+        
+        # Get team schedule
+        team_schedule = []
+        for member in team_members or []:
+            member_schedule = db_manager.get_craftsman_schedule(member.get('craftsman_id'))
+            for shift in member_schedule:
+                shift['member_name'] = f"{member.get('first_name', '')} {member.get('last_name', '')}".strip()
+                team_schedule.append(shift)
+        team_data['schedule'] = sorted(team_schedule, key=lambda x: x.get('date', '1900-01-01'))
+    
+    try:
+        # Create and generate report
+        report = TeamReport(team_data)
+        return report.generate()
+    except Exception as e:
+        print(f"Error generating team report: {e}")
+        return None
 
 
 def create_equipment_report(db_manager, equipment_id, report_type="complete"):

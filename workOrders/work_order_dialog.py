@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit, 
     QTextEdit, QComboBox, QDateEdit, QSpinBox, QPushButton, QScrollArea,
-    QWidget, QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView
+    QWidget, QMessageBox, QTableWidget, QTableWidgetItem, QHeaderView, QCheckBox
 )
 from PySide6.QtCore import Qt, QDate
 import json
@@ -53,10 +53,43 @@ class WorkOrderDialog(QDialog):
         self.load_equipment_list()
         self.form_layout.addRow("Equipment:", self.equipment_combo)
         
-        # Craftsman selection
+        # Assignment type selection
+        self.assignment_type = QComboBox()
+        self.assignment_type.addItems(["Individual", "Team"])
+        self.assignment_type.currentTextChanged.connect(self.on_assignment_type_changed)
+        self.form_layout.addRow("Assignment Type:", self.assignment_type)
+        
+        # Create assignment container widget
+        self.assignment_container = QWidget()
+        assignment_layout = QVBoxLayout(self.assignment_container)
+        assignment_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Individual assignment (Craftsman selection)
+        self.craftsman_container = QWidget()
+        craftsman_layout = QHBoxLayout(self.craftsman_container)
+        craftsman_layout.setContentsMargins(0, 0, 0, 0)
+        
         self.craftsman_combo = QComboBox()
         self.load_craftsmen_list()
-        self.form_layout.addRow("Assigned To:", self.craftsman_combo)
+        craftsman_layout.addWidget(self.craftsman_combo)
+        
+        # Team assignment
+        self.team_container = QWidget()
+        team_layout = QHBoxLayout(self.team_container)
+        team_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.team_combo = QComboBox()
+        self.load_teams_list()
+        team_layout.addWidget(self.team_combo)
+        
+        # Add both containers to assignment container
+        assignment_layout.addWidget(self.craftsman_container)
+        assignment_layout.addWidget(self.team_container)
+        
+        self.form_layout.addRow("Assigned To:", self.assignment_container)
+        
+        # Initially hide team selection
+        self.team_container.hide()
         
         # Priority selection
         self.priority_combo = QComboBox()
@@ -170,6 +203,64 @@ class WorkOrderDialog(QDialog):
         self.notes_edit.setMinimumHeight(80)
         self.form_layout.addRow("Notes:", self.notes_edit)
         
+        # Add scheduling section
+        self.form_layout.addRow(QLabel("<b>Scheduling</b>"))
+        
+        # Create scheduling container
+        scheduling_container = QWidget()
+        scheduling_layout = QVBoxLayout(scheduling_container)
+        scheduling_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Checkbox to enable scheduling
+        self.enable_scheduling = QCheckBox("Create recurring work order")
+        scheduling_layout.addWidget(self.enable_scheduling)
+        
+        # Scheduling details container
+        self.scheduling_details = QWidget()
+        scheduling_details_layout = QFormLayout(self.scheduling_details)
+        scheduling_details_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Frequency settings
+        self.frequency = QSpinBox()
+        self.frequency.setRange(1, 365)
+        self.frequency.setValue(1)
+        
+        self.frequency_unit = QComboBox()
+        self.frequency_unit.addItems(["days", "weeks", "months"])
+        self.frequency_unit.setCurrentText("weeks")
+        
+        # End date (optional)
+        self.end_date = QDateEdit()
+        self.end_date.setCalendarPopup(True)
+        self.end_date.setDate(QDate.currentDate().addYears(1))
+        
+        # Notification settings
+        self.notification_days = QSpinBox()
+        self.notification_days.setRange(1, 30)
+        self.notification_days.setValue(2)
+        
+        self.notification_emails = QLineEdit()
+        self.notification_emails.setPlaceholderText("Comma-separated email addresses")
+        
+        # Add fields to layout
+        scheduling_details_layout.addRow("Repeat every:", self.frequency)
+        scheduling_details_layout.addRow("Frequency unit:", self.frequency_unit)
+        scheduling_details_layout.addRow("End date:", self.end_date)
+        scheduling_details_layout.addRow("Notify days before:", self.notification_days)
+        scheduling_details_layout.addRow("Notification emails:", self.notification_emails)
+        
+        # Add scheduling details to container
+        scheduling_layout.addWidget(self.scheduling_details)
+        
+        # Initially hide scheduling details
+        self.scheduling_details.setVisible(False)
+        
+        # Connect checkbox to show/hide scheduling details
+        self.enable_scheduling.toggled.connect(self.scheduling_details.setVisible)
+        
+        # Add scheduling container to form
+        self.form_layout.addRow("", scheduling_container)
+        
         # Add content widget to scroll area
         scroll.setWidget(content_widget)
         layout.addWidget(scroll)
@@ -211,6 +302,23 @@ class WorkOrderDialog(QDialog):
                 craftsman['craftsman_id']
             )
     
+    def load_teams_list(self):
+        """Load teams list into combo box"""
+        teams = self.db_manager.get_all_teams()
+        self.team_combo.clear()
+        
+        for team in teams:
+            self.team_combo.addItem(team['team_name'], team['team_id'])
+
+    def on_assignment_type_changed(self, assignment_type):
+        """Handle assignment type change"""
+        if assignment_type == "Individual":
+            self.craftsman_container.show()
+            self.team_container.hide()
+        else:
+            self.craftsman_container.hide()
+            self.team_container.show()
+
     def on_status_changed(self, status):
         """Handle status change"""
         # Enable completion date only if status is Completed
@@ -348,7 +456,9 @@ class WorkOrderDialog(QDialog):
             'title': self.title_edit.text().strip(),
             'description': self.description_edit.toPlainText().strip(),
             'equipment_id': self.equipment_combo.currentData(),
-            'craftsman_id': self.craftsman_combo.currentData(),
+            'assignment_type': self.assignment_type.currentText(),
+            'craftsman_id': None,
+            'team_id': None,
             'priority': self.priority_combo.currentText(),
             'status': self.status_combo.currentText(),
             'due_date': self.due_date_edit.date().toPython(),
@@ -359,20 +469,46 @@ class WorkOrderDialog(QDialog):
             'notes': self.notes_edit.toPlainText().strip()
         }
         
+        # Set craftsman_id or team_id based on assignment type
+        if work_order_data['assignment_type'] == "Individual":
+            work_order_data['craftsman_id'] = self.craftsman_combo.currentData()
+        else:
+            work_order_data['team_id'] = self.team_combo.currentData()
+        
         # Add completed date if status is Completed
         if self.status_combo.currentText() == "Completed":
             work_order_data['completed_date'] = self.completed_date_edit.date().toPython()
         else:
             work_order_data['completed_date'] = None
         
-        # Save to database
-        if self.is_edit_mode:
-            work_order_data['work_order_id'] = self.work_order['work_order_id']
-            success = self.db_manager.update_work_order(work_order_data)
-            message = "Work order updated successfully!"
+        # Check if this is a recurring work order
+        if self.enable_scheduling.isChecked():
+            # Prepare schedule data
+            schedule_data = {
+                'frequency': self.frequency.value(),
+                'frequency_unit': self.frequency_unit.currentText(),
+                'start_date': self.due_date_edit.date().toPython(),
+                'end_date': self.end_date.date().toPython(),
+                'notification_days_before': self.notification_days.value(),
+                'notification_emails': [
+                    email.strip() 
+                    for email in self.notification_emails.text().split(',')
+                    if email.strip()
+                ]
+            }
+            
+            # Save recurring work order
+            success = self.db_manager.create_recurring_work_order(work_order_data, schedule_data)
+            message = "Recurring work order created successfully!"
         else:
-            success = self.db_manager.create_work_order(work_order_data)
-            message = "Work order created successfully!"
+            # Save regular work order
+            if self.is_edit_mode:
+                work_order_data['work_order_id'] = self.work_order['work_order_id']
+                success = self.db_manager.update_work_order(work_order_data)
+                message = "Work order updated successfully!"
+            else:
+                success = self.db_manager.create_work_order(work_order_data)
+                message = "Work order created successfully!"
         
         if success:
             QMessageBox.information(self, "Success", message)
@@ -394,10 +530,17 @@ class WorkOrderDialog(QDialog):
         if equipment_index >= 0:
             self.equipment_combo.setCurrentIndex(equipment_index)
         
-        # Set craftsman
-        craftsman_index = self.craftsman_combo.findData(self.work_order['craftsman_id'])
-        if craftsman_index >= 0:
-            self.craftsman_combo.setCurrentIndex(craftsman_index)
+        # Set assignment type and assignee
+        if self.work_order.get('team_id'):
+            self.assignment_type.setCurrentText("Team")
+            team_index = self.team_combo.findData(self.work_order['team_id'])
+            if team_index >= 0:
+                self.team_combo.setCurrentIndex(team_index)
+        else:
+            self.assignment_type.setCurrentText("Individual")
+            craftsman_index = self.craftsman_combo.findData(self.work_order['craftsman_id'])
+            if craftsman_index >= 0:
+                self.craftsman_combo.setCurrentIndex(craftsman_index)
         
         # Set priority and status
         self.priority_combo.setCurrentText(self.work_order['priority'])

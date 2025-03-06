@@ -270,14 +270,16 @@ class DatabaseManager:
                 )
             """)
 
-            # Create work orders table
+            # Create work orders table with team support
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS work_orders (
                     work_order_id INT AUTO_INCREMENT PRIMARY KEY,
                     title VARCHAR(200) NOT NULL,
                     description TEXT,
                     equipment_id INT,
-                    craftsman_id INT,
+                    assignment_type VARCHAR(20) DEFAULT 'Individual',
+                    craftsman_id INT NULL,
+                    team_id INT NULL,
                     priority VARCHAR(20) DEFAULT 'Medium',
                     status VARCHAR(20) DEFAULT 'Open',
                     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -290,7 +292,12 @@ class DatabaseManager:
                     notes TEXT,
                     last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                     FOREIGN KEY (equipment_id) REFERENCES equipment_registry(equipment_id) ON DELETE SET NULL,
-                    FOREIGN KEY (craftsman_id) REFERENCES craftsmen(craftsman_id) ON DELETE SET NULL
+                    FOREIGN KEY (craftsman_id) REFERENCES craftsmen(craftsman_id) ON DELETE SET NULL,
+                    FOREIGN KEY (team_id) REFERENCES craftsmen_teams(team_id) ON DELETE SET NULL,
+                    CHECK (
+                        (assignment_type = 'Individual' AND craftsman_id IS NOT NULL AND team_id IS NULL) OR
+                        (assignment_type = 'Team' AND team_id IS NOT NULL AND craftsman_id IS NULL)
+                    )
                 )
             """)
 
@@ -298,14 +305,31 @@ class DatabaseManager:
             try:
                 cursor.execute("""
                     ALTER TABLE work_orders
+                    ADD COLUMN IF NOT EXISTS assignment_type VARCHAR(20) DEFAULT 'Individual',
+                    ADD COLUMN IF NOT EXISTS team_id INT NULL,
                     ADD COLUMN IF NOT EXISTS tools_required JSON,
-                    ADD COLUMN IF NOT EXISTS spares_required JSON
+                    ADD COLUMN IF NOT EXISTS spares_required JSON,
+                    ADD FOREIGN KEY (team_id) REFERENCES craftsmen_teams(team_id) ON DELETE SET NULL,
+                    ADD CONSTRAINT check_assignment 
+                    CHECK (
+                        (assignment_type = 'Individual' AND craftsman_id IS NOT NULL AND team_id IS NULL) OR
+                        (assignment_type = 'Team' AND team_id IS NOT NULL AND craftsman_id IS NULL)
+                    )
                 """)
                 connection.commit()
             except Error as e:
                 # Handle the case where IF NOT EXISTS is not supported
                 try:
                     # Check if columns exist
+                    cursor.execute("SHOW COLUMNS FROM work_orders LIKE 'assignment_type'")
+                    if not cursor.fetchone():
+                        cursor.execute("ALTER TABLE work_orders ADD COLUMN assignment_type VARCHAR(20) DEFAULT 'Individual'")
+                    
+                    cursor.execute("SHOW COLUMNS FROM work_orders LIKE 'team_id'")
+                    if not cursor.fetchone():
+                        cursor.execute("ALTER TABLE work_orders ADD COLUMN team_id INT NULL")
+                        cursor.execute("ALTER TABLE work_orders ADD FOREIGN KEY (team_id) REFERENCES craftsmen_teams(team_id) ON DELETE SET NULL")
+                    
                     cursor.execute("SHOW COLUMNS FROM work_orders LIKE 'tools_required'")
                     if not cursor.fetchone():
                         cursor.execute("ALTER TABLE work_orders ADD COLUMN tools_required JSON")
@@ -313,6 +337,20 @@ class DatabaseManager:
                     cursor.execute("SHOW COLUMNS FROM work_orders LIKE 'spares_required'")
                     if not cursor.fetchone():
                         cursor.execute("ALTER TABLE work_orders ADD COLUMN spares_required JSON")
+                    
+                    # Add constraint if it doesn't exist
+                    try:
+                        cursor.execute("""
+                            ALTER TABLE work_orders
+                            ADD CONSTRAINT check_assignment 
+                            CHECK (
+                                (assignment_type = 'Individual' AND craftsman_id IS NOT NULL AND team_id IS NULL) OR
+                                (assignment_type = 'Team' AND team_id IS NOT NULL AND craftsman_id IS NULL)
+                            )
+                        """)
+                    except Error:
+                        # Constraint might already exist or not be supported
+                        pass
                     
                     connection.commit()
                 except Error as e2:
@@ -417,6 +455,81 @@ class DatabaseManager:
                     FOREIGN KEY (item_id) REFERENCES inventory_items(item_id),
                     FOREIGN KEY (craftsman_id) REFERENCES craftsmen(craftsman_id),
                     FOREIGN KEY (work_order_id) REFERENCES work_orders(work_order_id)
+                )
+            """)
+
+            # Create maintenance schedules table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS maintenance_schedules (
+                    schedule_id INT AUTO_INCREMENT PRIMARY KEY,
+                    frequency INT NOT NULL,
+                    frequency_unit VARCHAR(20) NOT NULL,
+                    start_date DATE NOT NULL,
+                    end_date DATE,
+                    last_generated DATE,
+                    notification_days_before INT DEFAULT 2,
+                    notification_emails JSON,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+            # Create work order templates table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS work_order_templates (
+                    template_id INT AUTO_INCREMENT PRIMARY KEY,
+                    title VARCHAR(200) NOT NULL,
+                    description TEXT,
+                    equipment_id INT,
+                    priority VARCHAR(20) DEFAULT 'Medium',
+                    estimated_hours FLOAT,
+                    assignment_type VARCHAR(20) DEFAULT 'Individual',
+                    craftsman_id INT,
+                    team_id INT,
+                    tools_required JSON,
+                    spares_required JSON,
+                    schedule_id INT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (equipment_id) REFERENCES equipment_registry(equipment_id),
+                    FOREIGN KEY (craftsman_id) REFERENCES craftsmen(craftsman_id),
+                    FOREIGN KEY (team_id) REFERENCES craftsmen_teams(team_id),
+                    FOREIGN KEY (schedule_id) REFERENCES maintenance_schedules(schedule_id)
+                )
+            """)
+
+            # Add schedule_id and notification_sent fields to work_orders table
+            try:
+                # Check if columns exist first
+                cursor.execute("SHOW COLUMNS FROM work_orders LIKE 'schedule_id'")
+                if not cursor.fetchone():
+                    cursor.execute("""
+                        ALTER TABLE work_orders
+                        ADD COLUMN schedule_id INT,
+                        ADD FOREIGN KEY (schedule_id) REFERENCES maintenance_schedules(schedule_id)
+                    """)
+                
+                cursor.execute("SHOW COLUMNS FROM work_orders LIKE 'notification_sent'")
+                if not cursor.fetchone():
+                    cursor.execute("""
+                        ALTER TABLE work_orders
+                        ADD COLUMN notification_sent BOOLEAN DEFAULT 0
+                    """)
+                
+                connection.commit()
+            except Error as e:
+                print(f"Error adding columns to work_orders table: {e}")
+
+            # Create email settings table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS email_settings (
+                    setting_id INT AUTO_INCREMENT PRIMARY KEY,
+                    enabled BOOLEAN DEFAULT 0,
+                    server VARCHAR(100) NOT NULL,
+                    port INT NOT NULL,
+                    use_tls BOOLEAN DEFAULT 1,
+                    username VARCHAR(100),
+                    password VARCHAR(100),
+                    from_address VARCHAR(100) NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 )
             """)
 
@@ -1663,50 +1776,65 @@ class DatabaseManager:
             connection = self.connect()
             cursor = connection.cursor()
             
+            # Convert JSON fields
+            tools_required = json.dumps(work_order_data.get('tools_required', []))
+            spares_required = json.dumps(work_order_data.get('spares_required', []))
+            
+            # Insert work order
             cursor.execute("""
                 INSERT INTO work_orders (
-                    title, description, equipment_id, craftsman_id,
-                    priority, status, due_date, completed_date,
-                    estimated_hours, actual_hours, tools_required, spares_required, notes
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    title,
+                    description,
+                    equipment_id,
+                    craftsman_id,
+                    team_id,
+                    assignment_type,
+                    priority,
+                    status,
+                    created_date,
+                    due_date,
+                    completed_date,
+                    estimated_hours,
+                    actual_hours,
+                    tools_required,
+                    spares_required,
+                    notes,
+                    schedule_id
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 work_order_data['title'],
                 work_order_data['description'],
                 work_order_data['equipment_id'],
-                work_order_data['craftsman_id'],
+                work_order_data.get('craftsman_id'),
+                work_order_data.get('team_id'),
+                work_order_data.get('assignment_type', 'Individual'),
                 work_order_data['priority'],
-                work_order_data['status'],
+                work_order_data.get('status', 'Open'),
+                datetime.now().date(),
                 work_order_data['due_date'],
-                work_order_data['completed_date'],
-                work_order_data['estimated_hours'],
-                work_order_data['actual_hours'],
-                json.dumps(work_order_data.get('tools_required', [])),
-                json.dumps(work_order_data.get('spares_required', [])),
-                work_order_data['notes']
+                work_order_data.get('completed_date'),
+                work_order_data.get('estimated_hours', 0),
+                work_order_data.get('actual_hours', 0),
+                tools_required,
+                spares_required,
+                work_order_data.get('notes', ''),
+                work_order_data.get('schedule_id')
             ))
             
             work_order_id = cursor.lastrowid
             connection.commit()
             
-            # Add to equipment history if it's a maintenance work order
-            if work_order_data['equipment_id']:
-                cursor.execute("""
-                    INSERT INTO equipment_history (
-                        equipment_id, date, event_type, description, performed_by
-                    ) VALUES (%s, %s, %s, %s, %s)
-                """, (
-                    work_order_data['equipment_id'],
-                    datetime.now().date(),
-                    "Work Order Created",
-                    f"Work Order #{work_order_id}: {work_order_data['title']}",
-                    f"Assigned to: {self.get_craftsman_name(work_order_data['craftsman_id'])}"
-                ))
-                connection.commit()
+            # Send notifications if enabled
+            if work_order_data.get('craftsman_id'):
+                self._send_work_order_notification(work_order_id, 'craftsman', work_order_data['craftsman_id'])
+            elif work_order_data.get('team_id'):
+                self._send_work_order_notification(work_order_id, 'team', work_order_data['team_id'])
             
             return work_order_id
-        except Error as e:
+            
+        except Exception as e:
             print(f"Error creating work order: {e}")
-            return False
+            return None
         finally:
             self.close(connection)
 
@@ -1716,7 +1844,7 @@ class DatabaseManager:
             connection = self.connect()
             cursor = connection.cursor()
             
-            # Get current status
+            # Get current status and equipment_id
             cursor.execute("""
                 SELECT status, equipment_id FROM work_orders
                 WHERE work_order_id = %s
@@ -1735,7 +1863,9 @@ class DatabaseManager:
                     title = %s,
                     description = %s,
                     equipment_id = %s,
+                    assignment_type = %s,
                     craftsman_id = %s,
+                    team_id = %s,
                     priority = %s,
                     status = %s,
                     due_date = %s,
@@ -1750,7 +1880,9 @@ class DatabaseManager:
                 work_order_data['title'],
                 work_order_data['description'],
                 work_order_data['equipment_id'],
-                work_order_data['craftsman_id'],
+                work_order_data['assignment_type'],
+                work_order_data.get('craftsman_id'),
+                work_order_data.get('team_id'),
                 work_order_data['priority'],
                 work_order_data['status'],
                 work_order_data['due_date'],
@@ -1767,6 +1899,13 @@ class DatabaseManager:
             
             # Add to equipment history if status changed to Completed
             if current_status != "Completed" and work_order_data['status'] == "Completed" and work_order_data['equipment_id']:
+                assignee = ""
+                if work_order_data['assignment_type'] == 'Individual':
+                    assignee = f"Completed by: {self.get_craftsman_name(work_order_data['craftsman_id'])}"
+                else:
+                    team_name = self.get_team_name(work_order_data['team_id'])
+                    assignee = f"Completed by team: {team_name}"
+                
                 cursor.execute("""
                     INSERT INTO equipment_history (
                         equipment_id, date, event_type, description, performed_by, notes
@@ -1776,22 +1915,8 @@ class DatabaseManager:
                     datetime.now().date(),
                     "Work Order Completed",
                     f"Work Order #{work_order_data['work_order_id']}: {work_order_data['title']}",
-                    f"Completed by: {self.get_craftsman_name(work_order_data['craftsman_id'])}",
+                    assignee,
                     work_order_data['notes']
-                ))
-                connection.commit()
-            
-            # Add to equipment history if equipment changed
-            if current_equipment_id != work_order_data['equipment_id'] and work_order_data['equipment_id']:
-                cursor.execute("""
-                    INSERT INTO equipment_history (
-                        equipment_id, date, event_type, description
-                    ) VALUES (%s, %s, %s, %s)
-                """, (
-                    work_order_data['equipment_id'],
-                    datetime.now().date(),
-                    "Work Order Assigned",
-                    f"Work Order #{work_order_data['work_order_id']}: {work_order_data['title']}"
                 ))
                 connection.commit()
             
@@ -3837,6 +3962,437 @@ class DatabaseManager:
             return True
         except Error as e:
             print(f"Error adding supplier: {e}")
+            return False
+        finally:
+            self.close(connection)
+
+    def get_team_name(self, team_id):
+        """Get team name from team ID"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            cursor.execute("""
+                SELECT team_name FROM craftsmen_teams
+                WHERE team_id = %s
+            """, (team_id,))
+            
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            return "Unknown Team"
+        except Error as e:
+            print(f"Error getting team name: {e}")
+            return "Unknown Team"
+        finally:
+            self.close(connection)
+
+    def get_team_by_name(self, team_name):
+        """Get team details by team name"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT t.*, 
+                       l.first_name as leader_first_name, 
+                       l.last_name as leader_last_name
+                FROM craftsmen_teams t
+                LEFT JOIN craftsmen l ON t.team_leader_id = l.craftsman_id
+                WHERE t.team_name = %s
+            """, (team_name,))
+            
+            team = cursor.fetchone()
+            if not team:
+                print(f"Team not found: {team_name}")
+                return None
+            
+            # Ensure all required fields are present
+            team = {
+                'team_id': team.get('team_id'),
+                'team_name': team.get('team_name', 'Unknown Team'),
+                'team_leader_id': team.get('team_leader_id'),
+                'description': team.get('description', ''),
+                'leader_first_name': team.get('leader_first_name', ''),
+                'leader_last_name': team.get('leader_last_name', ''),
+                'created_at': team.get('created_at')
+            }
+            return team
+            
+        except Exception as e:
+            print(f"Error getting team by name: {e}")
+            return None
+        finally:
+            if 'connection' in locals():
+                self.close(connection)
+
+    def get_work_orders_by_team(self, team_id):
+        """Get work orders assigned to a team"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT wo.*, e.equipment_name
+                FROM work_orders wo
+                LEFT JOIN equipment e ON wo.equipment_id = e.equipment_id
+                WHERE wo.team_id = %s
+                ORDER BY wo.created_date DESC
+            """, (team_id,))
+            
+            work_orders = cursor.fetchall()
+            return work_orders
+            
+        except Exception as e:
+            print(f"Error getting work orders by team: {e}")
+            return []
+        finally:
+            if 'connection' in locals():
+                self.close(connection)
+
+    def create_recurring_work_order(self, work_order_data, schedule_data):
+        """Create a recurring work order with scheduling information"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            # First create the schedule record
+            cursor.execute("""
+                INSERT INTO maintenance_schedules (
+                    frequency,
+                    frequency_unit,
+                    start_date,
+                    end_date,
+                    last_generated,
+                    notification_days_before,
+                    notification_emails
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                schedule_data['frequency'],
+                schedule_data['frequency_unit'],
+                schedule_data['start_date'],
+                schedule_data.get('end_date'),
+                None,
+                schedule_data.get('notification_days_before', 2),
+                json.dumps(schedule_data.get('notification_emails', []))
+            ))
+            
+            schedule_id = cursor.lastrowid
+            
+            # Create the work order template
+            cursor.execute("""
+                INSERT INTO work_order_templates (
+                    title,
+                    description,
+                    equipment_id,
+                    priority,
+                    estimated_hours,
+                    assignment_type,
+                    craftsman_id,
+                    team_id,
+                    tools_required,
+                    spares_required,
+                    schedule_id
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                work_order_data['title'],
+                work_order_data['description'],
+                work_order_data['equipment_id'],
+                work_order_data['priority'],
+                work_order_data.get('estimated_hours', 0),
+                work_order_data.get('assignment_type', 'Individual'),
+                work_order_data.get('craftsman_id'),
+                work_order_data.get('team_id'),
+                json.dumps(work_order_data.get('tools_required', [])),
+                json.dumps(work_order_data.get('spares_required', [])),
+                schedule_id
+            ))
+            
+            connection.commit()
+            return True
+            
+        except Exception as e:
+            print(f"Error creating recurring work order: {e}")
+            return False
+        finally:
+            self.close(connection)
+
+    def get_pending_scheduled_work_orders(self):
+        """Get work orders that need to be generated based on schedules"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT 
+                    wot.*,
+                    ms.*,
+                    CASE 
+                        WHEN ms.last_generated IS NULL THEN ms.start_date
+                        WHEN ms.frequency_unit = 'days' THEN DATE_ADD(ms.last_generated, INTERVAL ms.frequency DAY)
+                        WHEN ms.frequency_unit = 'weeks' THEN DATE_ADD(ms.last_generated, INTERVAL ms.frequency WEEK)
+                        WHEN ms.frequency_unit = 'months' THEN DATE_ADD(ms.last_generated, INTERVAL ms.frequency MONTH)
+                    END as next_due_date
+                FROM work_order_templates wot
+                JOIN maintenance_schedules ms ON wot.schedule_id = ms.schedule_id
+                WHERE 
+                    (ms.last_generated IS NULL AND ms.start_date <= CURDATE())
+                    OR
+                    (
+                        CASE 
+                            WHEN ms.frequency_unit = 'days' THEN DATE_ADD(ms.last_generated, INTERVAL ms.frequency DAY)
+                            WHEN ms.frequency_unit = 'weeks' THEN DATE_ADD(ms.last_generated, INTERVAL ms.frequency WEEK)
+                            WHEN ms.frequency_unit = 'months' THEN DATE_ADD(ms.last_generated, INTERVAL ms.frequency MONTH)
+                        END <= CURDATE()
+                    )
+                    AND (ms.end_date IS NULL OR ms.end_date >= CURDATE())
+            """)
+            
+            return cursor.fetchall()
+            
+        except Exception as e:
+            print(f"Error getting pending scheduled work orders: {e}")
+            return []
+        finally:
+            self.close(connection)
+
+    def generate_scheduled_work_order(self, template, due_date):
+        """Generate a work order from a template"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            # Create the work order
+            cursor.execute("""
+                INSERT INTO work_orders (
+                    title,
+                    description,
+                    equipment_id,
+                    priority,
+                    status,
+                    created_date,
+                    due_date,
+                    estimated_hours,
+                    assignment_type,
+                    craftsman_id,
+                    team_id,
+                    tools_required,
+                    spares_required
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                template['title'],
+                template['description'],
+                template['equipment_id'],
+                template['priority'],
+                'Open',
+                datetime.now().date(),
+                due_date,
+                template['estimated_hours'],
+                template['assignment_type'],
+                template['craftsman_id'],
+                template['team_id'],
+                template['tools_required'],
+                template['spares_required']
+            ))
+            
+            work_order_id = cursor.lastrowid
+            
+            # Update the last generated date
+            cursor.execute("""
+                UPDATE maintenance_schedules
+                SET last_generated = %s
+                WHERE schedule_id = %s
+            """, (datetime.now().date(), template['schedule_id']))
+            
+            connection.commit()
+            
+            # Send notifications if configured
+            if template.get('notification_emails'):
+                self.send_work_order_notifications(
+                    work_order_id,
+                    template['notification_emails'],
+                    'new_scheduled'
+                )
+            
+            return work_order_id
+            
+        except Exception as e:
+            print(f"Error generating scheduled work order: {e}")
+            return None
+        finally:
+            self.close(connection)
+
+    def send_work_order_notifications(self, work_order_id, recipients, notification_type):
+        """Send email notifications for work orders"""
+        try:
+            # Get work order details
+            work_order = self.get_work_order_by_id(work_order_id)
+            if not work_order:
+                return False
+            
+            # Get email settings
+            settings = self.get_email_settings()
+            if not settings or not settings.get('enabled'):
+                return False
+            
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
+            # Create message
+            msg = MIMEMultipart()
+            msg['From'] = settings['from_address']
+            msg['To'] = ', '.join(recipients)
+            
+            if notification_type == 'new_scheduled':
+                msg['Subject'] = f"New Scheduled Work Order: {work_order['title']}"
+                body = f"""
+                A new scheduled work order has been generated:
+                
+                Title: {work_order['title']}
+                Equipment: {work_order['equipment_name']}
+                Priority: {work_order['priority']}
+                Due Date: {work_order['due_date']}
+                
+                Please log into the CMMS system to view the full details.
+                """
+            elif notification_type == 'upcoming':
+                msg['Subject'] = f"Upcoming Work Order Due: {work_order['title']}"
+                body = f"""
+                Reminder: The following work order is due soon:
+                
+                Title: {work_order['title']}
+                Equipment: {work_order['equipment_name']}
+                Priority: {work_order['priority']}
+                Due Date: {work_order['due_date']}
+                
+                Please ensure this work order is completed on time.
+                """
+            
+            msg.attach(MIMEText(body, 'plain'))
+            
+            # Send email
+            with smtplib.SMTP(settings['server'], int(settings['port'])) as server:
+                if settings.get('use_tls'):
+                    server.starttls()
+                if settings.get('username') and settings.get('password'):
+                    server.login(settings['username'], settings['password'])
+                server.send_message(msg)
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error sending work order notification: {e}")
+            return False
+
+    def get_email_settings(self):
+        """Get email notification settings"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("SELECT * FROM email_settings LIMIT 1")
+            settings = cursor.fetchone()
+            
+            return settings
+            
+        except Exception as e:
+            print(f"Error getting email settings: {e}")
+            return None
+        finally:
+            self.close(connection)
+
+    def save_email_settings(self, settings):
+        """Save email notification settings"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            cursor.execute("""
+                INSERT INTO email_settings (
+                    enabled,
+                    server,
+                    port,
+                    use_tls,
+                    username,
+                    password,
+                    from_address
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    enabled = VALUES(enabled),
+                    server = VALUES(server),
+                    port = VALUES(port),
+                    use_tls = VALUES(use_tls),
+                    username = VALUES(username),
+                    password = VALUES(password),
+                    from_address = VALUES(from_address)
+            """, (
+                settings['enabled'],
+                settings['server'],
+                settings['port'],
+                settings.get('use_tls', True),
+                settings.get('username'),
+                settings.get('password'),
+                settings['from_address']
+            ))
+            
+            connection.commit()
+            return True
+            
+        except Exception as e:
+            print(f"Error saving email settings: {e}")
+            return False
+        finally:
+            self.close(connection)
+
+    def check_upcoming_work_orders(self):
+        """Check for work orders due soon and send notifications"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            # First check if notification_sent column exists
+            cursor.execute("SHOW COLUMNS FROM work_orders LIKE 'notification_sent'")
+            has_notification_column = cursor.fetchone() is not None
+            
+            # Adjust query based on column existence
+            base_query = """
+                SELECT wo.*, ms.notification_days_before, ms.notification_emails
+                FROM work_orders wo
+                JOIN maintenance_schedules ms ON wo.schedule_id = ms.schedule_id
+                WHERE 
+                    wo.status = 'Open'
+                    AND wo.due_date BETWEEN CURDATE() 
+                    AND DATE_ADD(CURDATE(), INTERVAL ms.notification_days_before DAY)
+            """
+            
+            if has_notification_column:
+                base_query += " AND wo.notification_sent = 0"
+            
+            cursor.execute(base_query)
+            upcoming_orders = cursor.fetchall()
+            
+            for order in upcoming_orders:
+                if order.get('notification_emails'):
+                    # Send notification
+                    if self.send_work_order_notifications(
+                        order['work_order_id'],
+                        json.loads(order['notification_emails']),
+                        'upcoming'
+                    ):
+                        # Mark notification as sent if column exists
+                        if has_notification_column:
+                            cursor.execute("""
+                                UPDATE work_orders
+                                SET notification_sent = 1
+                                WHERE work_order_id = %s
+                            """, (order['work_order_id'],))
+                            connection.commit()
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error checking upcoming work orders: {e}")
             return False
         finally:
             self.close(connection)

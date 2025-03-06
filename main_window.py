@@ -15,6 +15,9 @@ from ui.equipments_window import EquipmentsWindow
 from notifications import EmailNotificationService
 from craftsman_portal import CraftsmanPortal
 from craftsman_login import CraftsmanLoginDialog
+from scheduler import MaintenanceScheduler
+from schedules_window import SchedulesWindow
+import logging
 
 class CMMSMainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -31,6 +34,13 @@ class CMMSMainWindow(QMainWindow):
         
         # Initialize database manager
         self.db_manager = DatabaseManager()
+
+        # Start the maintenance scheduler
+        self.scheduler_logger = logging.getLogger('maintenance_scheduler')
+        self.scheduler_logger.info("Starting maintenance scheduler...")
+        self.scheduler = MaintenanceScheduler()
+        self.scheduler.db_manager = self.db_manager
+        self.scheduler.start()
         
         # Create central widget and main layout
         central_widget = QWidget()
@@ -48,6 +58,7 @@ class CMMSMainWindow(QMainWindow):
         self.craftsmen_window = CraftsMenWindow(db_manager=self.db_manager, parent=self)
         self.work_orders_window = WorkOrdersWindow(db_manager=self.db_manager, parent=self)
         self.inventory_window = InventoryWindow(db_manager=self.db_manager, parent=self)
+        self.schedules_window = SchedulesWindow(db_manager=self.db_manager, parent=self)
 
         # Add pages to stacked widget
         self.stacked_widget.addWidget(self.welcome_page)
@@ -55,6 +66,7 @@ class CMMSMainWindow(QMainWindow):
         self.stacked_widget.addWidget(self.craftsmen_window)
         self.stacked_widget.addWidget(self.work_orders_window)
         self.stacked_widget.addWidget(self.inventory_window)
+        self.stacked_widget.addWidget(self.schedules_window)
         
         self.main_layout.addWidget(self.stacked_widget)
         
@@ -152,7 +164,7 @@ class CMMSMainWindow(QMainWindow):
         grid_layout = QGridLayout()
         grid_layout.setSpacing(15)
         
-        # Feature boxes - updated to include Work Orders
+        # Feature boxes - updated to include Schedules
         features = [
             ("Equipment Management", "Register and track all your equipment with detailed information", 
              "icons/equipment.png", 1),  # Navigate to Equipment tab
@@ -160,8 +172,8 @@ class CMMSMainWindow(QMainWindow):
              "icons/craftsman.png", 2),  # Navigate to Craftsmen tab
             ("Work Orders", "Create and track maintenance work orders from request to completion", 
              "icons/workorder.png", 3),  # Navigate to Work Orders tab
-            ("Preventive Maintenance", "Schedule and manage routine maintenance tasks", 
-             "icons/maintenance.png", 4),  # Navigate to PM tab (future)
+            ("Schedules", "Schedule and manage recurring maintenance tasks", 
+             "icons/maintenance.png", 5),  # Navigate to Schedules tab
             ("Inventory Management", "Track spare parts, tools, and supplies for maintenance operations", 
              "icons/inventory.png", 4),  # Navigate to Inventory tab
             ("Reports & Analytics", "Generate reports and analyze maintenance performance", 
@@ -384,39 +396,37 @@ class CMMSMainWindow(QMainWindow):
         exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
         
-        # Navigation menu
-        nav_menu = menu_bar.addMenu("Navigation")
-        
-        # Add navigation actions
-        home_action = nav_menu.addAction("Home")
+        # Add direct menu items for each feature
+        home_action = menu_bar.addAction("Home")
         home_action.setShortcut("Ctrl+1")
         home_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(0))
         
-        equipment_action = nav_menu.addAction("Equipment")
+        equipment_action = menu_bar.addAction("Equipment")
         equipment_action.setShortcut("Ctrl+2")
         equipment_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(1))
         
-        craftsmen_action = nav_menu.addAction("Craftsmen")
+        craftsmen_action = menu_bar.addAction("Craftsmen")
         craftsmen_action.setShortcut("Ctrl+3")
         craftsmen_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(2))
         
-        work_orders_action = nav_menu.addAction("Work Orders")
+        work_orders_action = menu_bar.addAction("Work Orders")
         work_orders_action.setShortcut("Ctrl+4")
         work_orders_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(3))
         
-        # Add Craftsman Portal action
-        craftsman_portal_action = nav_menu.addAction("Craftsman Portal")
-        craftsman_portal_action.setShortcut("Ctrl+5")
-        craftsman_portal_action.triggered.connect(self.open_craftsman_portal)
-        
-        # Add Web Portal action to the Navigation menu
-        web_portal_action = nav_menu.addAction("Launch Web Portal")
-        web_portal_action.triggered.connect(self.launch_web_portal)
-        
-        # Add inventory to Navigation menu
-        inventory_action = nav_menu.addAction("Inventory")
+        inventory_action = menu_bar.addAction("Inventory")
         inventory_action.setShortcut("Ctrl+5")
         inventory_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(4))
+        
+        schedules_action = menu_bar.addAction("Schedules")
+        schedules_action.setShortcut("Ctrl+6")
+        schedules_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(5))
+        
+        portal_action = menu_bar.addAction("Craftsman Portal")
+        portal_action.setShortcut("Ctrl+7")
+        portal_action.triggered.connect(self.open_craftsman_portal)
+        
+        web_portal_action = menu_bar.addAction("Web Portal")
+        web_portal_action.triggered.connect(self.launch_web_portal)
         
         # View menu
         view_menu = menu_bar.addMenu("View")
