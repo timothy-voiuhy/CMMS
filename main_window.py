@@ -6,6 +6,7 @@ from ui.equipment_registration import EquipmentRegistrationWindow
 from ui.equipment_list import EquipmentListWindow
 from craftsmen import CraftsMenWindow
 from workOrders.work_orders import WorkOrdersWindow
+from inventory import InventoryWindow
 from db_manager import DatabaseManager
 from styles.theme_settings_widget import ThemeSettingsWidget
 from styles.dark_theme import DarkTheme
@@ -46,12 +47,14 @@ class CMMSMainWindow(QMainWindow):
         self.equipments_window = EquipmentsWindow(self.db_manager)
         self.craftsmen_window = CraftsMenWindow(db_manager=self.db_manager, parent=self)
         self.work_orders_window = WorkOrdersWindow(db_manager=self.db_manager, parent=self)
+        self.inventory_window = InventoryWindow(db_manager=self.db_manager, parent=self)
 
         # Add pages to stacked widget
         self.stacked_widget.addWidget(self.welcome_page)
         self.stacked_widget.addWidget(self.equipments_window)
         self.stacked_widget.addWidget(self.craftsmen_window)
         self.stacked_widget.addWidget(self.work_orders_window)
+        self.stacked_widget.addWidget(self.inventory_window)
         
         self.main_layout.addWidget(self.stacked_widget)
         
@@ -189,6 +192,15 @@ class CMMSMainWindow(QMainWindow):
         )
         grid_layout.addWidget(craftsman_portal_box, row+1, 0, 1, 2)  # Span two columns
         self.feature_boxes.append(craftsman_portal_box)
+        
+        # Add inventory feature box
+        inventory_box = self.create_feature_box(
+            "Inventory Management",
+            "Track spare parts, tools, and supplies for maintenance operations",
+            "icons/inventory.png",
+            5  # Page index for inventory
+        )
+        grid_layout.addWidget(inventory_box, row+1, 1, 1, 2)  # Add to grid at appropriate position
         
         features_layout.addLayout(grid_layout)
         
@@ -407,6 +419,11 @@ class CMMSMainWindow(QMainWindow):
         # Add Web Portal action to the Navigation menu
         web_portal_action = nav_menu.addAction("Launch Web Portal")
         web_portal_action.triggered.connect(self.launch_web_portal)
+        
+        # Add inventory to Navigation menu
+        inventory_action = nav_menu.addAction("Inventory")
+        inventory_action.setShortcut("Ctrl+5")
+        inventory_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(4))
         
         # View menu
         view_menu = menu_bar.addMenu("View")

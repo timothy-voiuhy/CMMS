@@ -306,6 +306,93 @@ class DatabaseManager:
                 )
             """)
 
+            # Create inventory categories table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS inventory_categories (
+                    category_id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    description TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+            # Create suppliers table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS suppliers (
+                    supplier_id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    contact_person VARCHAR(100),
+                    phone VARCHAR(50),
+                    email VARCHAR(100),
+                    address TEXT,
+                    notes TEXT,
+                    status VARCHAR(20) DEFAULT 'Active',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """)
+
+            # Create inventory items table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS inventory_items (
+                    item_id INT AUTO_INCREMENT PRIMARY KEY,
+                    category_id INT,
+                    supplier_id INT,
+                    item_code VARCHAR(50) UNIQUE NOT NULL,
+                    name VARCHAR(100) NOT NULL,
+                    description TEXT,
+                    unit VARCHAR(20),
+                    unit_cost DECIMAL(10, 2),
+                    quantity INT DEFAULT 0,
+                    minimum_quantity INT DEFAULT 0,
+                    reorder_point INT DEFAULT 0,
+                    location VARCHAR(100),
+                    status VARCHAR(20) DEFAULT 'Active',
+                    last_restock_date DATE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (category_id) REFERENCES inventory_categories(category_id),
+                    FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id)
+                )
+            """)
+
+            # Create inventory transactions table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS inventory_transactions (
+                    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+                    item_id INT,
+                    work_order_id INT NULL,
+                    transaction_type VARCHAR(20),  -- 'IN', 'OUT', 'ADJUST'
+                    quantity INT,
+                    unit_cost DECIMAL(10, 2),
+                    total_cost DECIMAL(10, 2),
+                    reference_number VARCHAR(50),
+                    notes TEXT,
+                    performed_by VARCHAR(100),
+                    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (item_id) REFERENCES inventory_items(item_id),
+                    FOREIGN KEY (work_order_id) REFERENCES work_orders(work_order_id)
+                )
+            """)
+
+            # Create tool checkout table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS tool_checkouts (
+                    checkout_id INT AUTO_INCREMENT PRIMARY KEY,
+                    item_id INT,
+                    craftsman_id INT,
+                    work_order_id INT NULL,
+                    checkout_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expected_return_date TIMESTAMP,
+                    actual_return_date TIMESTAMP NULL,
+                    status VARCHAR(20) DEFAULT 'Checked Out',
+                    notes TEXT,
+                    FOREIGN KEY (item_id) REFERENCES inventory_items(item_id),
+                    FOREIGN KEY (craftsman_id) REFERENCES craftsmen(craftsman_id),
+                    FOREIGN KEY (work_order_id) REFERENCES work_orders(work_order_id)
+                )
+            """)
+
             connection.commit()
             msg = "Database initialized successfully"
             self.console_logger.info(msg)
@@ -3302,7 +3389,6 @@ class DatabaseManager:
             return None
         finally:
             self.close(connection)
-
     def add_report_attachment(self, report_id, file_path):
         """
         Add an attachment to a maintenance report.
@@ -3396,3 +3482,4 @@ class DatabaseManager:
             return False
         finally:
             self.close(connection)
+
