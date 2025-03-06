@@ -92,3 +92,104 @@
 2025-03-06 19:40:54,444 - INFO - Notification scheduler stopped.
 2025-03-06 19:49:16,162 - INFO - Starting notification scheduler...
 2025-03-06 19:49:16,181 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 0 overdue work orders.
+2025-03-06 17:30:26,882 - INFO - Starting notification scheduler...
+2025-03-06 17:30:26,974 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 0 overdue work orders.
+2025-03-06 17:31:27,484 - INFO - Notification scheduler stopped.
+2025-03-06 17:32:34,117 - INFO - Starting notification scheduler...
+2025-03-06 17:32:34,210 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 0 overdue work orders.
+2025-03-06 17:34:17,611 - INFO - Notification scheduler stopped.
+2025-03-06 17:34:26,865 - INFO - Starting notification scheduler...
+2025-03-06 17:34:29,828 - ERROR - Error sending email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-3912c0194f2sm2698002f8f.54 - gsmtp')
+2025-03-06 17:34:29,828 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 17:36:31,861 - INFO - Notification scheduler stopped.
+2025-03-06 17:36:48,406 - INFO - Starting notification scheduler...
+2025-03-06 17:36:51,204 - ERROR - Error sending email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5b1f17b1804b1-43bd426c01bsm57021475e9.2 - gsmtp')
+2025-03-06 17:36:51,205 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 17:40:09,907 - INFO - Notification scheduler stopped.
+2025-03-06 17:40:48,475 - INFO - Starting notification scheduler...
+2025-03-06 17:40:50,921 - ERROR - Error sending email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5b1f17b1804b1-43bd435cd8csm56190695e9.40 - gsmtp')
+2025-03-06 17:40:50,922 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 17:42:22,125 - INFO - Notification scheduler stopped.
+2025-03-06 17:42:37,627 - INFO - Starting notification scheduler...
+2025-03-06 17:42:40,380 - ERROR - Error sending email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-3912c1027d3sm2653817f8f.83 - gsmtp')
+2025-03-06 17:42:40,380 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 17:45:35,825 - INFO - Notification scheduler stopped.
+2025-03-06 17:45:51,359 - INFO - Starting notification scheduler...
+2025-03-06 17:45:53,847 - ERROR - Error sending email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5b1f17b1804b1-43bd4352fa3sm55929085e9.30 - gsmtp')
+2025-03-06 17:45:53,848 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 17:49:18,568 - INFO - Notification scheduler stopped.
+2025-03-06 17:49:27,715 - INFO - Starting notification scheduler...
+2025-03-06 17:49:30,300 - ERROR - Error sending email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-3912bfbaa94sm2711733f8f.14 - gsmtp')
+2025-03-06 17:49:30,301 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 17:53:53,718 - INFO - Starting notification scheduler...
+2025-03-06 17:53:57,773 - ERROR - Error sending email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5b1f17b1804b1-43bd42c55e6sm55989155e9.23 - gsmtp')
+2025-03-06 17:53:57,774 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 18:00:39,264 - INFO - Notification scheduler stopped.
+2025-03-06 18:00:48,129 - INFO - Starting notification scheduler...
+2025-03-06 18:00:50,754 - ERROR - Error sending email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5b1f17b1804b1-43bd42920a5sm56344035e9.11 - gsmtp')
+2025-03-06 18:00:50,756 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 18:03:59,405 - INFO - Notification scheduler stopped.
+2025-03-06 18:04:10,781 - INFO - Starting notification scheduler...
+2025-03-06 18:04:15,455 - ERROR - Error sending email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 5b1f17b1804b1-43bd426c33asm58923175e9.3 - gsmtp')
+2025-03-06 18:04:15,456 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 18:06:38,940 - INFO - Notification scheduler stopped.
+2025-03-06 18:06:48,058 - INFO - Starting notification scheduler...
+2025-03-06 18:06:52,285 - ERROR - Error sending email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-3912c0e3099sm2806202f8f.69 - gsmtp')
+2025-03-06 18:06:52,285 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 18:38:36,021 - INFO - Notification scheduler stopped.
+2025-03-06 18:38:54,066 - INFO - Starting notification scheduler...
+2025-03-06 18:38:57,668 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 18:38:57,668 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 18:44:56,342 - INFO - Notification scheduler stopped.
+2025-03-06 18:45:05,281 - INFO - Starting notification scheduler...
+2025-03-06 18:45:10,501 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 18:45:10,502 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 18:47:42,943 - INFO - Notification scheduler stopped.
+2025-03-06 19:04:23,766 - INFO - Starting notification scheduler...
+2025-03-06 19:04:28,836 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:04:28,836 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:05:58,840 - INFO - Notification scheduler stopped.
+2025-03-06 19:06:29,342 - INFO - Starting notification scheduler...
+2025-03-06 19:06:35,929 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:06:35,930 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:07:25,573 - INFO - Notification scheduler stopped.
+2025-03-06 19:09:59,221 - INFO - Starting notification scheduler...
+2025-03-06 19:10:08,396 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:10:08,397 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:11:53,199 - INFO - Notification scheduler stopped.
+2025-03-06 19:12:19,432 - INFO - Starting notification scheduler...
+2025-03-06 19:12:25,083 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:12:25,083 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:13:58,601 - INFO - Notification scheduler stopped.
+2025-03-06 19:14:14,362 - INFO - Starting notification scheduler...
+2025-03-06 19:14:21,341 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:14:21,342 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:17:34,197 - INFO - Notification scheduler stopped.
+2025-03-06 19:17:44,530 - INFO - Starting notification scheduler...
+2025-03-06 19:17:51,926 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:17:51,927 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:21:14,821 - INFO - Notification scheduler stopped.
+2025-03-06 19:22:30,397 - INFO - Starting notification scheduler...
+2025-03-06 19:22:34,509 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:22:34,510 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:25:27,854 - INFO - Notification scheduler stopped.
+2025-03-06 19:25:37,633 - INFO - Starting notification scheduler...
+2025-03-06 19:25:41,601 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:25:41,602 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:28:53,695 - INFO - Notification scheduler stopped.
+2025-03-06 19:29:03,779 - INFO - Starting notification scheduler...
+2025-03-06 19:29:17,574 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:29:17,575 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:33:25,364 - INFO - Notification scheduler stopped.
+2025-03-06 19:33:36,589 - INFO - Starting notification scheduler...
+2025-03-06 19:33:41,937 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:33:41,937 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:35:42,580 - INFO - Notification scheduler stopped.
+2025-03-06 19:35:53,303 - INFO - Starting notification scheduler...
+2025-03-06 19:35:59,398 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:35:59,399 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:40:07,932 - INFO - Notification scheduler stopped.
+2025-03-06 19:40:18,068 - INFO - Starting notification scheduler...
+2025-03-06 19:40:22,991 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:40:22,992 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-06 19:41:10,666 - INFO - Notification scheduler stopped.

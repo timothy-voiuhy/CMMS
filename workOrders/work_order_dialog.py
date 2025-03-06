@@ -17,8 +17,8 @@ class WorkOrderDialog(QDialog):
         self.selected_spares = []  # Store selected spare parts
         
         self.setWindowTitle("Create Work Order" if not self.is_edit_mode else "Edit Work Order")
-        self.setMinimumWidth(800)  # Increased width to accommodate tables
-        self.setMinimumHeight(800)  # Increased height
+        # self.setMinimumWidth(800)  # Increased width to accommodate tables
+        # self.setMinimumHeight(800)  # Increased height
         
         self.setup_ui()
         
@@ -255,8 +255,8 @@ class WorkOrderDialog(QDialog):
         # Initially hide scheduling details
         self.scheduling_details.setVisible(False)
         
-        # Connect checkbox to show/hide scheduling details
-        self.enable_scheduling.toggled.connect(self.scheduling_details.setVisible)
+        # Connect checkbox to show/hide scheduling details and update emails
+        self.enable_scheduling.toggled.connect(self.on_scheduling_toggled)
         
         # Add scheduling container to form
         self.form_layout.addRow("", scheduling_container)
@@ -315,9 +315,60 @@ class WorkOrderDialog(QDialog):
         if assignment_type == "Individual":
             self.craftsman_container.show()
             self.team_container.hide()
+            
+            # Update notification emails when craftsman changes
+            self.craftsman_combo.currentIndexChanged.connect(self.update_notification_emails)
+            # Disconnect team signal to avoid conflicts
+            try:
+                self.team_combo.currentIndexChanged.disconnect(self.update_notification_emails)
+            except:
+                pass
+            
+            # Update emails immediately if scheduling is enabled
+            if self.enable_scheduling.isChecked():
+                self.update_notification_emails()
         else:
             self.craftsman_container.hide()
             self.team_container.show()
+            
+            # Update notification emails when team changes
+            self.team_combo.currentIndexChanged.connect(self.update_notification_emails)
+            # Disconnect craftsman signal to avoid conflicts
+            try:
+                self.craftsman_combo.currentIndexChanged.disconnect(self.update_notification_emails)
+            except:
+                pass
+            
+            # Update emails immediately if scheduling is enabled
+            if self.enable_scheduling.isChecked():
+                self.update_notification_emails()
+
+    def update_notification_emails(self):
+        """Update notification emails based on assigned craftsman or team"""
+        if not self.enable_scheduling.isChecked():
+            return
+        
+        emails = []
+        
+        if self.assignment_type.currentText() == "Individual":
+            # Get craftsman email
+            craftsman_id = self.craftsman_combo.currentData()
+            if craftsman_id:
+                craftsman = self.db_manager.get_craftsman_by_id(craftsman_id)
+                if craftsman and craftsman.get('email'):
+                    emails.append(craftsman['email'])
+        else:
+            # Get team members' emails
+            team_id = self.team_combo.currentData()
+            if team_id:
+                team_members = self.db_manager.get_team_members(team_id)
+                for member in team_members:
+                    if member.get('email'):
+                        emails.append(member['email'])
+        
+        # Update the notification emails field
+        if emails:
+            self.notification_emails.setText(", ".join(emails))
 
     def on_status_changed(self, status):
         """Handle status change"""
@@ -497,9 +548,15 @@ class WorkOrderDialog(QDialog):
                 ]
             }
             
-            # Save recurring work order
-            success = self.db_manager.create_recurring_work_order(work_order_data, schedule_data)
-            message = "Recurring work order created successfully!"
+            # If editing an existing work order with a schedule
+            if self.is_edit_mode and self.work_order.get('schedule_id'):
+                work_order_data['schedule_id'] = self.work_order['schedule_id']
+                success = self.update_recurring_work_order(work_order_data, schedule_data)
+                message = "Recurring work order updated successfully!"
+            else:
+                # Save new recurring work order
+                success = self.db_manager.create_recurring_work_order(work_order_data, schedule_data)
+                message = "Recurring work order created successfully!"
         else:
             # Save regular work order
             if self.is_edit_mode:
@@ -515,6 +572,107 @@ class WorkOrderDialog(QDialog):
             self.accept()
         else:
             QMessageBox.critical(self, "Error", "Failed to save work order!")
+
+    def update_recurring_work_order(self, work_order_data, schedule_data):
+        """Update an existing recurring work order"""
+        try:
+            connection = self.db_manager.connect()
+            cursor = connection.cursor()
+            
+            # Update the schedule
+            cursor.execute("""
+                UPDATE maintenance_schedules
+                SET frequency = %s,
+                    frequency_unit = %s,
+                    end_date = %s,
+                    notification_days_before = %s,
+                    notification_emails = %s
+                WHERE schedule_id = %s
+            """, (
+                schedule_data['frequency'],
+                schedule_data['frequency_unit'],
+                schedule_data['end_date'],
+                schedule_data['notification_days_before'],
+                json.dumps(schedule_data['notification_emails']),
+                work_order_data['schedule_id']
+            ))
+            
+            # Update the work order
+            cursor.execute("""
+                UPDATE work_orders
+                SET title = %s,
+                    description = %s,
+                    equipment_id = %s,
+                    assignment_type = %s,
+                    craftsman_id = %s,
+                    team_id = %s,
+                    priority = %s,
+                    status = %s,
+                    due_date = %s,
+                    completed_date = %s,
+                    estimated_hours = %s,
+                    actual_hours = %s,
+                    tools_required = %s,
+                    spares_required = %s,
+                    notes = %s
+                WHERE work_order_id = %s
+            """, (
+                work_order_data['title'],
+                work_order_data['description'],
+                work_order_data['equipment_id'],
+                work_order_data['assignment_type'],
+                work_order_data['craftsman_id'],
+                work_order_data['team_id'],
+                work_order_data['priority'],
+                work_order_data['status'],
+                work_order_data['due_date'],
+                work_order_data['completed_date'],
+                work_order_data['estimated_hours'],
+                work_order_data['actual_hours'],
+                json.dumps(work_order_data['tools_required']),
+                json.dumps(work_order_data['spares_required']),
+                work_order_data['notes'],
+                work_order_data['work_order_id']
+            ))
+            
+            # Update the work order template
+            cursor.execute("""
+                UPDATE work_order_templates
+                SET title = %s,
+                    description = %s,
+                    equipment_id = %s,
+                    assignment_type = %s,
+                    craftsman_id = %s,
+                    team_id = %s,
+                    priority = %s,
+                    estimated_hours = %s,
+                    tools_required = %s,
+                    spares_required = %s
+                WHERE schedule_id = %s
+            """, (
+                work_order_data['title'],
+                work_order_data['description'],
+                work_order_data['equipment_id'],
+                work_order_data['assignment_type'],
+                work_order_data['craftsman_id'],
+                work_order_data['team_id'],
+                work_order_data['priority'],
+                work_order_data['estimated_hours'],
+                json.dumps(work_order_data['tools_required']),
+                json.dumps(work_order_data['spares_required']),
+                work_order_data['schedule_id']
+            ))
+            
+            connection.commit()
+            return True
+        except Exception as e:
+            print(f"Error updating recurring work order: {e}")
+            if connection:
+                connection.rollback()
+            return False
+        finally:
+            if connection:
+                self.db_manager.close(connection)
 
     def load_work_order_data(self):
         """Load work order data into form fields"""
@@ -585,203 +743,57 @@ class WorkOrderDialog(QDialog):
         
         # Set notes
         self.notes_edit.setText(self.work_order['notes'] or "")
-    
+        
+        # Load scheduling information if this is a scheduled work order
+        if self.work_order.get('schedule_id'):
+            # Enable scheduling checkbox
+            self.enable_scheduling.setChecked(True)
+            self.scheduling_details.setVisible(True)
+            
+            # Get schedule details from database
+            schedule = self.get_schedule_details(self.work_order['schedule_id'])
+            if schedule:
+                # Set frequency
+                self.frequency.setValue(schedule['frequency'])
+                self.frequency_unit.setCurrentText(schedule['frequency_unit'])
+                
+                # Set end date
+                if schedule['end_date']:
+                    self.end_date.setDate(QDate.fromString(str(schedule['end_date']), "yyyy-MM-dd"))
+                
+                # Set notification settings
+                self.notification_days.setValue(schedule['notification_days_before'])
+                
+                # Set notification emails
+                if schedule['notification_emails']:
+                    try:
+                        emails = json.loads(schedule['notification_emails'])
+                        if isinstance(emails, list):
+                            self.notification_emails.setText(", ".join(emails))
+                    except json.JSONDecodeError:
+                        print("Error decoding notification emails JSON")
 
-    # def load_work_order_data(self):
-    #     """Load work order data into form fields"""
-    #     if not self.
+    def get_schedule_details(self, schedule_id):
+        """Get schedule details from database"""
+        try:
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT * FROM maintenance_schedules
+                WHERE schedule_id = %s
+            """, (schedule_id,))
+            
+            schedule = cursor.fetchone()
+            self.db_manager.close(connection)
+            return schedule
+        except Exception as e:
+            print(f"Error getting schedule details: {e}")
+            return None
 
-# class WorkOrderDialog(QDialog):
-#     """Dialog for creating or editing a work order"""
-#     def __init__(self, db_manager, work_order=None, parent=None):
-#         super().__init__(parent)
-#         self.db_manager = db_manager
-#         self.work_order = work_order
-#         self.is_edit_mode = work_order is not None
-        
-#         self.setWindowTitle("Create Work Order" if not self.is_edit_mode else "Edit Work Order")
-#         self.setMinimumWidth(600)
-#         self.setMinimumHeight(700)
-        
-#         self.setup_ui()
-        
-#         if self.is_edit_mode:
-#             self.load_work_order_data()
-    
-#     def setup_ui(self):
-#         """Set up the dialog UI"""
-#         layout = QVBoxLayout(self)
-        
-#         # Create scroll area
-#         scroll = QScrollArea()
-#         scroll.setWidgetResizable(True)
-#         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        
-#         # Create content widget
-#         content_widget = QWidget()
-#         self.form_layout = QFormLayout(content_widget)
-        
-#         # Basic information section
-#         self.form_layout.addRow(QLabel("<b>Basic Information</b>"))
-        
-#         self.title_edit = QLineEdit()
-#         self.form_layout.addRow("Title:", self.title_edit)
-        
-#         self.description_edit = QTextEdit()
-#         self.description_edit.setMinimumHeight(100)
-#         self.form_layout.addRow("Description:", self.description_edit)
-        
-#         # Equipment selection
-#         self.equipment_combo = QComboBox()
-#         self.load_equipment_list()
-#         self.form_layout.addRow("Equipment:", self.equipment_combo)
-        
-#         # Craftsman selection
-#         self.craftsman_combo = QComboBox()
-#         self.load_craftsmen_list()
-#         self.form_layout.addRow("Assigned To:", self.craftsman_combo)
-        
-#         # Priority selection
-#         self.priority_combo = QComboBox()
-#         self.priority_combo.addItems(["Low", "Medium", "High", "Critical"])
-#         self.priority_combo.setCurrentText("Medium")  # Default
-#         self.form_layout.addRow("Priority:", self.priority_combo)
-        
-#         # Status selection
-#         self.status_combo = QComboBox()
-#         self.status_combo.addItems(["Open", "In Progress", "On Hold", "Completed", "Cancelled"])
-#         self.form_layout.addRow("Status:", self.status_combo)
-        
-#         # Dates section
-#         self.form_layout.addRow(QLabel("<b>Dates</b>"))
-        
-#         self.due_date_edit = QDateEdit()
-#         self.due_date_edit.setCalendarPopup(True)
-#         self.due_date_edit.setDate(QDate.currentDate().addDays(7))  # Default to 1 week from now
-#         self.form_layout.addRow("Due Date:", self.due_date_edit)
-        
-#         self.completed_date_edit = QDateEdit()
-#         self.completed_date_edit.setCalendarPopup(True)
-#         self.completed_date_edit.setDate(QDate.currentDate())
-#         self.completed_date_edit.setEnabled(False)  # Disabled by default
-#         self.form_layout.addRow("Completion Date:", self.completed_date_edit)
-        
-#         # Connect status change to enable/disable completion date
-#         self.status_combo.currentTextChanged.connect(self.on_status_changed)
-        
-#         # Time and cost section
-#         self.form_layout.addRow(QLabel("<b>Time and Cost</b>"))
-        
-#         self.estimated_hours_spin = QSpinBox()
-#         self.estimated_hours_spin.setRange(0, 1000)
-#         self.estimated_hours_spin.setSuffix(" hours")
-#         self.form_layout.addRow("Estimated Hours:", self.estimated_hours_spin)
-        
-#         self.actual_hours_spin = QSpinBox()
-#         self.actual_hours_spin.setRange(0, 1000)
-#         self.actual_hours_spin.setSuffix(" hours")
-#         self.form_layout.addRow("Actual Hours:", self.actual_hours_spin)
-        
-#         # Parts and materials section
-#         self.form_layout.addRow(QLabel("<b>Parts and Materials</b>"))
-        
-#         self.parts_edit = QTextEdit()
-#         self.parts_edit.setPlaceholderText("List parts and materials used")
-#         self.parts_edit.setMinimumHeight(80)
-#         self.form_layout.addRow("Parts Used:", self.parts_edit)
-        
-#         # Notes section
-#         self.form_layout.addRow(QLabel("<b>Additional Notes</b>"))
-        
-#         self.notes_edit = QTextEdit()
-#         self.notes_edit.setMinimumHeight(80)
-#         self.form_layout.addRow("Notes:", self.notes_edit)
-        
-#         # Add content widget to scroll area
-#         scroll.setWidget(content_widget)
-#         layout.addWidget(scroll)
-        
-#         # Buttons
-#         buttons_layout = QHBoxLayout()
-        
-#         self.save_btn = QPushButton("Save Work Order")
-#         self.save_btn.clicked.connect(self.save_work_order)
-        
-#         cancel_btn = QPushButton("Cancel")
-#         cancel_btn.clicked.connect(self.reject)
-        
-#         buttons_layout.addWidget(self.save_btn)
-#         buttons_layout.addWidget(cancel_btn)
-#         layout.addLayout(buttons_layout)
-    
-#     def load_equipment_list(self):
-#         """Load equipment list into combo box"""
-#         equipment_list = self.db_manager.get_all_equipment()
-        
-#         for equipment in equipment_list:
-#             self.equipment_combo.addItem(
-#                 f"{equipment['equipment_name']} ({equipment['equipment_id']})",
-#                 equipment['equipment_id']
-#             )
-    
-#     def load_craftsmen_list(self):
-#         """Load craftsmen list into combo box"""
-#         craftsmen_list = self.db_manager.get_all_craftsmen()
-        
-#         for craftsman in craftsmen_list:
-#             self.craftsman_combo.addItem(
-#                 f"{craftsman['first_name']} {craftsman['last_name']}",
-#                 craftsman['craftsman_id']
-#             )
-    
-#     def on_status_changed(self, status):
-#         """Handle status change"""
-#         # Enable completion date only if status is Completed
-#         self.completed_date_edit.setEnabled(status == "Completed")
-        
-#         # If changing to Completed, set completion date to today
-#         if status == "Completed" and not self.is_edit_mode:
-#             self.completed_date_edit.setDate(QDate.currentDate())
-    
-#     def save_work_order(self):
-#         """Save work order data"""
-#         # Validate required fields
-#         if not self.title_edit.text().strip():
-#             QMessageBox.warning(self, "Validation Error", "Title is required!")
-#             return
-        
-#         # Prepare data
-#         work_order_data = {
-#             'title': self.title_edit.text().strip(),
-#             'description': self.description_edit.toPlainText().strip(),
-#             'equipment_id': self.equipment_combo.currentData(),
-#             'craftsman_id': self.craftsman_combo.currentData(),
-#             'priority': self.priority_combo.currentText(),
-#             'status': self.status_combo.currentText(),
-#             'due_date': self.due_date_edit.date().toPython(),
-#             'estimated_hours': self.estimated_hours_spin.value(),
-#             'actual_hours': self.actual_hours_spin.value(),
-#             'parts_used': self.parts_edit.toPlainText().strip(),
-#             'notes': self.notes_edit.toPlainText().strip()
-#         }
-        
-#         # Add completed date if status is Completed
-#         if self.status_combo.currentText() == "Completed":
-#             work_order_data['completed_date'] = self.completed_date_edit.date().toPython()
-#         else:
-#             work_order_data['completed_date'] = None
-        
-#         # Save to database
-#         if self.is_edit_mode:
-#             work_order_data['work_order_id'] = self.work_order['work_order_id']
-#             success = self.db_manager.update_work_order(work_order_data)
-#             message = "Work order updated successfully!"
-#         else:
-#             success = self.db_manager.create_work_order(work_order_data)
-#             message = "Work order created successfully!"
-        
-#         if success:
-#             QMessageBox.information(self, "Success", message)
-#             self.accept()
-#         else:
-#             QMessageBox.critical(self, "Error", "Failed to save work order!") 
+    def on_scheduling_toggled(self, checked):
+        """Handle scheduling checkbox toggle"""
+        self.scheduling_details.setVisible(checked)
+        if checked:
+            # When scheduling is enabled, populate notification emails
+            self.update_notification_emails()

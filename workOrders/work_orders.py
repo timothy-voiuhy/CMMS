@@ -940,6 +940,9 @@ class WorkOrdersWindow(QMainWindow):
             self.work_orders_table.setItem(row, 7, priority_item)
             
             self.work_orders_table.setItem(row, 8, QTableWidgetItem(str(order['created_date'])))
+        
+        # Make sure the table is visible and refreshed
+        self.work_orders_table.viewport().update()
 
     def filter_work_orders(self):
         """Filter work orders based on search and filter criteria"""
@@ -1005,7 +1008,11 @@ class WorkOrdersWindow(QMainWindow):
         """Open dialog to create a new work order"""
         dialog = WorkOrderDialog(self.db_manager, parent=self)
         if dialog.exec():
-            self.refresh_data()
+            # Immediately refresh the work orders table after creation
+            self.load_work_orders()
+            # Also refresh other related data
+            self.load_dashboard_data()
+            self.refresh_calendar_views()
 
     def view_work_order_details(self, index):
         """View details of the selected work order"""
@@ -1647,8 +1654,7 @@ class WorkOrdersWindow(QMainWindow):
         
         # Connect double-click to open report
         self.recent_reports_list.itemDoubleClicked.connect(
-            lambda item: self.open_file(item.data(Qt.UserRole))
-        )
+            lambda item: self.open_file(item.data(Qt.UserRole)))
 
     def import_work_orders(self):
         """Import work orders from CSV or JSON file"""
@@ -1766,7 +1772,9 @@ class WorkOrdersWindow(QMainWindow):
             #     QMessageBox.information(
             #         self,
             #         "Export Successful",
-            #         f"Work
+            #         f"Work orders exported successfully to {file_path}")
+            # else:
+            #     QMessageBox.critical(self, "Error", "Failed to export work orders!")
 
     def save_settings(self):
         """Save work order settings"""

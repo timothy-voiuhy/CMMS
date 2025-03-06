@@ -1823,13 +1823,7 @@ class DatabaseManager:
             
             work_order_id = cursor.lastrowid
             connection.commit()
-            
-            # Send notifications if enabled
-            if work_order_data.get('craftsman_id'):
-                self._send_work_order_notification(work_order_id, 'craftsman', work_order_data['craftsman_id'])
-            elif work_order_data.get('team_id'):
-                self._send_work_order_notification(work_order_id, 'team', work_order_data['team_id'])
-            
+
             return work_order_id
             
         except Exception as e:
@@ -4052,6 +4046,7 @@ class DatabaseManager:
 
     def create_recurring_work_order(self, work_order_data, schedule_data):
         """Create a recurring work order with scheduling information"""
+        connection = None
         try:
             connection = self.connect()
             cursor = connection.cursor()
@@ -4108,14 +4103,70 @@ class DatabaseManager:
                 schedule_id
             ))
             
+            # Now create the first work order instance directly instead of calling create_work_order
+            tools_required = json.dumps(work_order_data.get('tools_required', []))
+            spares_required = json.dumps(work_order_data.get('spares_required', []))
+            
+            cursor.execute("""
+                INSERT INTO work_orders (
+                    title,
+                    description,
+                    equipment_id,
+                    craftsman_id,
+                    team_id,
+                    assignment_type,
+                    priority,
+                    status,
+                    created_date,
+                    due_date,
+                    completed_date,
+                    estimated_hours,
+                    actual_hours,
+                    tools_required,
+                    spares_required,
+                    notes,
+                    schedule_id
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                work_order_data['title'],
+                work_order_data['description'],
+                work_order_data['equipment_id'],
+                work_order_data.get('craftsman_id'),
+                work_order_data.get('team_id'),
+                work_order_data.get('assignment_type', 'Individual'),
+                work_order_data['priority'],
+                work_order_data.get('status', 'Open'),
+                datetime.now().date(),
+                work_order_data['due_date'],
+                work_order_data.get('completed_date'),
+                work_order_data.get('estimated_hours', 0),
+                work_order_data.get('actual_hours', 0),
+                tools_required,
+                spares_required,
+                work_order_data.get('notes', ''),
+                schedule_id
+            ))
+            
+            work_order_id = cursor.lastrowid
+            
+            # Update the last_generated date in the schedule
+            cursor.execute("""
+                UPDATE maintenance_schedules
+                SET last_generated = %s
+                WHERE schedule_id = %s
+            """, (datetime.now().date(), schedule_id))
+            
             connection.commit()
             return True
             
         except Exception as e:
             print(f"Error creating recurring work order: {e}")
+            if connection:
+                connection.rollback()
             return False
         finally:
-            self.close(connection)
+            if connection:
+                self.close(connection)
 
     def get_pending_scheduled_work_orders(self):
         """Get work orders that need to be generated based on schedules"""
@@ -4177,8 +4228,10 @@ class DatabaseManager:
                     craftsman_id,
                     team_id,
                     tools_required,
-                    spares_required
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    spares_required,
+                    notes,
+                    schedule_id
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 template['title'],
                 template['description'],
@@ -4192,7 +4245,9 @@ class DatabaseManager:
                 template['craftsman_id'],
                 template['team_id'],
                 template['tools_required'],
-                template['spares_required']
+                template['spares_required'],
+                f"Auto-generated from schedule #{template['schedule_id']}",
+                template['schedule_id']
             ))
             
             work_order_id = cursor.lastrowid
@@ -4205,22 +4260,16 @@ class DatabaseManager:
             """, (datetime.now().date(), template['schedule_id']))
             
             connection.commit()
-            
-            # Send notifications if configured
-            if template.get('notification_emails'):
-                self.send_work_order_notifications(
-                    work_order_id,
-                    template['notification_emails'],
-                    'new_scheduled'
-                )
-            
             return work_order_id
             
         except Exception as e:
             print(f"Error generating scheduled work order: {e}")
+            if connection:
+                connection.rollback()
             return None
         finally:
-            self.close(connection)
+            if connection:
+                self.close(connection)
 
     def send_work_order_notifications(self, work_order_id, recipients, notification_type):
         """Send email notifications for work orders"""

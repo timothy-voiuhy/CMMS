@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,
 from PySide6.QtCore import Qt, QDate
 import json
 from datetime import datetime, timedelta
+from PySide6.QtGui import QColor
 
 class AddScheduleDialog(QDialog):
     def __init__(self, db_manager, parent=None, schedule_id=None):
@@ -337,16 +338,57 @@ class SchedulesWindow(QWidget):
 
     def load_schedules(self):
         try:
-            schedules = self.db_manager.get_pending_scheduled_work_orders()
+            # Get all scheduled work orders, not just pending ones
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            # This query gets all schedules with their templates and calculates next due dates
+            query = """
+                SELECT 
+                    ms.schedule_id,
+                    ms.frequency,
+                    ms.frequency_unit,
+                    ms.start_date,
+                    ms.end_date,
+                    ms.last_generated,
+                    ms.notification_days_before,
+                    ms.notification_emails,
+                    wot.template_id,
+                    wot.title,
+                    wot.description,
+                    wot.equipment_id,
+                    wot.priority,
+                    wot.assignment_type,
+                    wot.craftsman_id,
+                    wot.team_id,
+                    e.equipment_name,
+                    CASE 
+                        WHEN ms.last_generated IS NULL THEN ms.start_date
+                        WHEN ms.frequency_unit = 'days' THEN DATE_ADD(ms.last_generated, INTERVAL ms.frequency DAY)
+                        WHEN ms.frequency_unit = 'weeks' THEN DATE_ADD(ms.last_generated, INTERVAL ms.frequency WEEK)
+                        WHEN ms.frequency_unit = 'months' THEN DATE_ADD(ms.last_generated, INTERVAL ms.frequency MONTH)
+                    END as next_due_date,
+                    (SELECT COUNT(*) FROM work_orders WHERE schedule_id = ms.schedule_id) as work_order_count
+                FROM maintenance_schedules ms
+                JOIN work_order_templates wot ON ms.schedule_id = wot.schedule_id
+                LEFT JOIN equipment_registry e ON wot.equipment_id = e.equipment_id
+                ORDER BY next_due_date ASC
+            """
+            
+            cursor.execute(query)
+            schedules = cursor.fetchall()
+            self.db_manager.close(connection)
+            
             self.table.setRowCount(len(schedules))
             
             for row, schedule in enumerate(schedules):
                 # Title
-                self.table.setItem(row, 0, QTableWidgetItem(schedule['title']))
+                title_item = QTableWidgetItem(schedule['title'])
+                title_item.setData(Qt.UserRole, schedule['schedule_id'])  # Store schedule_id for later use
+                self.table.setItem(row, 0, title_item)
                 
                 # Equipment
-                equipment = self.db_manager.get_equipment_by_id(schedule['equipment_id'])
-                equipment_name = equipment['equipment_name'] if equipment else "Unknown"
+                equipment_name = schedule['equipment_name'] if schedule['equipment_name'] else "Unknown"
                 self.table.setItem(row, 1, QTableWidgetItem(equipment_name))
                 
                 # Frequency
@@ -356,7 +398,19 @@ class SchedulesWindow(QWidget):
                 # Next Due
                 next_due = schedule['next_due_date']
                 next_due_str = next_due.strftime('%Y-%m-%d') if next_due else "N/A"
-                self.table.setItem(row, 3, QTableWidgetItem(next_due_str))
+                next_due_item = QTableWidgetItem(next_due_str)
+                
+                # Color-code based on due date
+                if next_due:
+                    days_until_due = (next_due - datetime.now().date()).days
+                    if days_until_due < 0:
+                        next_due_item.setBackground(QColor(255, 200, 200))  # Light red for overdue
+                    elif days_until_due == 0:
+                        next_due_item.setBackground(QColor(255, 255, 200))  # Light yellow for today
+                    elif days_until_due <= 7:
+                        next_due_item.setBackground(QColor(200, 255, 200))  # Light green for upcoming
+                
+                self.table.setItem(row, 3, next_due_item)
                 
                 # Assigned To
                 if schedule['assignment_type'] == 'Individual':
@@ -375,25 +429,55 @@ class SchedulesWindow(QWidget):
                     status = "Due Today"
                 else:
                     status = "Active"
-                self.table.setItem(row, 5, QTableWidgetItem(status))
+                
+                status_item = QTableWidgetItem(status)
+                if status == "Overdue":
+                    status_item.setBackground(QColor(255, 200, 200))  # Light red
+                elif status == "Due Today":
+                    status_item.setBackground(QColor(255, 255, 200))  # Light yellow
+                else:
+                    status_item.setBackground(QColor(200, 255, 200))  # Light green
+                
+                self.table.setItem(row, 5, status_item)
                 
                 # Last Generated
                 last_gen = schedule['last_generated']
                 last_gen_str = last_gen.strftime('%Y-%m-%d') if last_gen else "Never"
+                
+                # Add count of work orders generated
+                work_order_count = schedule.get('work_order_count', 0)
+                if work_order_count > 0:
+                    last_gen_str += f" ({work_order_count} WOs)"
+                
                 self.table.setItem(row, 6, QTableWidgetItem(last_gen_str))
                 
                 # Actions
                 actions_widget = QWidget()
                 actions_layout = QHBoxLayout(actions_widget)
-                actions_layout.setContentsMargins(0, 0, 0, 0)
+                actions_layout.setContentsMargins(4, 0, 4, 0)
+                actions_layout.setSpacing(4)
                 
                 edit_btn = QPushButton("Edit")
-                delete_btn = QPushButton("Delete")
+                edit_btn.setMaximumWidth(60)
                 
+                view_btn = QPushButton("View WOs")
+                view_btn.setMaximumWidth(80)
+                
+                generate_btn = QPushButton("Generate")
+                generate_btn.setMaximumWidth(80)
+                
+                delete_btn = QPushButton("Delete")
+                delete_btn.setMaximumWidth(60)
+                
+                # Connect buttons to their respective functions
                 edit_btn.clicked.connect(lambda checked, s=schedule: self.edit_schedule(s))
+                view_btn.clicked.connect(lambda checked, s=schedule: self.view_work_orders(s))
+                generate_btn.clicked.connect(lambda checked, s=schedule: self.generate_work_order(s))
                 delete_btn.clicked.connect(lambda checked, s=schedule: self.delete_schedule(s))
                 
                 actions_layout.addWidget(edit_btn)
+                actions_layout.addWidget(view_btn)
+                actions_layout.addWidget(generate_btn)
                 actions_layout.addWidget(delete_btn)
                 self.table.setCellWidget(row, 7, actions_widget)
             
@@ -557,125 +641,38 @@ class SchedulesWindow(QWidget):
                 self.db_manager.close(connection)
 
     def apply_filters(self):
-        # Implement filtering functionality
+        """Apply filters to the schedules table"""
         try:
-            # Get filter values
-            equipment_id = self.equipment_filter.currentData()
-            assignee_type = self.assignee_type_filter.currentText()
-            assignee_id = self.assignee_filter.currentData()
-            frequency_unit = self.frequency_filter.currentText()
+            status_filter = self.status_filter.currentText()
+            equipment_filter = self.equipment_filter.currentData()
             
-            # Build SQL query with filters
-            query = """
-                SELECT 
-                    ms.schedule_id,
-                    wot.title,
-                    wot.description,
-                    e.equipment_name,
-                    ms.frequency,
-                    ms.frequency_unit,
-                    ms.start_date,
-                    ms.end_date,
-                    ms.last_generated,
-                    CASE 
-                        WHEN wot.assignment_type = 'Individual' THEN 
-                            CONCAT(c.first_name, ' ', c.last_name)
-                        ELSE t.team_name
-                    END as assignee,
-                    wot.assignment_type
-                FROM maintenance_schedules ms
-                JOIN work_order_templates wot ON ms.schedule_id = wot.schedule_id
-                LEFT JOIN equipment_registry e ON wot.equipment_id = e.equipment_id
-                LEFT JOIN craftsmen c ON wot.craftsman_id = c.craftsman_id
-                LEFT JOIN craftsmen_teams t ON wot.team_id = t.team_id
-                WHERE 1=1
-            """
-            
-            params = []
-            
-            # Add equipment filter
-            if equipment_id:
-                query += " AND wot.equipment_id = %s"
-                params.append(equipment_id)
-            
-            # Add assignee type filter
-            if assignee_type != "All":
-                query += " AND wot.assignment_type = %s"
-                params.append(assignee_type)
+            # Loop through all rows and hide/show based on filters
+            for row in range(self.table.rowCount()):
+                show_row = True
                 
-                # Add specific assignee filter
-                if assignee_id:
-                    if assignee_type == "Individual":
-                        query += " AND wot.craftsman_id = %s"
-                    else:
-                        query += " AND wot.team_id = %s"
-                    params.append(assignee_id)
+                # Apply status filter
+                if status_filter != "All":
+                    status_item = self.table.item(row, 5)  # Status column
+                    if status_item and status_item.text() != status_filter:
+                        # Special case for "Overdue" which might be "Due Today" in the filter
+                        if not (status_filter == "Overdue" and status_item.text() == "Due Today"):
+                            show_row = False
+                
+                # Apply equipment filter
+                if equipment_filter and show_row:
+                    equipment_item = self.table.item(row, 1)  # Equipment column
+                    equipment_name = self.equipment_filter.currentText()
+                    if equipment_item and equipment_item.text() != equipment_name:
+                        show_row = False
+                
+                # Show or hide the row
+                self.table.setRowHidden(row, not show_row)
             
-            # Add frequency filter
-            if frequency_unit != "All":
-                query += " AND ms.frequency_unit = %s"
-                params.append(frequency_unit.lower())
-            
-            # Execute query
-            connection = self.db_manager.connect()
-            cursor = connection.cursor(dictionary=True)
-            cursor.execute(query, params)
-            schedules = cursor.fetchall()
-            
-            # Clear the table
-            self.table.setRowCount(0)
-            
-            # Populate the table with filtered results
-            for row, schedule in enumerate(schedules):
-                self.table.insertRow(row)
-                
-                # Format dates for display
-                start_date = schedule['start_date'].strftime('%Y-%m-%d') if schedule['start_date'] else ''
-                end_date = schedule['end_date'].strftime('%Y-%m-%d') if schedule['end_date'] else 'None'
-                last_generated = schedule['last_generated'].strftime('%Y-%m-%d') if schedule['last_generated'] else 'Never'
-                
-                # Calculate next run date
-                if schedule['last_generated']:
-                    if schedule['frequency_unit'] == 'days':
-                        next_run = (schedule['last_generated'] + timedelta(days=schedule['frequency'])).strftime('%Y-%m-%d')
-                    elif schedule['frequency_unit'] == 'weeks':
-                        next_run = (schedule['last_generated'] + timedelta(weeks=schedule['frequency'])).strftime('%Y-%m-%d')
-                    elif schedule['frequency_unit'] == 'months':
-                        # Approximate months as 30 days
-                        next_run = (schedule['last_generated'] + timedelta(days=30*schedule['frequency'])).strftime('%Y-%m-%d')
-                else:
-                    next_run = start_date
-                
-                # Add data to table
-                self.table.setItem(row, 0, QTableWidgetItem(schedule['title']))
-                self.table.setItem(row, 1, QTableWidgetItem(schedule['equipment_name'] or ''))
-                self.table.setItem(row, 2, QTableWidgetItem(schedule['assignee'] or ''))
-                self.table.setItem(row, 3, QTableWidgetItem(f"{schedule['frequency']} {schedule['frequency_unit']}"))
-                self.table.setItem(row, 4, QTableWidgetItem(start_date))
-                self.table.setItem(row, 5, QTableWidgetItem(last_generated))
-                self.table.setItem(row, 6, QTableWidgetItem(next_run))
-                
-                # Add action buttons
-                actions_widget = QWidget()
-                actions_layout = QHBoxLayout(actions_widget)
-                actions_layout.setContentsMargins(0, 0, 0, 0)
-                
-                edit_btn = QPushButton("Edit")
-                delete_btn = QPushButton("Delete")
-                
-                edit_btn.clicked.connect(lambda checked, s=schedule: self.edit_schedule(s))
-                delete_btn.clicked.connect(lambda checked, s=schedule: self.delete_schedule(s))
-                
-                actions_layout.addWidget(edit_btn)
-                actions_layout.addWidget(delete_btn)
-                self.table.setCellWidget(row, 7, actions_widget)
-            
+            # Update status bar with filtered counts
             self.update_status_bar()
             
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to apply filters: {str(e)}")
-        finally:
-            self.db_manager.close(connection)
 
     def update_status_bar(self):
         total = self.table.rowCount()
@@ -687,3 +684,170 @@ class SchedulesWindow(QWidget):
         self.status_label.setText(
             f"Total Schedules: {total} | Active: {active} | Overdue: {overdue}"
         )
+
+    def view_work_orders(self, schedule):
+        """View all work orders generated from this schedule"""
+        try:
+            schedule_id = schedule['schedule_id']
+            
+            # Get all work orders for this schedule
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT wo.*, e.equipment_name,
+                       CASE 
+                           WHEN wo.assignment_type = 'Individual' THEN 
+                               CONCAT(c.first_name, ' ', c.last_name)
+                           ELSE t.team_name
+                       END as assignee
+                FROM work_orders wo
+                LEFT JOIN equipment_registry e ON wo.equipment_id = e.equipment_id
+                LEFT JOIN craftsmen c ON wo.craftsman_id = c.craftsman_id
+                LEFT JOIN craftsmen_teams t ON wo.team_id = t.team_id
+                WHERE wo.schedule_id = %s
+                ORDER BY wo.created_date DESC
+            """, (schedule_id,))
+            
+            work_orders = cursor.fetchall()
+            self.db_manager.close(connection)
+            
+            if not work_orders:
+                QMessageBox.information(self, "No Work Orders", 
+                                       "No work orders have been generated from this schedule yet.")
+                return
+            
+            # Create a dialog to display the work orders
+            dialog = QDialog(self)
+            dialog.setWindowTitle(f"Work Orders for Schedule: {schedule['title']}")
+            dialog.resize(800, 500)
+            
+            layout = QVBoxLayout(dialog)
+            
+            # Add header
+            header = QLabel(f"Work Orders for: {schedule['title']}")
+            header.setStyleSheet("font-size: 16px; font-weight: bold;")
+            layout.addWidget(header)
+            
+            # Create table for work orders
+            table = QTableWidget()
+            table.setColumnCount(7)
+            table.setHorizontalHeaderLabels([
+                "ID", "Status", "Due Date", "Completed Date", 
+                "Assigned To", "Priority", "Actions"
+            ])
+            
+            table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+            table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+            
+            table.setRowCount(len(work_orders))
+            
+            for row, wo in enumerate(work_orders):
+                # ID
+                table.setItem(row, 0, QTableWidgetItem(str(wo['work_order_id'])))
+                
+                # Status
+                status_item = QTableWidgetItem(wo['status'])
+                if wo['status'] == 'Completed':
+                    status_item.setBackground(QColor(200, 255, 200))  # Light green
+                elif wo['status'] == 'Open':
+                    status_item.setBackground(QColor(200, 200, 255))  # Light blue
+                elif wo['status'] == 'In Progress':
+                    status_item.setBackground(QColor(255, 255, 200))  # Light yellow
+                elif wo['status'] == 'Overdue':
+                    status_item.setBackground(QColor(255, 200, 200))  # Light red
+                table.setItem(row, 1, status_item)
+                
+                # Due Date
+                due_date = wo['due_date'].strftime('%Y-%m-%d') if wo['due_date'] else "N/A"
+                table.setItem(row, 2, QTableWidgetItem(due_date))
+                
+                # Completed Date
+                completed_date = wo['completed_date'].strftime('%Y-%m-%d') if wo['completed_date'] else "N/A"
+                table.setItem(row, 3, QTableWidgetItem(completed_date))
+                
+                # Assigned To
+                table.setItem(row, 4, QTableWidgetItem(wo['assignee'] if wo.get('assignee') else "Unassigned"))
+                
+                # Priority
+                priority_item = QTableWidgetItem(wo['priority'])
+                if wo['priority'] == 'Critical':
+                    priority_item.setBackground(QColor(255, 150, 150))  # Red
+                elif wo['priority'] == 'High':
+                    priority_item.setBackground(QColor(255, 200, 150))  # Orange
+                elif wo['priority'] == 'Medium':
+                    priority_item.setBackground(QColor(255, 255, 150))  # Yellow
+                table.setItem(row, 5, priority_item)
+                
+                # Actions
+                actions_widget = QWidget()
+                actions_layout = QHBoxLayout(actions_widget)
+                actions_layout.setContentsMargins(4, 0, 4, 0)
+                
+                view_btn = QPushButton("View")
+                view_btn.clicked.connect(lambda checked, work_order_id=wo['work_order_id']: 
+                                        self.view_work_order_details(work_order_id))
+                
+                actions_layout.addWidget(view_btn)
+                table.setCellWidget(row, 6, actions_widget)
+            
+            layout.addWidget(table)
+            
+            # Add close button
+            close_btn = QPushButton("Close")
+            close_btn.clicked.connect(dialog.accept)
+            layout.addWidget(close_btn)
+            
+            dialog.exec()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to view work orders: {str(e)}")
+
+    def view_work_order_details(self, work_order_id):
+        """View details of a specific work order"""
+        try:
+            # Get the work order data
+            work_order = self.db_manager.get_work_order_by_id(work_order_id)
+            if not work_order:
+                QMessageBox.warning(self, "Not Found", "Work order not found.")
+                return
+            
+            # Create a dialog to show work order details
+            from workOrders.work_order_dialog import WorkOrderDialog
+            dialog = WorkOrderDialog(self.db_manager, work_order, parent=self)
+            dialog.exec()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to view work order details: {str(e)}")
+
+    def generate_work_order(self, schedule):
+        """Manually generate a work order from this schedule"""
+        try:
+            reply = QMessageBox.question(
+                self, "Generate Work Order",
+                f"Are you sure you want to generate a new work order from the schedule '{schedule['title']}'?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+            
+            if reply == QMessageBox.StandardButton.Yes:
+                # Calculate the next due date
+                next_due_date = schedule['next_due_date']
+                
+                # Generate the work order
+                work_order_id = self.db_manager.generate_scheduled_work_order(schedule, next_due_date)
+                
+                if work_order_id:
+                    QMessageBox.information(
+                        self, "Success", 
+                        f"Work order #{work_order_id} has been generated successfully!"
+                    )
+                    # Refresh the schedules list
+                    self.load_schedules()
+                else:
+                    QMessageBox.warning(
+                        self, "Warning", 
+                        "Failed to generate work order. Please check the logs for details."
+                    )
+        
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to generate work order: {str(e)}")
