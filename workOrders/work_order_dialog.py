@@ -312,17 +312,24 @@ class WorkOrderDialog(QDialog):
 
     def on_assignment_type_changed(self, assignment_type):
         """Handle assignment type change"""
+        # Safely disconnect any existing connections
+        try:
+            self.craftsman_combo.currentIndexChanged.disconnect()
+        except TypeError:
+            # Signal was not connected
+            pass
+        try:
+            self.team_combo.currentIndexChanged.disconnect()
+        except TypeError:
+            # Signal was not connected
+            pass
+        
         if assignment_type == "Individual":
             self.craftsman_container.show()
             self.team_container.hide()
             
-            # Update notification emails when craftsman changes
+            # Connect craftsman signal
             self.craftsman_combo.currentIndexChanged.connect(self.update_notification_emails)
-            # Disconnect team signal to avoid conflicts
-            try:
-                self.team_combo.currentIndexChanged.disconnect(self.update_notification_emails)
-            except:
-                pass
             
             # Update emails immediately if scheduling is enabled
             if self.enable_scheduling.isChecked():
@@ -331,13 +338,8 @@ class WorkOrderDialog(QDialog):
             self.craftsman_container.hide()
             self.team_container.show()
             
-            # Update notification emails when team changes
+            # Connect team signal
             self.team_combo.currentIndexChanged.connect(self.update_notification_emails)
-            # Disconnect craftsman signal to avoid conflicts
-            try:
-                self.craftsman_combo.currentIndexChanged.disconnect(self.update_notification_emails)
-            except:
-                pass
             
             # Update emails immediately if scheduling is enabled
             if self.enable_scheduling.isChecked():
@@ -597,6 +599,21 @@ class WorkOrderDialog(QDialog):
                 work_order_data['schedule_id']
             ))
             
+            # Get the current work order ID
+            cursor.execute("""
+                SELECT work_order_id 
+                FROM work_orders 
+                WHERE schedule_id = %s 
+                ORDER BY created_date DESC 
+                LIMIT 1
+            """, (work_order_data['schedule_id'],))
+            
+            result = cursor.fetchone()
+            if not result:
+                raise Exception("Could not find associated work order")
+            
+            current_work_order_id = result[0]
+            
             # Update the work order
             cursor.execute("""
                 UPDATE work_orders
@@ -632,7 +649,7 @@ class WorkOrderDialog(QDialog):
                 json.dumps(work_order_data['tools_required']),
                 json.dumps(work_order_data['spares_required']),
                 work_order_data['notes'],
-                work_order_data['work_order_id']
+                current_work_order_id
             ))
             
             # Update the work order template

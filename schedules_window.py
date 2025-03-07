@@ -1,11 +1,12 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, 
                               QTableWidget, QTableWidgetItem, QPushButton, QLabel, 
                               QComboBox, QSpinBox, QDateEdit, QDialog, QFormLayout,
-                              QLineEdit, QTextEdit, QMessageBox, QHeaderView)
+                              QLineEdit, QTextEdit, QMessageBox, QHeaderView, QMenu)
 from PySide6.QtCore import Qt, QDate
 import json
 from datetime import datetime, timedelta
 from PySide6.QtGui import QColor
+from ui.card_table_widget import CardTableWidget
 
 class AddScheduleDialog(QDialog):
     def __init__(self, db_manager, parent=None, schedule_id=None):
@@ -295,11 +296,16 @@ class SchedulesWindow(QWidget):
         
         layout.addLayout(header_layout)
 
-        # Filter Section
+        # Search and Filter Section
         filter_layout = QHBoxLayout()
         
+        # Add search field
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("Search schedules...")
+        self.search_input.textChanged.connect(self.apply_filters)
+        
         self.status_filter = QComboBox()
-        self.status_filter.addItems(["All", "Active", "Completed", "Overdue"])
+        self.status_filter.addItems(["All", "Active", "Due Today", "Overdue"])
         self.status_filter.currentTextChanged.connect(self.apply_filters)
         
         self.equipment_filter = QComboBox()
@@ -309,6 +315,8 @@ class SchedulesWindow(QWidget):
             self.equipment_filter.addItem(equip['equipment_name'], equip['equipment_id'])
         self.equipment_filter.currentTextChanged.connect(self.apply_filters)
         
+        filter_layout.addWidget(QLabel("Search:"))
+        filter_layout.addWidget(self.search_input, 3)  # Give search field more stretch
         filter_layout.addWidget(QLabel("Status:"))
         filter_layout.addWidget(self.status_filter)
         filter_layout.addWidget(QLabel("Equipment:"))
@@ -317,16 +325,41 @@ class SchedulesWindow(QWidget):
         
         layout.addLayout(filter_layout)
 
-        # Schedules Table
+        # Create card table widget for schedules
+        self.schedules_cards = CardTableWidget()
+        
+        # Define display fields
+        display_fields = [
+            {'field': 'title', 'display': 'Title'},
+            {'field': 'equipment_name', 'display': 'Equipment'},
+            {'field': 'frequency', 'display': 'Frequency'},
+            {'field': 'next_due', 'display': 'Next Due', 'type': 'date'},
+            {'field': 'assigned_to', 'display': 'Assigned To'},
+            {'field': 'status', 'display': 'Status', 'type': 'status',
+             'colors': {
+                 'Active': '#4CAF50',  # Green
+                 'Due Today': '#FFC107',  # Amber
+                 'Overdue': '#F44336'  # Red
+             }},
+            {'field': 'last_generated', 'display': 'Last Generated'}
+        ]
+        self.schedules_cards.set_display_fields(display_fields)
+        
+        # Connect signals
+        self.schedules_cards.itemClicked.connect(self.handle_schedule_click)
+        self.schedules_cards.itemEditClicked.connect(self.edit_schedule)
+        self.schedules_cards.itemContextMenuRequested.connect(self.show_schedule_context_menu)
+        
+        layout.addWidget(self.schedules_cards)
+
+        # Keep the table for compatibility (hidden)
         self.table = QTableWidget()
         self.table.setColumnCount(8)
         self.table.setHorizontalHeaderLabels([
             "Title", "Equipment", "Frequency", "Next Due",
             "Assigned To", "Status", "Last Generated", "Actions"
         ])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        
+        self.table.hide()
         layout.addWidget(self.table)
 
         # Status Summary
@@ -336,13 +369,39 @@ class SchedulesWindow(QWidget):
         status_layout.addStretch()
         layout.addLayout(status_layout)
 
+    def show_schedule_context_menu(self, data, position):
+        """Show context menu for schedules"""
+        menu = QMenu(self)
+        
+        edit_action = menu.addAction("Edit Schedule")
+        view_action = menu.addAction("View Work Orders")
+        generate_action = menu.addAction("Generate Work Order")
+        menu.addSeparator()
+        delete_action = menu.addAction("Delete Schedule")
+        
+        action = menu.exec(position)
+        
+        if action:
+            if action == edit_action:
+                self.edit_schedule(data)
+            elif action == view_action:
+                self.view_work_orders(data)
+            elif action == generate_action:
+                self.generate_work_order(data)
+            elif action == delete_action:
+                self.delete_schedule(data)
+
+    def handle_schedule_click(self, data):
+        """Handle single click on schedule card - just select the card"""
+        pass
+
     def load_schedules(self):
         try:
-            # Get all scheduled work orders, not just pending ones
+            # Get all scheduled work orders (keep existing query)
             connection = self.db_manager.connect()
             cursor = connection.cursor(dictionary=True)
             
-            # This query gets all schedules with their templates and calculates next due dates
+            # Keep your existing query
             query = """
                 SELECT 
                     ms.schedule_id,
@@ -379,49 +438,27 @@ class SchedulesWindow(QWidget):
             schedules = cursor.fetchall()
             self.db_manager.close(connection)
             
+            # Update hidden table (keep existing code)
             self.table.setRowCount(len(schedules))
             
+            # Prepare data for card view
+            card_data = []
+            
             for row, schedule in enumerate(schedules):
-                # Title
+                # Update table (keep existing code)
                 title_item = QTableWidgetItem(schedule['title'])
-                title_item.setData(Qt.UserRole, schedule['schedule_id'])  # Store schedule_id for later use
+                title_item.setData(Qt.UserRole, schedule['schedule_id'])
                 self.table.setItem(row, 0, title_item)
                 
-                # Equipment
-                equipment_name = schedule['equipment_name'] if schedule['equipment_name'] else "Unknown"
-                self.table.setItem(row, 1, QTableWidgetItem(equipment_name))
-                
-                # Frequency
+                # Format frequency
                 frequency = f"Every {schedule['frequency']} {schedule['frequency_unit']}"
                 self.table.setItem(row, 2, QTableWidgetItem(frequency))
                 
-                # Next Due
+                # Format next due date and determine status
                 next_due = schedule['next_due_date']
                 next_due_str = next_due.strftime('%Y-%m-%d') if next_due else "N/A"
-                next_due_item = QTableWidgetItem(next_due_str)
                 
-                # Color-code based on due date
-                if next_due:
-                    days_until_due = (next_due - datetime.now().date()).days
-                    if days_until_due < 0:
-                        next_due_item.setBackground(QColor(255, 200, 200))  # Light red for overdue
-                    elif days_until_due == 0:
-                        next_due_item.setBackground(QColor(255, 255, 200))  # Light yellow for today
-                    elif days_until_due <= 7:
-                        next_due_item.setBackground(QColor(200, 255, 200))  # Light green for upcoming
-                
-                self.table.setItem(row, 3, next_due_item)
-                
-                # Assigned To
-                if schedule['assignment_type'] == 'Individual':
-                    craftsman = self.db_manager.get_craftsman_by_id(schedule['craftsman_id'])
-                    assignee = f"{craftsman['first_name']} {craftsman['last_name']}" if craftsman else "Unknown"
-                else:
-                    team_name = self.db_manager.get_team_name(schedule['team_id'])
-                    assignee = f"Team: {team_name}"
-                self.table.setItem(row, 4, QTableWidgetItem(assignee))
-                
-                # Status
+                # Determine status based on due date
                 days_until_due = (next_due - datetime.now().date()).days if next_due else 0
                 if days_until_due < 0:
                     status = "Overdue"
@@ -430,56 +467,48 @@ class SchedulesWindow(QWidget):
                 else:
                     status = "Active"
                 
-                status_item = QTableWidgetItem(status)
-                if status == "Overdue":
-                    status_item.setBackground(QColor(255, 200, 200))  # Light red
-                elif status == "Due Today":
-                    status_item.setBackground(QColor(255, 255, 200))  # Light yellow
+                # Format assigned to
+                if schedule['assignment_type'] == 'Individual':
+                    craftsman = self.db_manager.get_craftsman_by_id(schedule['craftsman_id'])
+                    assignee = f"{craftsman['first_name']} {craftsman['last_name']}" if craftsman else "Unknown"
                 else:
-                    status_item.setBackground(QColor(200, 255, 200))  # Light green
+                    team_name = self.db_manager.get_team_name(schedule['team_id'])
+                    assignee = f"Team: {team_name}"
                 
-                self.table.setItem(row, 5, status_item)
-                
-                # Last Generated
+                # Format last generated
                 last_gen = schedule['last_generated']
                 last_gen_str = last_gen.strftime('%Y-%m-%d') if last_gen else "Never"
+                if schedule['work_order_count'] > 0:
+                    last_gen_str += f" ({schedule['work_order_count']} WOs)"
                 
-                # Add count of work orders generated
-                work_order_count = schedule.get('work_order_count', 0)
-                if work_order_count > 0:
-                    last_gen_str += f" ({work_order_count} WOs)"
+                # Create card data
+                card_item = {
+                    'schedule_id': schedule['schedule_id'],
+                    'title': schedule['title'],
+                    'equipment_name': schedule['equipment_name'] or "Unknown",
+                    'frequency': frequency,
+                    'next_due': next_due_str,
+                    'assigned_to': assignee,
+                    'status': status,
+                    'last_generated': last_gen_str,
+                    # Store additional data needed for actions
+                    'template_id': schedule['template_id'],
+                    'equipment_id': schedule['equipment_id'],
+                    'assignment_type': schedule['assignment_type'],
+                    'craftsman_id': schedule['craftsman_id'],
+                    'team_id': schedule['team_id']
+                }
+                card_data.append(card_item)
                 
+                # Continue updating table items (keep existing code)
+                self.table.setItem(row, 1, QTableWidgetItem(schedule['equipment_name'] or "Unknown"))
+                self.table.setItem(row, 3, QTableWidgetItem(next_due_str))
+                self.table.setItem(row, 4, QTableWidgetItem(assignee))
+                self.table.setItem(row, 5, QTableWidgetItem(status))
                 self.table.setItem(row, 6, QTableWidgetItem(last_gen_str))
-                
-                # Actions
-                actions_widget = QWidget()
-                actions_layout = QHBoxLayout(actions_widget)
-                actions_layout.setContentsMargins(4, 0, 4, 0)
-                actions_layout.setSpacing(4)
-                
-                edit_btn = QPushButton("Edit")
-                edit_btn.setMaximumWidth(60)
-                
-                view_btn = QPushButton("View WOs")
-                view_btn.setMaximumWidth(80)
-                
-                generate_btn = QPushButton("Generate")
-                generate_btn.setMaximumWidth(80)
-                
-                delete_btn = QPushButton("Delete")
-                delete_btn.setMaximumWidth(60)
-                
-                # Connect buttons to their respective functions
-                edit_btn.clicked.connect(lambda checked, s=schedule: self.edit_schedule(s))
-                view_btn.clicked.connect(lambda checked, s=schedule: self.view_work_orders(s))
-                generate_btn.clicked.connect(lambda checked, s=schedule: self.generate_work_order(s))
-                delete_btn.clicked.connect(lambda checked, s=schedule: self.delete_schedule(s))
-                
-                actions_layout.addWidget(edit_btn)
-                actions_layout.addWidget(view_btn)
-                actions_layout.addWidget(generate_btn)
-                actions_layout.addWidget(delete_btn)
-                self.table.setCellWidget(row, 7, actions_widget)
+            
+            # Update card view with the prepared data
+            self.schedules_cards.set_data(card_data)
             
             self.update_status_bar()
             
@@ -641,32 +670,44 @@ class SchedulesWindow(QWidget):
                 self.db_manager.close(connection)
 
     def apply_filters(self):
-        """Apply filters to the schedules table"""
+        """Apply filters to the schedules"""
         try:
+            search_text = self.search_input.text().lower()
             status_filter = self.status_filter.currentText()
-            equipment_filter = self.equipment_filter.currentData()
+            equipment_filter = self.equipment_filter.currentText()
             
-            # Loop through all rows and hide/show based on filters
-            for row in range(self.table.rowCount()):
-                show_row = True
+            def filter_func(schedule):
+                show = True
+                
+                # Apply text search
+                if search_text:
+                    # Search through all searchable fields
+                    searchable_fields = [
+                        'title', 'equipment_name', 'assigned_to', 
+                        'frequency', 'status', 'last_generated'
+                    ]
+                    found = False
+                    for field in searchable_fields:
+                        if field in schedule and str(schedule[field]).lower().find(search_text) != -1:
+                            found = True
+                            break
+                    if not found:
+                        show = False
                 
                 # Apply status filter
-                if status_filter != "All":
-                    status_item = self.table.item(row, 5)  # Status column
-                    if status_item and status_item.text() != status_filter:
-                        # Special case for "Overdue" which might be "Due Today" in the filter
-                        if not (status_filter == "Overdue" and status_item.text() == "Due Today"):
-                            show_row = False
+                if status_filter != "All" and show:
+                    if schedule['status'] != status_filter:
+                        show = False
                 
                 # Apply equipment filter
-                if equipment_filter and show_row:
-                    equipment_item = self.table.item(row, 1)  # Equipment column
-                    equipment_name = self.equipment_filter.currentText()
-                    if equipment_item and equipment_item.text() != equipment_name:
-                        show_row = False
+                if equipment_filter != "All Equipment" and show:
+                    if schedule['equipment_name'] != equipment_filter:
+                        show = False
                 
-                # Show or hide the row
-                self.table.setRowHidden(row, not show_row)
+                return show
+            
+            # Apply the filter function to the card view
+            self.schedules_cards.filter_data(filter_func)
             
             # Update status bar with filtered counts
             self.update_status_bar()
@@ -675,15 +716,19 @@ class SchedulesWindow(QWidget):
             QMessageBox.critical(self, "Error", f"Failed to apply filters: {str(e)}")
 
     def update_status_bar(self):
-        total = self.table.rowCount()
-        active = sum(1 for row in range(total) 
-                    if self.table.item(row, 5).text() == "Active")
-        overdue = sum(1 for row in range(total) 
-                     if self.table.item(row, 5).text() == "Overdue")
-        
-        self.status_label.setText(
-            f"Total Schedules: {total} | Active: {active} | Overdue: {overdue}"
-        )
+        """Update the status bar with current counts"""
+        try:
+            total = len(self.schedules_cards.data)
+            active = sum(1 for item in self.schedules_cards.data 
+                        if item['status'] == 'Active' and item.get('visible', True))
+            overdue = sum(1 for item in self.schedules_cards.data 
+                         if item['status'] == 'Overdue' and item.get('visible', True))
+            
+            self.status_label.setText(
+                f"Total Schedules: {total} | Active: {active} | Overdue: {overdue}"
+            )
+        except Exception as e:
+            print(f"Error updating status bar: {e}")
 
     def view_work_orders(self, schedule):
         """View all work orders generated from this schedule"""

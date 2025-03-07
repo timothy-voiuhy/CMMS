@@ -16,6 +16,7 @@ import os
 from .work_order_dialog import WorkOrderDialog
 from .report_dialog import CustomReportDialog
 from .calendar_widgets import MonthCalendarView, WeekCalendarView, DayCalendarView
+from ui.card_table_widget import CardTableWidget
 from config import WORK_ORDER_SETTINGS_FILE
 
 class WorkOrdersWindow(QMainWindow):
@@ -188,19 +189,7 @@ class WorkOrdersWindow(QMainWindow):
         work_orders_widget = QWidget()
         layout = QVBoxLayout(work_orders_widget)
         
-        # Create scroll area
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        
-        # Create content widget
-        content_widget = QWidget()
-        content_layout = QVBoxLayout(content_widget)
-        content_layout.setContentsMargins(15, 15, 15, 15)
-        content_layout.setSpacing(15)
-        
-        # Search and filter section
+        # Create search and filter section
         filter_container = QWidget()
         filter_layout = QHBoxLayout(filter_container)
         
@@ -235,37 +224,52 @@ class WorkOrdersWindow(QMainWindow):
         filter_layout.addWidget(QLabel("Date:"))
         filter_layout.addWidget(self.wo_date_filter, 1)
         
-        content_layout.addWidget(filter_container)
+        layout.addWidget(filter_container)
         
-        # Work orders table
+        # Create card table widget for work orders
+        self.work_orders_cards = CardTableWidget()
+        
+        # Define display fields
+        display_fields = [
+            {'field': 'title', 'display': 'Title'},
+            {'field': 'equipment_name', 'display': 'Equipment'},
+            {'field': 'assigned_to', 'display': 'Assigned To'},
+            {'field': 'due_date', 'display': 'Due Date', 'type': 'date'},
+            {'field': 'status', 'display': 'Status', 'type': 'status', 
+             'colors': {
+                 'Open': '#2196F3',  # Blue
+                 'In Progress': '#FF9800',  # Orange
+                 'On Hold': '#9C27B0',  # Purple
+                 'Completed': '#4CAF50',  # Green
+                 'Cancelled': '#9E9E9E',  # Grey
+                 'Overdue': '#F44336'  # Red
+             }},
+            {'field': 'priority', 'display': 'Priority', 'type': 'priority',
+             'colors': {
+                 'Low': '#8BC34A',  # Light Green
+                 'Medium': '#FFC107',  # Amber
+                 'High': '#FF5722',  # Deep Orange
+                 'Critical': '#F44336'  # Red
+             }}
+        ]
+        self.work_orders_cards.set_display_fields(display_fields)
+        
+        # Connect signals
+        self.work_orders_cards.itemClicked.connect(self.handle_work_order_click)
+        self.work_orders_cards.itemEditClicked.connect(self.edit_work_order)
+        self.work_orders_cards.itemContextMenuRequested.connect(self.show_work_order_context_menu)
+        
+        layout.addWidget(self.work_orders_cards)
+        
+        # Create hidden table for compatibility
         self.work_orders_table = QTableWidget()
-        self.work_orders_table.setColumnCount(9)  # Added assignment type column
+        self.work_orders_table.setColumnCount(9)
         self.work_orders_table.setHorizontalHeaderLabels([
             "ID", "Title", "Equipment", "Assignment Type", "Assigned To", "Due Date", 
             "Status", "Priority", "Created Date"
         ])
-        
-        # Set column widths
-        self.work_orders_table.setColumnWidth(0, 60)   # ID
-        self.work_orders_table.setColumnWidth(1, 200)  # Title
-        self.work_orders_table.setColumnWidth(2, 150)  # Equipment
-        self.work_orders_table.setColumnWidth(3, 100)  # Assignment Type
-        self.work_orders_table.setColumnWidth(4, 150)  # Assigned To
-        self.work_orders_table.setColumnWidth(5, 100)  # Due Date
-        self.work_orders_table.setColumnWidth(6, 100)  # Status
-        self.work_orders_table.setColumnWidth(7, 80)   # Priority
-        self.work_orders_table.setColumnWidth(8, 100)  # Created Date
-        
-        # Make table stretch to fill available space
-        self.work_orders_table.horizontalHeader().setStretchLastSection(True)
-        self.work_orders_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        
-        # Connect signals
-        self.work_orders_table.doubleClicked.connect(self.view_work_order_details)
-        self.work_orders_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.work_orders_table.customContextMenuRequested.connect(self.show_work_order_context_menu)
-        
-        content_layout.addWidget(self.work_orders_table)
+        self.work_orders_table.hide()
+        layout.addWidget(self.work_orders_table)
         
         # Action buttons
         buttons_container = QWidget()
@@ -280,13 +284,7 @@ class WorkOrdersWindow(QMainWindow):
         buttons_layout.addWidget(create_btn)
         buttons_layout.addWidget(refresh_btn)
         
-        content_layout.addWidget(buttons_container)
-        
-        # Set the content widget as the scroll area's widget
-        scroll.setWidget(content_widget)
-        
-        # Add scroll area to main layout
-        layout.addWidget(scroll)
+        layout.addWidget(buttons_container)
         
         self.tab_widget.addTab(work_orders_widget, "Work Orders")
 
@@ -907,42 +905,59 @@ class WorkOrdersWindow(QMainWindow):
         return colors.get(priority, QColor("#607D8B"))
 
     def load_work_orders(self):
-        """Load all work orders into the table"""
+        """Load all work orders"""
         work_orders = self.db_manager.get_all_work_orders()
+        
+        # Keep the table code for compatibility
         self.work_orders_table.setRowCount(len(work_orders))
         
+        # Prepare data for card view
+        card_data = []
+        
         for row, order in enumerate(work_orders):
+            # Update table
             self.work_orders_table.setItem(row, 0, QTableWidgetItem(str(order['work_order_id'])))
             self.work_orders_table.setItem(row, 1, QTableWidgetItem(order['title']))
             self.work_orders_table.setItem(row, 2, QTableWidgetItem(order['equipment_name']))
+            self.work_orders_table.setItem(row, 3, QTableWidgetItem(order.get('assignment_type', 'Individual')))
             
-            # Add assignment type
-            assignment_type = order.get('assignment_type', 'Individual')
-            self.work_orders_table.setItem(row, 3, QTableWidgetItem(assignment_type))
-            
-            # Set assigned to based on assignment type
-            if assignment_type == 'Team':
-                team_name = self.db_manager.get_team_name(order['team_id']) if order.get('team_id') else "Unknown Team"
-                self.work_orders_table.setItem(row, 4, QTableWidgetItem(f"Team: {team_name}"))
+            # Format assigned to
+            assigned_to = ""
+            if order.get('assignment_type') == 'Team':
+                team_name = self.db_manager.get_team_name(order['team_id'])
+                assigned_to = f"Team: {team_name}"
             else:
-                self.work_orders_table.setItem(row, 4, QTableWidgetItem(order['assigned_to'] or "Unassigned"))
+                craftsman = self.db_manager.get_craftsman_by_id(order.get('craftsman_id'))
+                if craftsman:
+                    assigned_to = f"{craftsman['first_name']} {craftsman['last_name']}"
             
+            self.work_orders_table.setItem(row, 4, QTableWidgetItem(assigned_to))
             self.work_orders_table.setItem(row, 5, QTableWidgetItem(str(order['due_date'])))
-            
-            # Set status with color
-            status_item = QTableWidgetItem(order['status'])
-            status_item.setBackground(self.get_status_color(order['status']))
-            self.work_orders_table.setItem(row, 6, status_item)
-            
-            # Set priority with color
-            priority_item = QTableWidgetItem(order['priority'])
-            priority_item.setBackground(self.get_priority_color(order['priority']))
-            self.work_orders_table.setItem(row, 7, priority_item)
-            
+            self.work_orders_table.setItem(row, 6, QTableWidgetItem(order['status']))
+            self.work_orders_table.setItem(row, 7, QTableWidgetItem(order['priority']))
             self.work_orders_table.setItem(row, 8, QTableWidgetItem(str(order['created_date'])))
+            
+            # Prepare card data
+            card_item = {
+                'work_order_id': order['work_order_id'],
+                'title': order['title'],
+                'equipment_name': order['equipment_name'],
+                'assigned_to': assigned_to,
+                'due_date': str(order['due_date']),
+                'status': order['status'],
+                'priority': order['priority'],
+                'created_date': str(order['created_date']),
+                'description': order.get('description', ''),
+                'assignment_type': order.get('assignment_type', 'Individual'),
+                'craftsman_id': order.get('craftsman_id'),
+                'team_id': order.get('team_id'),
+                'estimated_hours': order.get('estimated_hours', 0),
+                'actual_hours': order.get('actual_hours', 0)
+            }
+            card_data.append(card_item)
         
-        # Make sure the table is visible and refreshed
-        self.work_orders_table.viewport().update()
+        # Update card view
+        self.work_orders_cards.set_data(card_data)
 
     def filter_work_orders(self):
         """Filter work orders based on search and filter criteria"""
@@ -955,54 +970,55 @@ class WorkOrdersWindow(QMainWindow):
         # Get current date for date filtering
         current_date = QDate.currentDate()
         
-        for row in range(self.work_orders_table.rowCount()):
-            show_row = True
+        def filter_func(work_order):
+            show = True
             
             # Apply text search
             if search_text:
-                text_match = False
-                for col in range(self.work_orders_table.columnCount()):
-                    item = self.work_orders_table.item(row, col)
-                    if item and search_text in item.text().lower():
-                        text_match = True
+                # Search through all searchable fields
+                searchable_fields = [
+                    'title', 'equipment_name', 'assigned_to', 
+                    'status', 'priority', 'description'
+                ]
+                found = False
+                for field in searchable_fields:
+                    if field in work_order and str(work_order[field]).lower().find(search_text) != -1:
+                        found = True
                         break
-                if not text_match:
-                    show_row = False
+                if not found:
+                    show = False
             
             # Apply status filter
-            if status_filter != "All Statuses":
-                status_item = self.work_orders_table.item(row, 6)
-                if status_item and status_item.text() != status_filter:
-                    show_row = False
+            if status_filter != "All Statuses" and show:
+                if work_order['status'] != status_filter:
+                    show = False
             
             # Apply priority filter
-            if priority_filter != "All Priorities":
-                priority_item = self.work_orders_table.item(row, 7)
-                if priority_item and priority_item.text() != priority_filter:
-                    show_row = False
+            if priority_filter != "All Priorities" and show:
+                if work_order['priority'] != priority_filter:
+                    show = False
             
             # Apply assignment filter
-            if assignment_filter != "All Assignments":
-                assignment_item = self.work_orders_table.item(row, 3)
-                if assignment_item and assignment_item.text() != assignment_filter:
-                    show_row = False
+            if assignment_filter != "All Assignments" and show:
+                if work_order['assignment_type'] != assignment_filter:
+                    show = False
             
             # Apply date filter
-            if date_filter != "All Dates":
-                due_date_item = self.work_orders_table.item(row, 5)
-                if due_date_item:
-                    due_date = QDate.fromString(due_date_item.text(), "yyyy-MM-dd")
-                    
-                    if date_filter == "Today" and due_date != current_date:
-                        show_row = False
-                    elif date_filter == "This Week" and (due_date < current_date or due_date > current_date.addDays(7)):
-                        show_row = False
-                    elif date_filter == "This Month" and (due_date < current_date or due_date > current_date.addMonths(1)):
-                        show_row = False
-                    elif date_filter == "Overdue" and due_date >= current_date:
-                        show_row = False
+            if date_filter != "All Dates" and show:
+                due_date = QDate.fromString(work_order['due_date'], "yyyy-MM-dd")
+                if date_filter == "Today" and due_date != current_date:
+                    show = False
+                elif date_filter == "This Week" and (due_date < current_date or due_date > current_date.addDays(7)):
+                    show = False
+                elif date_filter == "This Month" and (due_date < current_date or due_date > current_date.addMonths(1)):
+                    show = False
+                elif date_filter == "Overdue" and due_date >= current_date:
+                    show = False
             
-            self.work_orders_table.setRowHidden(row, not show_row)
+            return show
+        
+        # Apply the filter function to the card view
+        self.work_orders_cards.filter_data(filter_func)
 
     def create_work_order(self):
         """Open dialog to create a new work order"""
@@ -1017,7 +1033,7 @@ class WorkOrdersWindow(QMainWindow):
     def view_work_order_details(self, index):
         """View details of the selected work order"""
         row = index.row()
-        work_order_id = int(self.work_orders_table.item(row, 0).text())
+        work_order_id = int(self.work_orders_cards.item(row, 0).text())
         
         # Get work order data
         work_order = self.db_manager.get_work_order_by_id(work_order_id)
@@ -1026,50 +1042,51 @@ class WorkOrdersWindow(QMainWindow):
             if dialog.exec():
                 self.refresh_data()
 
-    def show_work_order_context_menu(self, position):
-        """Show context menu for work orders table"""
-        row = self.work_orders_table.rowAt(position.y())
+    def show_work_order_context_menu(self, data, position):
+        """Show context menu for work orders"""
+        menu = QMenu(self)
         
-        if row >= 0:
-            menu = QMenu(self)
+        view_action = menu.addAction("View Details")
+        edit_action = menu.addAction("Edit Work Order")
+        
+        menu.addSeparator()
+        
+        status_menu = menu.addMenu("Change Status")
+        status_actions = {}
+        
+        for status in ["Open", "In Progress", "On Hold", "Completed", "Cancelled"]:
+            action = status_menu.addAction(status)
+            status_actions[action] = status
+        
+        menu.addSeparator()
+        
+        delete_action = menu.addAction("Delete Work Order")
+        
+        # Show menu and handle actions
+        action = menu.exec(position)
+        
+        if action:
+            work_order_id = data['work_order_id']
             
-            view_action = menu.addAction("View Details")
-            edit_action = menu.addAction("Edit Work Order")
+            if action == view_action:
+                work_order = self.db_manager.get_work_order_by_id(work_order_id)
+                if work_order:
+                    dialog = WorkOrderDialog(self.db_manager, work_order, parent=self)
+                    if dialog.exec():
+                        self.refresh_data()
             
-            menu.addSeparator()
+            elif action == edit_action:
+                work_order = self.db_manager.get_work_order_by_id(work_order_id)
+                if work_order:
+                    dialog = WorkOrderDialog(self.db_manager, work_order, parent=self)
+                    if dialog.exec():
+                        self.refresh_data()
             
-            status_menu = menu.addMenu("Change Status")
-            status_actions = {}
+            elif action == delete_action:
+                self.delete_work_order(work_order_id)
             
-            for status in ["Open", "In Progress", "On Hold", "Completed", "Cancelled"]:
-                action = status_menu.addAction(status)
-                status_actions[action] = status
-            
-            menu.addSeparator()
-            
-            delete_action = menu.addAction("Delete Work Order")
-            
-            # Show menu and handle actions
-            action = menu.exec(self.work_orders_table.viewport().mapToGlobal(position))
-            
-            if action:
-                work_order_id = int(self.work_orders_table.item(row, 0).text())
-                
-                if action == view_action:
-                    self.view_work_order_details(self.work_orders_table.indexAt(position))
-                
-                elif action == edit_action:
-                    work_order = self.db_manager.get_work_order_by_id(work_order_id)
-                    if work_order:
-                        dialog = WorkOrderDialog(self.db_manager, work_order, parent=self)
-                        if dialog.exec():
-                            self.refresh_data()
-                
-                elif action == delete_action:
-                    self.delete_work_order(work_order_id)
-                
-                elif action in status_actions:
-                    self.change_work_order_status(work_order_id, status_actions[action])
+            elif action in status_actions:
+                self.change_work_order_status(work_order_id, status_actions[action])
 
     def delete_work_order(self, work_order_id):
         """Delete a work order after confirmation"""
@@ -1869,3 +1886,20 @@ class WorkOrdersWindow(QMainWindow):
         
         except Exception as e:
             print(f"Error loading settings: {e}")
+
+    def handle_work_order_click(self, data):
+        """Handle single click on work order card - just select the card"""
+        # Selection is handled internally by the CardTableWidget
+        pass
+
+    def edit_work_order(self, data):
+        """Show edit dialog for a work order"""
+        work_order_id = data.get('work_order_id')
+        # Get the work order data first
+        work_order = self.db_manager.get_work_order_by_id(work_order_id)
+        if work_order:
+            dialog = WorkOrderDialog(self.db_manager, work_order, parent=self)
+            if dialog.exec_():
+                self.load_work_orders()  # Refresh the list if changes were made
+        else:
+            QMessageBox.warning(self, "Error", "Could not find work order details!")

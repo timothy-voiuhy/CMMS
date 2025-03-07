@@ -193,3 +193,116 @@
 2025-03-06 19:40:22,991 - INFO - Email sent successfully to john.rodriguez@gmail.com
 2025-03-06 19:40:22,992 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
 2025-03-06 19:41:10,666 - INFO - Notification scheduler stopped.
+2025-03-06 19:47:10,569 - INFO - Starting notification scheduler...
+2025-03-06 19:47:14,852 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-06 19:47:14,853 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 1 overdue work orders.
+2025-03-07 05:03:49,003 - INFO - Notification scheduler stopped.
+2025-03-07 05:04:16,520 - INFO - Starting notification scheduler...
+2025-03-07 05:04:16,624 - ERROR - Error sending email: [Errno -3] Temporary failure in name resolution
+2025-03-07 05:04:16,697 - ERROR - Error sending email: [Errno -3] Temporary failure in name resolution
+2025-03-07 05:04:16,698 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 05:10:23,589 - INFO - Notification scheduler stopped.
+2025-03-07 07:20:39,844 - INFO - Starting notification scheduler...
+2025-03-07 07:20:39,956 - ERROR - Error sending email: [Errno -3] Temporary failure in name resolution
+2025-03-07 07:20:40,027 - ERROR - Error sending email: [Errno -3] Temporary failure in name resolution
+2025-03-07 07:20:40,028 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 07:20:46,268 - INFO - Notification scheduler stopped.
+2025-03-07 07:22:43,124 - INFO - Starting notification scheduler...
+2025-03-07 07:22:43,198 - ERROR - Error sending email: [Errno -3] Temporary failure in name resolution
+2025-03-07 07:22:43,266 - ERROR - Error sending email: [Errno -3] Temporary failure in name resolution
+2025-03-07 07:22:43,267 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 08:19:05,225 - INFO - Starting notification scheduler...
+2025-03-07 08:19:05,303 - ERROR - Error sending email: [Errno -3] Temporary failure in name resolution
+2025-03-07 08:19:05,372 - ERROR - Error sending email: [Errno -3] Temporary failure in name resolution
+2025-03-07 08:19:05,373 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 08:44:43,451 - INFO - Notification scheduler stopped.
+2025-03-07 08:48:25,613 - INFO - Starting notification scheduler...
+2025-03-07 08:49:06,023 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 08:49:09,575 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 08:49:09,575 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:05:17,527 - INFO - Notification scheduler stopped.
+2025-03-07 09:05:31,415 - INFO - Starting notification scheduler...
+2025-03-07 09:05:34,763 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:05:40,113 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:05:40,114 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:10:41,802 - INFO - Notification scheduler stopped.
+2025-03-07 09:10:51,766 - INFO - Starting notification scheduler...
+2025-03-07 09:10:57,428 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:11:00,608 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:11:00,609 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:18:51,354 - INFO - Notification scheduler stopped.
+2025-03-07 09:20:38,265 - INFO - Starting notification scheduler...
+2025-03-07 09:20:41,603 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:20:44,926 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:20:44,926 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:21:42,420 - INFO - Notification scheduler stopped.
+2025-03-07 09:21:52,000 - INFO - Starting notification scheduler...
+2025-03-07 09:22:01,734 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:22:04,908 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:22:04,908 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:26:59,858 - INFO - Notification scheduler stopped.
+2025-03-07 09:27:11,465 - INFO - Starting notification scheduler...
+2025-03-07 09:27:15,465 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:27:18,779 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:27:18,780 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:32:44,542 - INFO - Notification scheduler stopped.
+2025-03-07 09:32:54,930 - INFO - Starting notification scheduler...
+2025-03-07 09:32:59,406 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:33:02,713 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:33:02,713 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:34:07,235 - INFO - Notification scheduler stopped.
+2025-03-07 09:34:25,199 - INFO - Starting notification scheduler...
+2025-03-07 09:34:28,440 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:34:31,763 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:34:31,764 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:38:22,150 - INFO - Notification scheduler stopped.
+2025-03-07 09:39:43,328 - INFO - Starting notification scheduler...
+2025-03-07 09:39:46,869 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:39:49,958 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:39:49,959 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:48:30,830 - INFO - Notification scheduler stopped.
+2025-03-07 09:49:32,337 - INFO - Starting notification scheduler...
+2025-03-07 09:49:35,731 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:49:39,194 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:49:39,195 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:53:37,800 - INFO - Notification scheduler stopped.
+2025-03-07 09:53:53,823 - INFO - Starting notification scheduler...
+2025-03-07 09:53:57,382 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:54:00,752 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:54:00,753 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:54:36,635 - INFO - Notification scheduler stopped.
+2025-03-07 09:54:52,093 - INFO - Starting notification scheduler...
+2025-03-07 09:54:55,888 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:54:59,215 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:54:59,215 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 09:57:21,159 - INFO - Notification scheduler stopped.
+2025-03-07 09:57:39,164 - INFO - Starting notification scheduler...
+2025-03-07 09:57:42,597 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:57:45,873 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 09:57:45,873 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 10:02:14,680 - INFO - Notification scheduler stopped.
+2025-03-07 10:02:24,735 - INFO - Starting notification scheduler...
+2025-03-07 10:02:29,587 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 10:02:33,411 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 10:02:33,415 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 10:16:32,371 - INFO - Notification scheduler stopped.
+2025-03-07 10:16:42,917 - INFO - Starting notification scheduler...
+2025-03-07 10:16:46,524 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 10:16:49,881 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 10:16:49,881 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 10:19:56,711 - INFO - Notification scheduler stopped.
+2025-03-07 10:20:09,136 - INFO - Starting notification scheduler...
+2025-03-07 10:20:12,803 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 10:20:16,053 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 10:20:16,054 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 10:24:08,035 - INFO - Notification scheduler stopped.
+2025-03-07 10:24:22,714 - INFO - Starting notification scheduler...
+2025-03-07 10:24:25,901 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 10:24:30,386 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 10:24:30,387 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 10:31:15,170 - INFO - Notification scheduler stopped.
+2025-03-07 10:31:25,265 - INFO - Starting notification scheduler...
+2025-03-07 10:31:28,632 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 10:31:31,788 - INFO - Email sent successfully to john.rodriguez@gmail.com
+2025-03-07 10:31:31,789 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
+2025-03-07 10:53:31,902 - INFO - Notification scheduler stopped.

@@ -11,6 +11,416 @@ from datetime import datetime, timedelta
 import random
 import os
 import json
+from ui.card_table_widget import CardTableWidget
+
+# Add this class definition to the file
+
+class CraftsmanDetailsDialog(QDialog):
+    def __init__(self, craftsman_id, db_manager, parent=None, read_only=False):
+        super().__init__(parent)
+        self.craftsman_id = craftsman_id
+        self.db_manager = db_manager
+        self.setWindowTitle("Craftsman Details")
+        self.setMinimumWidth(800)
+        
+        layout = QVBoxLayout(self)
+        
+        # Create tab widget for different sections
+        self.tab_widget = QTabWidget()
+        layout.addWidget(self.tab_widget)
+        
+        # Setup tabs
+        self.setup_basic_info_tab()
+        self.setup_skills_tab()
+        self.setup_work_history_tab()
+        self.setup_training_tab()
+        self.setup_schedule_tab()
+        self.setup_teams_tab()
+        
+        # Add close button
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(self.close)
+        layout.addWidget(close_btn)
+
+    def setup_basic_info_tab(self):
+        basic_info = QWidget()
+        layout = QFormLayout(basic_info)
+        
+        # Get craftsman data
+        craftsman = self.db_manager.get_craftsman_by_id(self.craftsman_id)
+        if not craftsman:
+            return
+        
+        # Create fields
+        self.edit_first_name = QLineEdit(craftsman['first_name'])
+        self.edit_last_name = QLineEdit(craftsman['last_name'])
+        self.edit_phone = QLineEdit(craftsman['phone'])
+        self.edit_email = QLineEdit(craftsman['email'])
+        self.edit_specialization = QComboBox()
+        self.edit_specialization.addItems(["Mechanical", "Electrical", "HVAC", "Plumbing"])
+        self.edit_specialization.setCurrentText(craftsman['specialization'])
+        self.edit_status = QComboBox()
+        self.edit_status.addItems(["Active", "Inactive"])
+        self.edit_status.setCurrentText(craftsman['status'])
+        
+        # Add fields to layout
+        layout.addRow("Employee ID:", QLabel(craftsman['employee_id']))
+        layout.addRow("First Name:", self.edit_first_name)
+        layout.addRow("Last Name:", self.edit_last_name)
+        layout.addRow("Phone:", self.edit_phone)
+        layout.addRow("Email:", self.edit_email)
+        layout.addRow("Specialization:", self.edit_specialization)
+        layout.addRow("Status:", self.edit_status)
+        layout.addRow("Hire Date:", QLabel(str(craftsman['hire_date'])))
+        
+        # Add update button
+        update_btn = QPushButton("Update Information")
+        update_btn.clicked.connect(self.update_basic_info)
+        layout.addRow("", update_btn)
+        
+        self.tab_widget.addTab(basic_info, "Basic Information")
+
+    def setup_skills_tab(self):
+        skills_widget = QWidget()
+        layout = QVBoxLayout(skills_widget)
+        
+        # Add skills table
+        self.skills_table = QTableWidget()
+        self.skills_table.setColumnCount(6)
+        self.skills_table.setHorizontalHeaderLabels([
+            "Skill Name", "Level", "Certification",
+            "Cert. Date", "Expiry Date", "Authority"
+        ])
+        
+        # Set column widths
+        self.skills_table.setColumnWidth(0, 120)  # Skill Name
+        self.skills_table.setColumnWidth(1, 80)   # Level
+        self.skills_table.setColumnWidth(2, 150)  # Certification
+        self.skills_table.setColumnWidth(3, 100)  # Cert. Date
+        self.skills_table.setColumnWidth(4, 100)  # Expiry Date
+        self.skills_table.setColumnWidth(5, 150)  # Authority
+        
+        # Make table stretch to fill available space
+        self.skills_table.horizontalHeader().setStretchLastSection(True)
+        self.skills_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        layout.addWidget(self.skills_table)
+        
+        # Add new skill button
+        add_skill_btn = QPushButton("Add New Skill")
+        add_skill_btn.clicked.connect(self.add_skill_dialog)
+        layout.addWidget(add_skill_btn)
+        
+        self.load_skills()
+        self.tab_widget.addTab(skills_widget, "Skills & Certifications")
+
+    def setup_work_history_tab(self):
+        history_widget = QWidget()
+        layout = QVBoxLayout(history_widget)
+        
+        # Add work history table
+        self.history_table = QTableWidget()
+        self.history_table.setColumnCount(6)
+        self.history_table.setHorizontalHeaderLabels([
+            "Date", "Equipment", "Task Type",
+            "Description", "Performance", "Time Taken"
+        ])
+        layout.addWidget(self.history_table)
+        
+        self.load_work_history()
+        self.tab_widget.addTab(history_widget, "Work History")
+
+    def setup_training_tab(self):
+        training_widget = QWidget()
+        layout = QVBoxLayout(training_widget)
+        
+        # Add training table
+        self.training_table = QTableWidget()
+        self.training_table.setColumnCount(6)
+        self.training_table.setHorizontalHeaderLabels([
+            "Training Name", "Start Date", "Completion Date",
+            "Provider", "Certification", "Status"
+        ])
+        layout.addWidget(self.training_table)
+        
+        # Add new training button
+        add_training_btn = QPushButton("Add Training Record")
+        add_training_btn.clicked.connect(self.add_training_dialog)
+        layout.addWidget(add_training_btn)
+        
+        self.load_training_records()
+        self.tab_widget.addTab(training_widget, "Training Records")
+
+    def setup_schedule_tab(self):
+        schedule_widget = QWidget()
+        layout = QVBoxLayout(schedule_widget)
+        
+        # Add schedule table
+        self.schedule_table = QTableWidget()
+        self.schedule_table.setColumnCount(5)
+        self.schedule_table.setHorizontalHeaderLabels([
+            "Date", "Shift Start", "Shift End", "Status", "Notes"
+        ])
+        layout.addWidget(self.schedule_table)
+        
+        self.load_schedule()
+        self.tab_widget.addTab(schedule_widget, "Schedule")
+
+    def setup_teams_tab(self):
+        """Setup tab showing teams the craftsman belongs to"""
+        teams_widget = QWidget()
+        layout = QVBoxLayout(teams_widget)
+        
+        # Add teams table
+        self.teams_table = QTableWidget()
+        self.teams_table.setColumnCount(5)
+        self.teams_table.setHorizontalHeaderLabels([
+            "Team Name", "Team Leader", "Role", "Joined Date", "Description"
+        ])
+        
+        # Set column widths
+        self.teams_table.setColumnWidth(0, 150)  # Team Name
+        self.teams_table.setColumnWidth(1, 150)  # Team Leader
+        self.teams_table.setColumnWidth(2, 100)  # Role
+        self.teams_table.setColumnWidth(3, 100)  # Joined Date
+        self.teams_table.setColumnWidth(4, 250)  # Description
+        
+        layout.addWidget(self.teams_table)
+        
+        self.tab_widget.addTab(teams_widget, "Teams")
+        self.load_teams()
+
+    # Add helper methods for loading data and handling updates
+    def update_basic_info(self):
+        try:
+            data = {
+                'employee_id': self.craftsman_id,  # This is the employee_id we received in constructor
+                'first_name': self.edit_first_name.text(),
+                'last_name': self.edit_last_name.text(),
+                'phone': self.edit_phone.text(),
+                'email': self.edit_email.text(),
+                'specialization': self.edit_specialization.currentText(),
+                'status': self.edit_status.currentText()
+            }
+            
+            if self.db_manager.update_craftsman(data):
+                QMessageBox.information(self, "Success", "Craftsman information updated successfully!")
+                self.accept()  # Close dialog with success
+                return True
+            else:
+                QMessageBox.warning(self, "Error", "Failed to update craftsman information!")
+                return False
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"An error occurred while updating: {str(e)}")
+            return False
+
+    def add_skill_dialog(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add New Skill")
+        layout = QFormLayout(dialog)
+        
+        # Create input fields
+        skill_name = QLineEdit()
+        skill_level = QComboBox()
+        skill_level.addItems(["Basic", "Intermediate", "Advanced", "Expert"])
+        certification = QLineEdit()
+        cert_date = QDateEdit()
+        cert_date.setCalendarPopup(True)
+        cert_date.setDate(datetime.now().date())
+        expiry_date = QDateEdit()
+        expiry_date.setCalendarPopup(True)
+        expiry_date.setDate(datetime.now().date())
+        authority = QLineEdit()
+        
+        # Add fields to layout
+        layout.addRow("Skill Name:", skill_name)
+        layout.addRow("Skill Level:", skill_level)
+        layout.addRow("Certification:", certification)
+        layout.addRow("Certification Date:", cert_date)
+        layout.addRow("Expiry Date:", expiry_date)
+        layout.addRow("Authority:", authority)
+        
+        # Add buttons
+        buttons = QHBoxLayout()
+        save_btn = QPushButton("Save")
+        cancel_btn = QPushButton("Cancel")
+        buttons.addWidget(save_btn)
+        buttons.addWidget(cancel_btn)
+        layout.addRow("", buttons)
+        
+        # Connect buttons
+        save_btn.clicked.connect(lambda: self.save_skill({
+            'craftsman_id': self.craftsman_id,
+            'skill_name': skill_name.text(),
+            'skill_level': skill_level.currentText(),
+            'certification': certification.text(),
+            'certification_date': cert_date.date().toPython(),
+            'expiry_date': expiry_date.date().toPython(),
+            'certification_authority': authority.text()
+        }, dialog))
+        cancel_btn.clicked.connect(dialog.reject)
+        
+        dialog.exec()
+
+    def save_skill(self, data, dialog):
+        if self.db_manager.add_craftsman_skill(data):
+            QMessageBox.information(self, "Success", "Skill added successfully!")
+            self.load_skills()
+            dialog.accept()
+        else:
+            QMessageBox.warning(self, "Error", "Failed to add skill!")
+
+    def load_skills(self):
+        skills = self.db_manager.get_craftsman_skills(self.craftsman_id)
+        self.skills_table.setRowCount(len(skills))
+        
+        for row, skill in enumerate(skills):
+            self.skills_table.setItem(row, 0, QTableWidgetItem(skill['skill_name']))
+            self.skills_table.setItem(row, 1, QTableWidgetItem(skill['skill_level']))
+            self.skills_table.setItem(row, 2, QTableWidgetItem(skill['certification']))
+            self.skills_table.setItem(row, 3, QTableWidgetItem(str(skill['certification_date'])))
+            self.skills_table.setItem(row, 4, QTableWidgetItem(str(skill['expiry_date'])))
+            self.skills_table.setItem(row, 5, QTableWidgetItem(skill['certification_authority']))
+
+    def add_training_dialog(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add Training Record")
+        layout = QFormLayout(dialog)
+        
+        # Create input fields
+        training_name = QLineEdit()
+        start_date = QDateEdit()
+        start_date.setCalendarPopup(True)
+        start_date.setDate(datetime.now().date())
+        completion_date = QDateEdit()
+        completion_date.setCalendarPopup(True)
+        completion_date.setDate(datetime.now().date())
+        provider = QLineEdit()
+        certification = QLineEdit()
+        status = QComboBox()
+        status.addItems(["Scheduled", "In Progress", "Completed", "Failed"])
+        
+        # Add fields to layout
+        layout.addRow("Training Name:", training_name)
+        layout.addRow("Start Date:", start_date)
+        layout.addRow("Completion Date:", completion_date)
+        layout.addRow("Provider:", provider)
+        layout.addRow("Certification:", certification)
+        layout.addRow("Status:", status)
+        
+        # Add buttons
+        buttons = QHBoxLayout()
+        save_btn = QPushButton("Save")
+        cancel_btn = QPushButton("Cancel")
+        buttons.addWidget(save_btn)
+        buttons.addWidget(cancel_btn)
+        layout.addRow("", buttons)
+        
+        # Connect buttons
+        save_btn.clicked.connect(lambda: self.save_training({
+            'craftsman_id': self.craftsman_id,
+            'training_name': training_name.text(),
+            'training_date': start_date.date().toPython(),
+            'completion_date': completion_date.date().toPython(),
+            'training_provider': provider.text(),
+            'certification_received': certification.text(),
+            'training_status': status.currentText()
+        }, dialog))
+        cancel_btn.clicked.connect(dialog.reject)
+        
+        dialog.exec()
+
+    def save_training(self, data, dialog):
+        if self.db_manager.add_craftsman_training(data):
+            QMessageBox.information(self, "Success", "Training record added successfully!")
+            self.load_training_records()
+            dialog.accept()
+        else:
+            QMessageBox.warning(self, "Error", "Failed to add training record!")
+
+    def load_training_records(self):
+        records = self.db_manager.get_craftsman_training(self.craftsman_id)
+        self.training_table.setRowCount(len(records))
+        
+        for row, record in enumerate(records):
+            self.training_table.setItem(row, 0, QTableWidgetItem(record['training_name']))
+            self.training_table.setItem(row, 1, QTableWidgetItem(str(record['training_date'])))
+            self.training_table.setItem(row, 2, QTableWidgetItem(str(record['completion_date'])))
+            self.training_table.setItem(row, 3, QTableWidgetItem(record['training_provider']))
+            self.training_table.setItem(row, 4, QTableWidgetItem(record['certification_received']))
+            self.training_table.setItem(row, 5, QTableWidgetItem(record['training_status']))
+
+    def load_work_history(self):
+        history = self.db_manager.get_craftsman_work_history(self.craftsman_id)
+        self.history_table.setRowCount(len(history))
+        
+        for row, entry in enumerate(history):
+            self.history_table.setItem(row, 0, QTableWidgetItem(str(entry['task_date'])))
+            self.history_table.setItem(row, 1, QTableWidgetItem(str(entry['equipment_id'])))
+            self.history_table.setItem(row, 2, QTableWidgetItem(entry['task_type']))
+            self.history_table.setItem(row, 3, QTableWidgetItem(entry['task_description']))
+            self.history_table.setItem(row, 4, QTableWidgetItem(str(entry['performance_rating'])))
+            self.history_table.setItem(row, 5, QTableWidgetItem(str(entry['completion_time'])))
+
+    def load_schedule(self):
+        schedule = self.db_manager.get_craftsman_schedule(self.craftsman_id)
+        self.schedule_table.setRowCount(len(schedule))
+        
+        for row, shift in enumerate(schedule):
+            self.schedule_table.setItem(row, 0, QTableWidgetItem(str(shift['date'])))
+            self.schedule_table.setItem(row, 1, QTableWidgetItem(str(shift['shift_start'])))
+            self.schedule_table.setItem(row, 2, QTableWidgetItem(str(shift['shift_end'])))
+            self.schedule_table.setItem(row, 3, QTableWidgetItem(shift['status']))
+            self.schedule_table.setItem(row, 4, QTableWidgetItem(shift['notes']))
+
+    def load_teams(self):
+        """Load teams that the craftsman belongs to"""
+        try:
+            # First, we need to get the craftsman's internal ID (craftsman_id) from the employee_id
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get the craftsman's internal ID if we received an employee_id
+            if not str(self.craftsman_id).isdigit():
+                cursor.execute("""
+                    SELECT craftsman_id FROM craftsmen 
+                    WHERE employee_id = %s
+                """, (self.craftsman_id,))
+                
+                result = cursor.fetchone()
+                if result:
+                    internal_id = result['craftsman_id']
+                else:
+                    print(f"Could not find craftsman with ID: {self.craftsman_id}")
+                    return
+            else:
+                internal_id = self.craftsman_id
+            
+            # Now get the teams using the internal ID
+            teams = self.db_manager.get_craftsman_teams(internal_id)
+            self.teams_table.setRowCount(len(teams))
+            
+            for row, team in enumerate(teams):
+                self.teams_table.setItem(row, 0, QTableWidgetItem(team['team_name']))
+                
+                # Format team leader name
+                leader_name = "Not Assigned"
+                if team.get('leader_first_name') and team.get('leader_last_name'):
+                    leader_name = f"{team['leader_first_name']} {team['leader_last_name']}"
+                self.teams_table.setItem(row, 1, QTableWidgetItem(leader_name))
+                
+                # Role and joined date
+                self.teams_table.setItem(row, 2, QTableWidgetItem(team['role']))
+                self.teams_table.setItem(row, 3, QTableWidgetItem(str(team['joined_date'])))
+                
+                # Description
+                self.teams_table.setItem(row, 4, QTableWidgetItem(team.get('description', '')))
+                
+        except Exception as e:
+            print(f"Error loading craftsman teams: {e}")
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
 
 
 class CraftsMenWindow(QMainWindow):
@@ -78,33 +488,39 @@ class CraftsMenWindow(QMainWindow):
         list_widget = QWidget()
         list_layout = QVBoxLayout(list_widget)
         
-        # Create table
+        # Create card table widget instead of regular table
+        self.craftsmen_cards = CardTableWidget()
+        
+        # Define display fields
+        display_fields = [
+            {'field': 'full_name', 'display': 'Name'},
+            {'field': 'specialization', 'display': 'Specialization'},
+            {'field': 'experience_level', 'display': 'Experience'},
+            {'field': 'phone', 'display': 'Phone'},
+            {'field': 'email', 'display': 'Email'},
+            {'field': 'status', 'display': 'Status', 'type': 'status', 
+             'colors': {'Active': '#4CAF50', 'Inactive': '#F44336'}}
+        ]
+        self.craftsmen_cards.set_display_fields(display_fields)
+        
+        # Connect signals
+        self.craftsmen_cards.itemClicked.connect(self.handle_craftsman_click)
+        # self.craftsmen_cards.itemDoubleClicked.connect(self.show_craftsman_details)
+        self.craftsmen_cards.itemEditClicked.connect(self.edit_craftsman)
+        
+        list_layout.addWidget(self.craftsmen_cards)
+        
+        # Create hidden table for compatibility with existing code
         self.craftsmen_table = QTableWidget()
         self.craftsmen_table.setColumnCount(8)
         self.craftsmen_table.setHorizontalHeaderLabels([
             "ID", "Name", "Specialization", "Experience",
             "Phone", "Email", "Status", "Hire Date"
         ])
-        
-        # Set column widths proportionally
-        self.craftsmen_table.setColumnWidth(0, 60)   # ID
-        self.craftsmen_table.setColumnWidth(1, 150)  # Name
-        self.craftsmen_table.setColumnWidth(2, 120)  # Specialization
-        self.craftsmen_table.setColumnWidth(3, 100)  # Experience
-        self.craftsmen_table.setColumnWidth(4, 120)  # Phone
-        self.craftsmen_table.setColumnWidth(5, 180)  # Email
-        self.craftsmen_table.setColumnWidth(6, 80)   # Status
-        self.craftsmen_table.setColumnWidth(7, 100)  # Hire Date
-        
-        # Make table stretch to fill available space
-        self.craftsmen_table.horizontalHeader().setStretchLastSection(True)
-        self.craftsmen_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        
-        self.craftsmen_table.doubleClicked.connect(self.show_craftsman_details)
-        
+        self.craftsmen_table.hide()  # Hide the table since we're using cards
         list_layout.addWidget(self.craftsmen_table)
         
-        # Add refresh button
+        # Keep the refresh button
         refresh_btn = QPushButton("Refresh List")
         refresh_btn.clicked.connect(self.load_craftsmen)
         list_layout.addWidget(refresh_btn)
@@ -384,13 +800,15 @@ class CraftsMenWindow(QMainWindow):
 
     def generate_complete_craftsman_report(self):
         """Generate a comprehensive report for the selected craftsman"""
-        selected_items = self.craftsmen_table.selectedItems()
-        if not selected_items:
+        # Get selected craftsman data
+        selected_data = self.craftsmen_cards.get_selected_data()
+        
+        if not selected_data:
             QMessageBox.warning(self, "Warning", "Please select a craftsman first!")
             return
-
-        row = selected_items[0].row()
-        craftsman_id = self.craftsmen_table.item(row, 0).text()
+        
+        # Get craftsman ID from the selected data
+        craftsman_id = selected_data.get('craftsman_id') or selected_data.get('employee_id')
 
         try:
             # Use the new reporting module to generate the report
@@ -427,13 +845,15 @@ class CraftsMenWindow(QMainWindow):
 
     def generate_craftsman_report(self, report_type):
         """Generate specific type of craftsman report"""
-        selected_items = self.craftsmen_table.selectedItems()
-        if not selected_items:
+        # Get selected craftsman data
+        selected_data = self.craftsmen_cards.get_selected_data()
+        
+        if not selected_data:
             QMessageBox.warning(self, "Warning", "Please select a craftsman first!")
             return
-
-        row = selected_items[0].row()
-        craftsman_id = self.craftsmen_table.item(row, 0).text()
+        
+        # Get craftsman ID from the selected data
+        craftsman_id = selected_data.get('craftsman_id') or selected_data.get('employee_id')
         
         try:
             # Use the new reporting module to generate the report
@@ -510,403 +930,6 @@ class CraftsMenWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to generate team report: {str(e)}")
 
-    def draw_craftsman_report(self, painter, craftsman_id, printer):
-        """Draw the complete craftsman report with improved layout"""
-        # Set up page metrics
-        page_rect = printer.pageRect(QPrinter.Unit.DevicePixel)
-        margin = 100
-        content_width = page_rect.width() - (margin * 2)
-        y_position = margin
-        line_height = painter.fontMetrics().height() + 10
-        
-        # Get craftsman data
-        craftsman = self.db_manager.get_craftsman_by_id(craftsman_id)
-        skills = self.db_manager.get_craftsman_skills(craftsman_id)
-        training = self.db_manager.get_craftsman_training(craftsman_id)
-        work_history = self.db_manager.get_craftsman_work_history(craftsman_id)
-        performance = self.db_manager.get_craftsman_performance(craftsman_id)
-        
-        # Draw header with background
-        header_rect = QRect(50, 50, page_rect.width() - 100, 80)
-        painter.fillRect(header_rect, QColor("#2a2a2a"))
-        
-        # Draw title
-        title_font = painter.font()
-        title_font.setPointSize(16)
-        title_font.setBold(True)
-        painter.setFont(title_font)
-        painter.setPen(QColor("#ffffff"))
-        painter.drawText(header_rect, Qt.AlignmentFlag.AlignCenter, 
-                        f"Craftsman Report - {craftsman['first_name']} {craftsman['last_name']}")
-        
-        y_position = header_rect.bottom() + 30
-        
-        # Reset font for content
-        font = painter.font()
-        font.setPointSize(10)
-        font.setBold(False)
-        painter.setFont(font)
-        painter.setPen(QColor("#000000"))
-        
-        # Draw report date
-        date_font = painter.font()
-        date_font.setItalic(True)
-        painter.setFont(date_font)
-        painter.drawText(margin, y_position, f"Report generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        y_position += line_height * 2
-        
-        # Reset font
-        font.setItalic(False)
-        painter.setFont(font)
-        
-        # Basic Information Section
-        self.draw_section_header(painter, "Basic Information", margin, y_position)
-        y_position += line_height * 1.5
-        
-        # Draw a horizontal line
-        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-        
-        # Create a table-like layout for basic info
-        basic_info = [
-            ("Employee ID", craftsman['employee_id']),
-            ("Name", f"{craftsman['first_name']} {craftsman['last_name']}"),
-            ("Specialization", craftsman['specialization']),
-            ("Experience Level", craftsman['experience_level']),
-            ("Phone", craftsman['phone']),
-            ("Email", craftsman['email']),
-            ("Hire Date", str(craftsman['hire_date'])),
-            ("Status", craftsman['status'])
-        ]
-        
-        # Calculate column widths
-        col1_width = 150
-        col2_width = content_width - col1_width
-        
-        # Draw basic info in two columns
-        left_items = basic_info[:4]
-        right_items = basic_info[4:]
-        
-        for i, (label, value) in enumerate(left_items):
-            self.draw_table_row(painter, label, value, margin, y_position, col1_width)
-            y_position += line_height
-        
-        y_position = header_rect.bottom() + 30 + line_height * 2 + line_height * 1.5  # Reset to top of section
-        
-        for i, (label, value) in enumerate(right_items):
-            self.draw_table_row(painter, label, value, margin + col1_width + 50, y_position, col1_width)
-            y_position += line_height
-        
-        # Move to the bottom of the section
-        y_position = header_rect.bottom() + 30 + line_height * 2 + line_height * 1.5 + line_height * 4
-        
-        # Skills Section
-        y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
-        self.draw_section_header(painter, "Skills & Certifications", margin, y_position)
-        y_position += line_height * 1.5
-        
-        # Draw a horizontal line
-        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-        
-        if skills:
-            # Draw table headers
-            skill_col_width = 150
-            level_col_width = 100
-            cert_col_width = content_width - skill_col_width - level_col_width
-            
-            header_font = painter.font()
-            header_font.setBold(True)
-            painter.setFont(header_font)
-            
-            painter.drawText(margin, y_position, "Skill")
-            painter.drawText(margin + skill_col_width, y_position, "Level")
-            painter.drawText(margin + skill_col_width + level_col_width, y_position, "Certification")
-            
-            y_position += line_height
-            
-            # Draw a line under headers
-            painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-            
-            # Reset font
-            font.setBold(False)
-            painter.setFont(font)
-            
-            # Draw skills data
-            for skill in skills:
-                # Check if we need a page break
-                if y_position > page_rect.height() - margin - line_height * 2:
-                    printer.newPage()
-                    y_position = margin
-                
-                painter.drawText(margin, y_position, skill['skill_name'])
-                painter.drawText(margin + skill_col_width, y_position, skill['skill_level'])
-                
-                # Handle certification text that might be long
-                cert_text = skill.get('certification', '')
-                if cert_text:
-                    metrics = painter.fontMetrics()
-                    if metrics.horizontalAdvance(cert_text) > cert_col_width:
-                        # Text is too long, truncate with ellipsis
-                        cert_text = metrics.elidedText(cert_text, Qt.TextElideMode.ElideRight, cert_col_width)
-                
-                painter.drawText(margin + skill_col_width + level_col_width, y_position, cert_text)
-                
-                y_position += line_height
-                
-                # Draw a light separator line
-                painter.setPen(QColor("#dddddd"))
-                painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-                painter.setPen(QColor("#000000"))
-        else:
-            painter.drawText(margin, y_position, "No skills or certifications recorded.")
-            y_position += line_height
-        
-        y_position += line_height  # Extra space after section
-        
-        # Training Records Section
-        y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
-        self.draw_section_header(painter, "Training Records", margin, y_position)
-        y_position += line_height * 1.5
-        
-        # Draw a horizontal line
-        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-        
-        if training:
-            # Draw table headers
-            training_col_width = 200
-            date_col_width = 100
-            status_col_width = content_width - training_col_width - date_col_width
-            
-            header_font = painter.font()
-            header_font.setBold(True)
-            painter.setFont(header_font)
-            
-            painter.drawText(margin, y_position, "Training")
-            painter.drawText(margin + training_col_width, y_position, "Completion Date")
-            painter.drawText(margin + training_col_width + date_col_width, y_position, "Status")
-            
-            y_position += line_height
-            
-            # Draw a line under headers
-            painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-            
-            # Reset font
-            font.setBold(False)
-            painter.setFont(font)
-            
-            # Draw training data
-            for record in training:
-                # Check if we need a page break
-                if y_position > page_rect.height() - margin - line_height * 2:
-                    printer.newPage()
-                    y_position = margin
-                
-                painter.drawText(margin, y_position, record['training_name'])
-                painter.drawText(margin + training_col_width, y_position, str(record['completion_date']))
-                painter.drawText(margin + training_col_width + date_col_width, y_position, record['training_status'])
-                
-                y_position += line_height
-                
-                # Draw a light separator line
-                painter.setPen(QColor("#dddddd"))
-                painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-                painter.setPen(QColor("#000000"))
-        else:
-            painter.drawText(margin, y_position, "No training records available.")
-            y_position += line_height
-        
-        y_position += line_height  # Extra space after section
-        
-        # Performance Metrics Section
-        y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
-        self.draw_section_header(painter, "Performance Metrics", margin, y_position)
-        y_position += line_height * 1.5
-        
-        # Draw a horizontal line
-        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-        
-        if performance:
-            metrics = [
-                ("Tasks Completed (Last Month)", str(performance.get('month_count', 'N/A'))),
-                ("Average Rating (Last Month)", f"{performance.get('month_rating', 0):.1f}" if performance.get('month_rating') is not None else 'N/A'),
-                ("On-Time Completion Rate", f"{performance.get('month_percentage', 0):.1f}%" if performance.get('month_percentage') is not None else 'N/A')
-            ]
-            
-            for label, value in metrics:
-                self.draw_table_row(painter, label, value, margin, y_position, 250)
-                y_position += line_height
-        else:
-            painter.drawText(margin, y_position, "No performance metrics available.")
-            y_position += line_height
-        
-        # Footer - replace the pageNumber() call
-        footer_text = "Generated by CMMS"  # Alternative footer text
-        painter.drawText(
-            QRect(margin, page_rect.height() - margin, content_width, line_height),
-            Qt.AlignmentFlag.AlignCenter,
-            footer_text
-        )
-
-    def draw_table_row(self, painter, label, value, x, y, label_width):
-        """Draw a table row with label and value"""
-        font = painter.font()
-        font.setBold(True)
-        painter.setFont(font)
-        
-        painter.drawText(x, y, label + ":")
-        
-        font.setBold(False)
-        painter.setFont(font)
-        
-        painter.drawText(x + label_width, y, str(value))
-
-    def draw_team_report(self, painter, team_name, team_leader, printer):
-        """Draw the team report with improved layout"""
-        # Set up page metrics
-        page_rect = printer.pageRect(QPrinter.Unit.DevicePixel)
-        margin = 100
-        content_width = page_rect.width() - (margin * 2)
-        y_position = margin
-        line_height = painter.fontMetrics().height() + 10
-        
-        # Get team data
-        members = self.db_manager.get_team_members(team_name)
-        team_performance = self.db_manager.get_team_performance(team_name)
-        
-        # Draw header with background
-        header_rect = QRect(50, 50, page_rect.width() - 100, 80)
-        painter.fillRect(header_rect, QColor("#2a2a2a"))
-        
-        # Draw title
-        title_font = painter.font()
-        title_font.setPointSize(16)
-        title_font.setBold(True)
-        painter.setFont(title_font)
-        painter.setPen(QColor("#ffffff"))
-        painter.drawText(header_rect, Qt.AlignmentFlag.AlignCenter, f"Team Report - {team_name}")
-        
-        y_position = header_rect.bottom() + 30
-        
-        # Reset font for content
-        font = painter.font()
-        font.setPointSize(10)
-        font.setBold(False)
-        painter.setFont(font)
-        painter.setPen(QColor("#000000"))
-        
-        # Draw report date
-        date_font = painter.font()
-        date_font.setItalic(True)
-        painter.setFont(date_font)
-        painter.drawText(margin, y_position, f"Report generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        y_position += line_height * 2
-        
-        # Reset font
-        font.setItalic(False)
-        painter.setFont(font)
-        
-        # Team Information Section
-        self.draw_section_header(painter, "Team Information", margin, y_position)
-        y_position += line_height * 1.5
-        
-        # Draw a horizontal line
-        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-        
-        team_info = [
-            ("Team Name", team_name),
-            ("Team Leader", team_leader),
-            ("Number of Members", str(len(members))),
-            ("Report Date", datetime.now().strftime("%Y-%m-%d"))
-        ]
-        
-        for label, value in team_info:
-            self.draw_table_row(painter, label, value, margin, y_position, 150)
-            y_position += line_height
-        
-        y_position += line_height  # Extra space after section
-        
-        # Team Members Section
-        y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
-        self.draw_section_header(painter, "Team Members", margin, y_position)
-        y_position += line_height * 1.5
-        
-        # Draw a horizontal line
-        painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-        
-        if members:
-            # Draw table headers
-            name_col_width = 200
-            role_col_width = 150
-            spec_col_width = content_width - name_col_width - role_col_width
-            
-            header_font = painter.font()
-            header_font.setBold(True)
-            painter.setFont(header_font)
-            
-            painter.drawText(margin, y_position, "Name")
-            painter.drawText(margin + name_col_width, y_position, "Role")
-            painter.drawText(margin + name_col_width + role_col_width, y_position, "Specialization")
-            
-            y_position += line_height
-            
-            # Draw a line under headers
-            painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-            
-            # Reset font
-            font.setBold(False)
-            painter.setFont(font)
-            
-            # Draw members data
-            for member in members:
-                # Check if we need a page break
-                if y_position > page_rect.height() - margin - line_height * 2:
-                    printer.newPage()
-                    y_position = margin
-                
-                name = f"{member['first_name']} {member['last_name']}"
-                painter.drawText(margin, y_position, name)
-                painter.drawText(margin + name_col_width, y_position, member['role'])
-                painter.drawText(margin + name_col_width + role_col_width, y_position, member['specialization'])
-                
-                y_position += line_height
-                
-                # Draw a light separator line
-                painter.setPen(QColor("#dddddd"))
-                painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-                painter.setPen(QColor("#000000"))
-        else:
-            painter.drawText(margin, y_position, "No team members found.")
-            y_position += line_height
-        
-        y_position += line_height  # Extra space after section
-        
-        # Team Performance Section
-        if team_performance:
-            y_position = self.check_page_break(y_position, line_height * 4, margin, printer)
-            self.draw_section_header(painter, "Team Performance", margin, y_position)
-            y_position += line_height * 1.5
-            
-            # Draw a horizontal line
-            painter.drawLine(margin, y_position - 5, page_rect.width() - margin, y_position - 5)
-            
-            performance_metrics = [
-                ("Tasks Completed (Last Month)", team_performance.get('tasks_completed', 'N/A')),
-                ("Average Completion Time", f"{team_performance.get('avg_completion_time', 'N/A')} hours"),
-                ("Team Efficiency Rate", f"{team_performance.get('efficiency_rate', 'N/A')}%"),
-                ("On-Time Completion Rate", f"{team_performance.get('on_time_rate', 'N/A')}%")
-            ]
-            
-            for label, value in performance_metrics:
-                self.draw_table_row(painter, label, value, margin, y_position, 250)
-                y_position += line_height
-        
-        # Footer - replace the pageNumber() call
-        footer_text = "Generated by CMMS"  # Alternative footer text
-        painter.drawText(
-            QRect(margin, page_rect.height() - margin, content_width, line_height),
-            Qt.AlignmentFlag.AlignCenter,
-            footer_text
-        )
-
     def check_page_break(self, current_y, needed_space, margin, printer):
         """Check if we need a new page and return the new y position"""
         page_rect = printer.pageRect(QPrinter.Unit.DevicePixel)
@@ -961,6 +984,8 @@ class CraftsMenWindow(QMainWindow):
 
     def load_craftsmen(self):
         craftsmen = self.db_manager.get_all_craftsmen()
+        
+        # Keep the existing table code for compatibility
         self.craftsmen_table.setRowCount(len(craftsmen))
         
         for row, craftsman in enumerate(craftsmen):
@@ -974,28 +999,90 @@ class CraftsMenWindow(QMainWindow):
             self.craftsmen_table.setItem(row, 5, QTableWidgetItem(craftsman['email']))
             self.craftsmen_table.setItem(row, 6, QTableWidgetItem(craftsman['status']))
             self.craftsmen_table.setItem(row, 7, QTableWidgetItem(str(craftsman['hire_date'])))
+        
+        # Prepare data for card view
+        card_data = []
+        for craftsman in craftsmen:
+            card_item = {
+                'craftsman_id': craftsman['craftsman_id'],
+                'employee_id': craftsman['employee_id'],
+                'full_name': f"{craftsman['first_name']} {craftsman['last_name']}",
+                'first_name': craftsman['first_name'],
+                'last_name': craftsman['last_name'],
+                'specialization': craftsman['specialization'],
+                'experience_level': craftsman['experience_level'],
+                'phone': craftsman['phone'],
+                'email': craftsman['email'],
+                'status': craftsman['status'],
+                'hire_date': str(craftsman['hire_date'])
+            }
+            card_data.append(card_item)
+        
+        # Update card view
+        self.craftsmen_cards.set_data(card_data)
 
     def search_craftsmen(self):
         try:
             # Get search criteria
-            name = self.search_name.text().strip().lower()
+            search_text = self.search_name.text().strip().lower()
             specialization = self.search_specialization.currentText()
             experience = self.search_experience.currentText()
             status = self.search_status.currentText()
             
-            # Iterate through all rows and hide/show based on criteria
+            # Define filter function for card view
+            def filter_func(craftsman):
+                # Check if any field contains the search text
+                if search_text:
+                    found = False
+                    # Search through all text fields
+                    searchable_fields = [
+                        'full_name', 'employee_id', 'specialization', 
+                        'experience_level', 'phone', 'email', 'status'
+                    ]
+                    for field in searchable_fields:
+                        if field in craftsman and str(craftsman[field]).lower().find(search_text) != -1:
+                            found = True
+                            break
+                    if not found:
+                        return False
+                
+                # Apply specialization filter
+                if specialization != "All Specializations" and specialization != craftsman['specialization']:
+                    return False
+                
+                # Apply experience filter
+                if experience != "All Experience Levels" and experience != craftsman['experience_level']:
+                    return False
+                
+                # Apply status filter
+                if status != "All Status" and status != craftsman['status']:
+                    return False
+                
+                return True
+            
+            # Apply filter to card view
+            self.craftsmen_cards.filter_data(filter_func)
+            
+            # Keep the table filtering for compatibility
             for row in range(self.craftsmen_table.rowCount()):
                 show_row = True
                 
-                # Get row data
-                full_name = self.craftsmen_table.item(row, 1).text().lower()
+                # Search in all columns
+                if search_text:
+                    found = False
+                    for col in range(self.craftsmen_table.columnCount()):
+                        item = self.craftsmen_table.item(row, col)
+                        if item and search_text in item.text().lower():
+                            found = True
+                            break
+                    if not found:
+                        show_row = False
+                
+                # Apply other filters
                 row_specialization = self.craftsmen_table.item(row, 2).text()
                 row_experience = self.craftsmen_table.item(row, 3).text()
                 row_status = self.craftsmen_table.item(row, 6).text()
                 
-                # Apply filters
-                if name and name not in full_name:
-                    show_row = False
                 if specialization != "All Specializations" and specialization != row_specialization:
                     show_row = False
                 if experience != "All Experience Levels" and experience != row_experience:
@@ -1016,11 +1103,36 @@ class CraftsMenWindow(QMainWindow):
                 f"An error occurred while searching: {str(e)}"
             )
 
-    def show_craftsman_details(self, index):
-        row = index.row()
-        craftsman_id = self.craftsmen_table.item(row, 0).text()
-        dialog = CraftsmanDetailsDialog(craftsman_id, self.db_manager, self)
+    def show_craftsman_details(self, data):
+        """Show details dialog for a craftsman"""
+        # Now this will only show a read-only view of the craftsman details
+        if isinstance(data, dict):
+            craftsman_id = data.get('craftsman_id') or data.get('employee_id')
+        else:
+            row = data.row()
+            craftsman_id = self.craftsmen_table.item(row, 0).text()
+        
+        # Create a read-only version of the details dialog
+        dialog = CraftsmanDetailsDialog(craftsman_id, self.db_manager, self, read_only=True)
         dialog.exec_()
+
+    def edit_craftsman(self, data):
+        """Show edit dialog for a craftsman"""
+        # Get the employee_id instead of craftsman_id
+        employee_id = data.get('employee_id')
+        if not employee_id:
+            # If somehow we don't have employee_id, try to get it from the database using craftsman_id
+            craftsman = self.db_manager.get_craftsman_by_id(data.get('craftsman_id'))
+            if craftsman:
+                employee_id = craftsman['employee_id']
+            else:
+                QMessageBox.warning(self, "Error", "Could not find craftsman details!")
+                return
+            
+        dialog = CraftsmanDetailsDialog(employee_id, self.db_manager, self)
+        if dialog.exec_():  # If dialog is accepted (closed with success)
+            # Refresh the craftsmen list to show updated data
+            self.load_craftsmen()
 
     def add_shift_dialog(self):
         dialog = QDialog(self)
@@ -1709,424 +1821,10 @@ class CraftsMenWindow(QMainWindow):
         else:
             QMessageBox.warning(self, "Error", "Failed to update team!")
 
-    def draw_section_header(self, painter, text, margin, y_position):
-        """Draw a section header with consistent styling"""
-        font = painter.font()
-        font.setPointSize(12)
-        font.setBold(True)
-        painter.setFont(font)
-        
-        # Draw the header text
-        painter.drawText(margin, y_position, text)
-        
-        # Reset font
-        font.setPointSize(10)
-        font.setBold(False)
-        painter.setFont(font)
-
-
-class CraftsmanDetailsDialog(QDialog):
-    def __init__(self, craftsman_id, db_manager, parent=None):
-        super().__init__(parent)
-        self.craftsman_id = craftsman_id
-        self.db_manager = db_manager
-        self.setWindowTitle("Craftsman Details")
-        self.setMinimumWidth(800)
-        
-        layout = QVBoxLayout(self)
-        
-        # Create tab widget for different sections
-        self.tab_widget = QTabWidget()
-        layout.addWidget(self.tab_widget)
-        
-        # Setup tabs
-        self.setup_basic_info_tab()
-        self.setup_skills_tab()
-        self.setup_work_history_tab()
-        self.setup_training_tab()
-        self.setup_schedule_tab()
-        self.setup_teams_tab()
-        
-        # Add close button
-        close_btn = QPushButton("Close")
-        close_btn.clicked.connect(self.close)
-        layout.addWidget(close_btn)
-
-    def setup_basic_info_tab(self):
-        basic_info = QWidget()
-        layout = QFormLayout(basic_info)
-        
-        # Get craftsman data
-        craftsman = self.db_manager.get_craftsman_by_id(self.craftsman_id)
-        if not craftsman:
-            return
-        
-        # Create fields
-        self.edit_first_name = QLineEdit(craftsman['first_name'])
-        self.edit_last_name = QLineEdit(craftsman['last_name'])
-        self.edit_phone = QLineEdit(craftsman['phone'])
-        self.edit_email = QLineEdit(craftsman['email'])
-        self.edit_specialization = QComboBox()
-        self.edit_specialization.addItems(["Mechanical", "Electrical", "HVAC", "Plumbing"])
-        self.edit_specialization.setCurrentText(craftsman['specialization'])
-        self.edit_status = QComboBox()
-        self.edit_status.addItems(["Active", "Inactive"])
-        self.edit_status.setCurrentText(craftsman['status'])
-        
-        # Add fields to layout
-        layout.addRow("Employee ID:", QLabel(craftsman['employee_id']))
-        layout.addRow("First Name:", self.edit_first_name)
-        layout.addRow("Last Name:", self.edit_last_name)
-        layout.addRow("Phone:", self.edit_phone)
-        layout.addRow("Email:", self.edit_email)
-        layout.addRow("Specialization:", self.edit_specialization)
-        layout.addRow("Status:", self.edit_status)
-        layout.addRow("Hire Date:", QLabel(str(craftsman['hire_date'])))
-        
-        # Add update button
-        update_btn = QPushButton("Update Information")
-        update_btn.clicked.connect(self.update_basic_info)
-        layout.addRow("", update_btn)
-        
-        self.tab_widget.addTab(basic_info, "Basic Information")
-
-    def setup_skills_tab(self):
-        skills_widget = QWidget()
-        layout = QVBoxLayout(skills_widget)
-        
-        # Add skills table
-        self.skills_table = QTableWidget()
-        self.skills_table.setColumnCount(6)
-        self.skills_table.setHorizontalHeaderLabels([
-            "Skill Name", "Level", "Certification",
-            "Cert. Date", "Expiry Date", "Authority"
-        ])
-        
-        # Set column widths
-        self.skills_table.setColumnWidth(0, 120)  # Skill Name
-        self.skills_table.setColumnWidth(1, 80)   # Level
-        self.skills_table.setColumnWidth(2, 150)  # Certification
-        self.skills_table.setColumnWidth(3, 100)  # Cert. Date
-        self.skills_table.setColumnWidth(4, 100)  # Expiry Date
-        self.skills_table.setColumnWidth(5, 150)  # Authority
-        
-        # Make table stretch to fill available space
-        self.skills_table.horizontalHeader().setStretchLastSection(True)
-        self.skills_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        
-        layout.addWidget(self.skills_table)
-        
-        # Add new skill button
-        add_skill_btn = QPushButton("Add New Skill")
-        add_skill_btn.clicked.connect(self.add_skill_dialog)
-        layout.addWidget(add_skill_btn)
-        
-        self.load_skills()
-        self.tab_widget.addTab(skills_widget, "Skills & Certifications")
-
-    def setup_work_history_tab(self):
-        history_widget = QWidget()
-        layout = QVBoxLayout(history_widget)
-        
-        # Add work history table
-        self.history_table = QTableWidget()
-        self.history_table.setColumnCount(6)
-        self.history_table.setHorizontalHeaderLabels([
-            "Date", "Equipment", "Task Type",
-            "Description", "Performance", "Time Taken"
-        ])
-        layout.addWidget(self.history_table)
-        
-        self.load_work_history()
-        self.tab_widget.addTab(history_widget, "Work History")
-
-    def setup_training_tab(self):
-        training_widget = QWidget()
-        layout = QVBoxLayout(training_widget)
-        
-        # Add training table
-        self.training_table = QTableWidget()
-        self.training_table.setColumnCount(6)
-        self.training_table.setHorizontalHeaderLabels([
-            "Training Name", "Start Date", "Completion Date",
-            "Provider", "Certification", "Status"
-        ])
-        layout.addWidget(self.training_table)
-        
-        # Add new training button
-        add_training_btn = QPushButton("Add Training Record")
-        add_training_btn.clicked.connect(self.add_training_dialog)
-        layout.addWidget(add_training_btn)
-        
-        self.load_training_records()
-        self.tab_widget.addTab(training_widget, "Training Records")
-
-    def setup_schedule_tab(self):
-        schedule_widget = QWidget()
-        layout = QVBoxLayout(schedule_widget)
-        
-        # Add schedule table
-        self.schedule_table = QTableWidget()
-        self.schedule_table.setColumnCount(5)
-        self.schedule_table.setHorizontalHeaderLabels([
-            "Date", "Shift Start", "Shift End", "Status", "Notes"
-        ])
-        layout.addWidget(self.schedule_table)
-        
-        self.load_schedule()
-        self.tab_widget.addTab(schedule_widget, "Schedule")
-
-    def setup_teams_tab(self):
-        """Setup tab showing teams the craftsman belongs to"""
-        teams_widget = QWidget()
-        layout = QVBoxLayout(teams_widget)
-        
-        # Add teams table
-        self.teams_table = QTableWidget()
-        self.teams_table.setColumnCount(5)
-        self.teams_table.setHorizontalHeaderLabels([
-            "Team Name", "Team Leader", "Role", "Joined Date", "Description"
-        ])
-        
-        # Set column widths
-        self.teams_table.setColumnWidth(0, 150)  # Team Name
-        self.teams_table.setColumnWidth(1, 150)  # Team Leader
-        self.teams_table.setColumnWidth(2, 100)  # Role
-        self.teams_table.setColumnWidth(3, 100)  # Joined Date
-        self.teams_table.setColumnWidth(4, 250)  # Description
-        
-        layout.addWidget(self.teams_table)
-        
-        self.tab_widget.addTab(teams_widget, "Teams")
-        self.load_teams()
-
-    def load_teams(self):
-        """Load teams that the craftsman belongs to"""
-        try:
-            # First, we need to get the craftsman's internal ID (craftsman_id) from the employee_id
-            connection = self.db_manager.connect()
-            cursor = connection.cursor(dictionary=True)
-            
-            # Get the craftsman's internal ID if we received an employee_id
-            if not str(self.craftsman_id).isdigit():
-                cursor.execute("""
-                    SELECT craftsman_id FROM craftsmen 
-                    WHERE employee_id = %s
-                """, (self.craftsman_id,))
-                
-                result = cursor.fetchone()
-                if result:
-                    internal_id = result['craftsman_id']
-                else:
-                    print(f"Could not find craftsman with ID: {self.craftsman_id}")
-                    return
-            else:
-                internal_id = self.craftsman_id
-            
-            # Now get the teams using the internal ID
-            teams = self.db_manager.get_craftsman_teams(internal_id)
-            self.teams_table.setRowCount(len(teams))
-            
-            for row, team in enumerate(teams):
-                self.teams_table.setItem(row, 0, QTableWidgetItem(team['team_name']))
-                
-                # Format team leader name
-                leader_name = "Not Assigned"
-                if team.get('leader_first_name') and team.get('leader_last_name'):
-                    leader_name = f"{team['leader_first_name']} {team['leader_last_name']}"
-                self.teams_table.setItem(row, 1, QTableWidgetItem(leader_name))
-                
-                # Role and joined date
-                self.teams_table.setItem(row, 2, QTableWidgetItem(team['role']))
-                self.teams_table.setItem(row, 3, QTableWidgetItem(str(team['joined_date'])))
-                
-                # Description
-                self.teams_table.setItem(row, 4, QTableWidgetItem(team.get('description', '')))
-                
-        except Exception as e:
-            print(f"Error loading craftsman teams: {e}")
-        finally:
-            if 'connection' in locals() and connection:
-                self.db_manager.close(connection)
-
-    # Add helper methods for loading data and handling updates
-    def update_basic_info(self):
-        try:
-            data = {
-                'employee_id': self.craftsman_id,  # This is the employee_id we received in constructor
-                'first_name': self.edit_first_name.text(),
-                'last_name': self.edit_last_name.text(),
-                'phone': self.edit_phone.text(),
-                'email': self.edit_email.text(),
-                'specialization': self.edit_specialization.currentText(),
-                'status': self.edit_status.currentText()
-            }
-            
-            if self.db_manager.update_craftsman(data):
-                QMessageBox.information(self, "Success", "Craftsman information updated successfully!")
-            else:
-                QMessageBox.warning(self, "Error", "Failed to update craftsman information!")
-        except Exception as e:
-            QMessageBox.warning(self, "Error", f"An error occurred while updating: {str(e)}")
-
-    def add_skill_dialog(self):
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Add New Skill")
-        layout = QFormLayout(dialog)
-        
-        # Create input fields
-        skill_name = QLineEdit()
-        skill_level = QComboBox()
-        skill_level.addItems(["Basic", "Intermediate", "Advanced", "Expert"])
-        certification = QLineEdit()
-        cert_date = QDateEdit()
-        cert_date.setCalendarPopup(True)
-        cert_date.setDate(datetime.now().date())
-        expiry_date = QDateEdit()
-        expiry_date.setCalendarPopup(True)
-        expiry_date.setDate(datetime.now().date())
-        authority = QLineEdit()
-        
-        # Add fields to layout
-        layout.addRow("Skill Name:", skill_name)
-        layout.addRow("Skill Level:", skill_level)
-        layout.addRow("Certification:", certification)
-        layout.addRow("Certification Date:", cert_date)
-        layout.addRow("Expiry Date:", expiry_date)
-        layout.addRow("Authority:", authority)
-        
-        # Add buttons
-        buttons = QHBoxLayout()
-        save_btn = QPushButton("Save")
-        cancel_btn = QPushButton("Cancel")
-        buttons.addWidget(save_btn)
-        buttons.addWidget(cancel_btn)
-        layout.addRow("", buttons)
-        
-        # Connect buttons
-        save_btn.clicked.connect(lambda: self.save_skill({
-            'craftsman_id': self.craftsman_id,
-            'skill_name': skill_name.text(),
-            'skill_level': skill_level.currentText(),
-            'certification': certification.text(),
-            'certification_date': cert_date.date().toPython(),
-            'expiry_date': expiry_date.date().toPython(),
-            'certification_authority': authority.text()
-        }, dialog))
-        cancel_btn.clicked.connect(dialog.reject)
-        
-        dialog.exec()
-
-    def save_skill(self, data, dialog):
-        if self.db_manager.add_craftsman_skill(data):
-            QMessageBox.information(self, "Success", "Skill added successfully!")
-            self.load_skills()
-            dialog.accept()
-        else:
-            QMessageBox.warning(self, "Error", "Failed to add skill!")
-
-    def load_skills(self):
-        skills = self.db_manager.get_craftsman_skills(self.craftsman_id)
-        self.skills_table.setRowCount(len(skills))
-        
-        for row, skill in enumerate(skills):
-            self.skills_table.setItem(row, 0, QTableWidgetItem(skill['skill_name']))
-            self.skills_table.setItem(row, 1, QTableWidgetItem(skill['skill_level']))
-            self.skills_table.setItem(row, 2, QTableWidgetItem(skill['certification']))
-            self.skills_table.setItem(row, 3, QTableWidgetItem(str(skill['certification_date'])))
-            self.skills_table.setItem(row, 4, QTableWidgetItem(str(skill['expiry_date'])))
-            self.skills_table.setItem(row, 5, QTableWidgetItem(skill['certification_authority']))
-
-    def add_training_dialog(self):
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Add Training Record")
-        layout = QFormLayout(dialog)
-        
-        # Create input fields
-        training_name = QLineEdit()
-        start_date = QDateEdit()
-        start_date.setCalendarPopup(True)
-        start_date.setDate(datetime.now().date())
-        completion_date = QDateEdit()
-        completion_date.setCalendarPopup(True)
-        completion_date.setDate(datetime.now().date())
-        provider = QLineEdit()
-        certification = QLineEdit()
-        status = QComboBox()
-        status.addItems(["Scheduled", "In Progress", "Completed", "Failed"])
-        
-        # Add fields to layout
-        layout.addRow("Training Name:", training_name)
-        layout.addRow("Start Date:", start_date)
-        layout.addRow("Completion Date:", completion_date)
-        layout.addRow("Provider:", provider)
-        layout.addRow("Certification:", certification)
-        layout.addRow("Status:", status)
-        
-        # Add buttons
-        buttons = QHBoxLayout()
-        save_btn = QPushButton("Save")
-        cancel_btn = QPushButton("Cancel")
-        buttons.addWidget(save_btn)
-        buttons.addWidget(cancel_btn)
-        layout.addRow("", buttons)
-        
-        # Connect buttons
-        save_btn.clicked.connect(lambda: self.save_training({
-            'craftsman_id': self.craftsman_id,
-            'training_name': training_name.text(),
-            'training_date': start_date.date().toPython(),
-            'completion_date': completion_date.date().toPython(),
-            'training_provider': provider.text(),
-            'certification_received': certification.text(),
-            'training_status': status.currentText()
-        }, dialog))
-        cancel_btn.clicked.connect(dialog.reject)
-        
-        dialog.exec()
-
-    def save_training(self, data, dialog):
-        if self.db_manager.add_craftsman_training(data):
-            QMessageBox.information(self, "Success", "Training record added successfully!")
-            self.load_training_records()
-            dialog.accept()
-        else:
-            QMessageBox.warning(self, "Error", "Failed to add training record!")
-
-    def load_training_records(self):
-        records = self.db_manager.get_craftsman_training(self.craftsman_id)
-        self.training_table.setRowCount(len(records))
-        
-        for row, record in enumerate(records):
-            self.training_table.setItem(row, 0, QTableWidgetItem(record['training_name']))
-            self.training_table.setItem(row, 1, QTableWidgetItem(str(record['training_date'])))
-            self.training_table.setItem(row, 2, QTableWidgetItem(str(record['completion_date'])))
-            self.training_table.setItem(row, 3, QTableWidgetItem(record['training_provider']))
-            self.training_table.setItem(row, 4, QTableWidgetItem(record['certification_received']))
-            self.training_table.setItem(row, 5, QTableWidgetItem(record['training_status']))
-
-    def load_work_history(self):
-        history = self.db_manager.get_craftsman_work_history(self.craftsman_id)
-        self.history_table.setRowCount(len(history))
-        
-        for row, entry in enumerate(history):
-            self.history_table.setItem(row, 0, QTableWidgetItem(str(entry['task_date'])))
-            self.history_table.setItem(row, 1, QTableWidgetItem(str(entry['equipment_id'])))
-            self.history_table.setItem(row, 2, QTableWidgetItem(entry['task_type']))
-            self.history_table.setItem(row, 3, QTableWidgetItem(entry['task_description']))
-            self.history_table.setItem(row, 4, QTableWidgetItem(str(entry['performance_rating'])))
-            self.history_table.setItem(row, 5, QTableWidgetItem(str(entry['completion_time'])))
-
-    def load_schedule(self):
-        schedule = self.db_manager.get_craftsman_schedule(self.craftsman_id)
-        self.schedule_table.setRowCount(len(schedule))
-        
-        for row, shift in enumerate(schedule):
-            self.schedule_table.setItem(row, 0, QTableWidgetItem(str(shift['date'])))
-            self.schedule_table.setItem(row, 1, QTableWidgetItem(str(shift['shift_start'])))
-            self.schedule_table.setItem(row, 2, QTableWidgetItem(str(shift['shift_end'])))
-            self.schedule_table.setItem(row, 3, QTableWidgetItem(shift['status']))
-            self.schedule_table.setItem(row, 4, QTableWidgetItem(shift['notes']))
+    def handle_craftsman_click(self, data):
+        """Handle single click on craftsman card - just select the card"""
+        # The selection is handled internally by the CardTableWidget
+        pass
 
 
 class DemoDataGenerator:
