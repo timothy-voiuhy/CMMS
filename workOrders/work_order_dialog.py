@@ -534,46 +534,79 @@ class WorkOrderDialog(QDialog):
         else:
             work_order_data['completed_date'] = None
         
-        # Check if this is a recurring work order
-        if self.enable_scheduling.isChecked():
-            # Prepare schedule data
-            schedule_data = {
-                'frequency': self.frequency.value(),
-                'frequency_unit': self.frequency_unit.currentText(),
-                'start_date': self.due_date_edit.date().toPython(),
-                'end_date': self.end_date.date().toPython(),
-                'notification_days_before': self.notification_days.value(),
-                'notification_emails': [
-                    email.strip() 
-                    for email in self.notification_emails.text().split(',')
-                    if email.strip()
-                ]
-            }
-            
-            # If editing an existing work order with a schedule
-            if self.is_edit_mode and self.work_order.get('schedule_id'):
-                work_order_data['schedule_id'] = self.work_order['schedule_id']
-                success = self.update_recurring_work_order(work_order_data, schedule_data)
-                message = "Recurring work order updated successfully!"
+        success = False
+        message = ""
+
+        try:
+            # Check if this is a recurring work order
+            if self.enable_scheduling.isChecked():
+                # Prepare schedule data
+                schedule_data = {
+                    'frequency': self.frequency.value(),
+                    'frequency_unit': self.frequency_unit.currentText(),
+                    'start_date': self.due_date_edit.date().toPython(),
+                    'end_date': self.end_date.date().toPython(),
+                    'notification_days_before': self.notification_days.value(),
+                    'notification_emails': [
+                        email.strip() 
+                        for email in self.notification_emails.text().split(',')
+                        if email.strip()
+                    ]
+                }
+                
+                if self.is_edit_mode:
+                    if self.work_order.get('schedule_id'):
+                        # Update existing recurring work order
+                        work_order_data['schedule_id'] = self.work_order['schedule_id']
+                        success = self.update_recurring_work_order(work_order_data, schedule_data)
+                        message = "Recurring work order updated successfully!"
+                    else:
+                        # Convert existing work order to recurring
+                        work_order_data['work_order_id'] = self.work_order['work_order_id']
+                        success = self.convert_to_recurring_work_order(work_order_data, schedule_data)
+                        message = "Work order converted to recurring successfully!"
+                else:
+                    # Create new recurring work order
+                    success = self.db_manager.create_recurring_work_order(work_order_data, schedule_data)
+                    message = "Recurring work order created successfully!"
             else:
-                # Save new recurring work order
-                success = self.db_manager.create_recurring_work_order(work_order_data, schedule_data)
-                message = "Recurring work order created successfully!"
-        else:
-            # Save regular work order
-            if self.is_edit_mode:
-                work_order_data['work_order_id'] = self.work_order['work_order_id']
-                success = self.db_manager.update_work_order(work_order_data)
-                message = "Work order updated successfully!"
+                # Handle regular work order
+                if self.is_edit_mode:
+                    if self.work_order.get('schedule_id'):
+                        # Convert recurring to regular work order
+                        success = self.convert_to_regular_work_order(work_order_data)
+                        message = "Recurring work order converted to regular work order!"
+                    else:
+                        # Update regular work order
+                        work_order_data['work_order_id'] = self.work_order['work_order_id']
+                        success = self.db_manager.update_work_order(work_order_data)
+                        message = "Work order updated successfully!"
+                else:
+                    # Create new regular work order
+                    success = self.db_manager.create_work_order(work_order_data)
+                    message = "Work order created successfully!"
+
+            if success:
+                QMessageBox.information(self, "Success", message)
+                
+                # Notify parent window to refresh data
+                parent = self.parent()
+                if parent and hasattr(parent, 'refresh_data'):
+                    parent.refresh_data()
+                
+                # Find and refresh the SchedulesWindow if it exists
+                main_window = self.get_main_window()
+                if main_window and hasattr(main_window, 'schedules_window'):
+                    schedules_window = main_window.schedules_window
+                    if schedules_window and hasattr(schedules_window, 'load_schedules'):
+                        schedules_window.load_schedules()
+                
+                self.accept()
             else:
-                success = self.db_manager.create_work_order(work_order_data)
-                message = "Work order created successfully!"
-        
-        if success:
-            QMessageBox.information(self, "Success", message)
-            self.accept()
-        else:
-            QMessageBox.critical(self, "Error", "Failed to save work order!")
+                QMessageBox.critical(self, "Error", "Failed to save work order!")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
 
     def update_recurring_work_order(self, work_order_data, schedule_data):
         """Update an existing recurring work order"""
@@ -684,6 +717,109 @@ class WorkOrderDialog(QDialog):
             return True
         except Exception as e:
             print(f"Error updating recurring work order: {e}")
+            if connection:
+                connection.rollback()
+            return False
+        finally:
+            if connection:
+                self.db_manager.close(connection)
+
+    def convert_to_recurring_work_order(self, work_order_data, schedule_data):
+        """Convert a regular work order to a recurring work order"""
+        try:
+            connection = self.db_manager.connect()
+            cursor = connection.cursor()
+
+            # Create maintenance schedule
+            cursor.execute("""
+                INSERT INTO maintenance_schedules (
+                    frequency, frequency_unit, start_date, end_date,
+                    notification_days_before, notification_emails
+                ) VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING schedule_id
+            """, (
+                schedule_data['frequency'],
+                schedule_data['frequency_unit'],
+                schedule_data['start_date'],
+                schedule_data['end_date'],
+                schedule_data['notification_days_before'],
+                json.dumps(schedule_data['notification_emails'])
+            ))
+            
+            schedule_id = cursor.fetchone()[0]
+
+            # Create work order template
+            cursor.execute("""
+                INSERT INTO work_order_templates (
+                    schedule_id, title, description, equipment_id,
+                    assignment_type, craftsman_id, team_id, priority,
+                    estimated_hours, tools_required, spares_required
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                schedule_id,
+                work_order_data['title'],
+                work_order_data['description'],
+                work_order_data['equipment_id'],
+                work_order_data['assignment_type'],
+                work_order_data['craftsman_id'],
+                work_order_data['team_id'],
+                work_order_data['priority'],
+                work_order_data['estimated_hours'],
+                json.dumps(work_order_data['tools_required']),
+                json.dumps(work_order_data['spares_required'])
+            ))
+
+            # Update existing work order to link it to the schedule
+            cursor.execute("""
+                UPDATE work_orders
+                SET schedule_id = %s
+                WHERE work_order_id = %s
+            """, (schedule_id, work_order_data['work_order_id']))
+
+            connection.commit()
+            return True
+
+        except Exception as e:
+            print(f"Error converting to recurring work order: {e}")
+            if connection:
+                connection.rollback()
+            return False
+        finally:
+            if connection:
+                self.db_manager.close(connection)
+
+    def convert_to_regular_work_order(self, work_order_data):
+        """Convert a recurring work order to a regular work order"""
+        try:
+            connection = self.db_manager.connect()
+            cursor = connection.cursor()
+
+            schedule_id = self.work_order['schedule_id']
+
+            # Update the work order to remove schedule_id
+            cursor.execute("""
+                UPDATE work_orders
+                SET schedule_id = NULL
+                WHERE work_order_id = %s
+            """, (work_order_data['work_order_id'],))
+
+            # Delete the work order template
+            cursor.execute("""
+                DELETE FROM work_order_templates
+                WHERE schedule_id = %s
+            """, (schedule_id,))
+
+            # Delete the maintenance schedule
+            cursor.execute("""
+                DELETE FROM maintenance_schedules
+                WHERE schedule_id = %s
+            """, (schedule_id,))
+
+            connection.commit()
+            return True
+
+        except Exception as e:
+            print(f"Error converting to regular work order: {e}")
             if connection:
                 connection.rollback()
             return False
@@ -814,3 +950,13 @@ class WorkOrderDialog(QDialog):
         if checked:
             # When scheduling is enabled, populate notification emails
             self.update_notification_emails()
+
+    def get_main_window(self):
+        """Find the main window in the parent hierarchy"""
+        parent = self.parent()
+        while parent:
+            # Check if this is the main window
+            if hasattr(parent, 'schedules_window'):
+                return parent
+            parent = parent.parent()
+        return None

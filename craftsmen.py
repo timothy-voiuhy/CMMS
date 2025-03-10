@@ -1828,6 +1828,7 @@ class CraftsMenWindow(QMainWindow):
 
 
 class DemoDataGenerator:
+
     first_names = [
         "John", "James", "Michael", "William", "David", "Robert", "Thomas", "Richard",
         "Charles", "Joseph", "Christopher", "Daniel", "Matthew", "Anthony", "Donald",

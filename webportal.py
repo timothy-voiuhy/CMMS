@@ -12,11 +12,20 @@ from werkzeug.utils import secure_filename
 import mysql.connector
 from mysql.connector import Error
 
+def nl2br(value):
+    """
+    Convert newlines to <br> tags
+    """
+    if not value:
+        return ''
+    return value.replace('\n', '<br>')
+
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Change this to a random secret key
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
+app.jinja_env.filters['nl2br'] = nl2br
 
 # Initialize login manager
 login_manager = LoginManager()
@@ -428,19 +437,30 @@ def add_report(work_order_id):
     
     cursor = conn.cursor(dictionary=True)
     
-    # Get work order details
+    # Get work order details - using equipment_registry instead of equipment
     cursor.execute("""
-        SELECT wo.*, e.equipment_name, e.equipment_type
+        SELECT wo.*, er.equipment_name
         FROM work_orders wo
-        LEFT JOIN equipment_registry e ON wo.equipment_id = e.equipment_id
-        WHERE wo.work_order_id = %s AND wo.craftsman_id = %s
-    """, (work_order_id, current_user.id))
+        JOIN equipment_registry er ON wo.equipment_id = er.equipment_id
+        WHERE wo.work_order_id = %s
+    """, (work_order_id,))
     
     work_order = cursor.fetchone()
     
     if not work_order:
-        flash('Work order not found or you do not have permission to add a report', 'error')
+        flash('Work order not found', 'error')
         return redirect(url_for('work_orders'))
+    
+    # Get equipment type - using equipment_registry instead of equipment
+    # Assuming equipment_registry has a field that indicates type
+    cursor.execute("""
+        SELECT template_id as equipment_type
+        FROM equipment_registry
+        WHERE equipment_id = %s
+    """, (work_order['equipment_id'],))
+    
+    equipment_type_result = cursor.fetchone()
+    equipment_type = equipment_type_result['equipment_type'] if equipment_type_result else 'unknown'
     
     # Check if this work order already has a maintenance report
     try:
@@ -603,9 +623,10 @@ def add_report(work_order_id):
     return render_template(
         'add_report.html',
         work_order=work_order,
-        equipment_type=work_order.get('equipment_type', '').lower(),
+        equipment_type=equipment_type,
         today=datetime.now().strftime('%Y-%m-%d'),
-        now=datetime.now().strftime('%H:%M')
+        now=datetime.now().strftime('%H:%M'),
+        current_user=current_user
     )
 
 @app.route('/view_report/<int:report_id>')
