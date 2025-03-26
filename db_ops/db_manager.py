@@ -592,20 +592,28 @@ class DatabaseManager:
             self.close(connection)
 
     def add_craftsman_skill(self, data):
+        """Add a skill to a craftsman's profile"""
         try:
             connection = self.connect()
             cursor = connection.cursor()
+            
+            # Ensure we're using the correct field names
             cursor.execute("""
                 INSERT INTO craftsmen_skills (
-                    craftsman_id, skill_name, skill_level,
-                    certification, certification_date, expiry_date,
-                    certification_authority
+                    craftsman_id, skill_name, skill_level, 
+                    certification_date, expiry_date, 
+                    certification_authority, certification_number
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
-                data['craftsman_id'], data['skill_name'], data['skill_level'],
-                data['certification'], data['certification_date'],
-                data['expiry_date'], data['certification_authority']
+                data['craftsman_id'],
+                data['skill_name'],
+                data['skill_level'],
+                data['certification_date'],
+                data['expiry_date'],
+                data['certification_authority'],
+                data.get('certification_number', '')  # Use the correct field name
             ))
+            
             connection.commit()
             return True
         except Error as e:
@@ -615,36 +623,45 @@ class DatabaseManager:
             self.close(connection)
 
     def get_craftsman_skills(self, craftsman_id):
+        """Get skills for a craftsman"""
         try:
             connection = self.connect()
             cursor = connection.cursor(dictionary=True)
+            
             cursor.execute("""
                 SELECT * FROM craftsmen_skills 
                 WHERE craftsman_id = %s
             """, (craftsman_id,))
+            
             return cursor.fetchall()
         except Error as e:
-            print(f"Error fetching craftsman skills: {e}")
+            print(f"Error getting craftsman skills: {e}")
             return []
         finally:
             self.close(connection)
 
     def add_craftsman_training(self, data):
+        """Add a training record to a craftsman's profile"""
         try:
             connection = self.connect()
             cursor = connection.cursor()
+            
             cursor.execute("""
                 INSERT INTO craftsmen_training (
-                    craftsman_id, training_name, training_date,
-                    completion_date, training_provider,
+                    craftsman_id, training_name, training_date, 
+                    completion_date, training_provider, 
                     certification_received, training_status
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s)
             """, (
-                data['craftsman_id'], data['training_name'],
-                data['training_date'], data['completion_date'],
-                data['training_provider'], data['certification_received'],
+                data['craftsman_id'],  # This should now be the internal ID
+                data['training_name'],
+                data['training_date'],
+                data['completion_date'],
+                data['training_provider'],
+                data['certification_received'],
                 data['training_status']
             ))
+            
             connection.commit()
             return True
         except Error as e:
@@ -654,17 +671,19 @@ class DatabaseManager:
             self.close(connection)
 
     def get_craftsman_training(self, craftsman_id):
+        """Get training records for a craftsman"""
         try:
             connection = self.connect()
             cursor = connection.cursor(dictionary=True)
+            
             cursor.execute("""
                 SELECT * FROM craftsmen_training 
-                WHERE craftsman_id = %s 
-                ORDER BY training_date DESC
+                WHERE craftsman_id = %s
             """, (craftsman_id,))
+            
             return cursor.fetchall()
         except Error as e:
-            print(f"Error fetching craftsman training: {e}")
+            print(f"Error getting craftsman training: {e}")
             return []
         finally:
             self.close(connection)
@@ -3016,6 +3035,40 @@ class DatabaseManager:
             return True
         except Error as e:
             print(f"Error removing inventory item: {e}")
+            return False
+        finally:
+            self.close(connection)
+
+    def update_craftsman_training(self, data):
+        """Update an existing training record for a craftsman"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            cursor.execute("""
+                UPDATE craftsmen_training SET
+                    training_name = %s,
+                    training_date = %s,
+                    completion_date = %s,
+                    training_provider = %s,
+                    certification_received = %s,
+                    training_status = %s
+                WHERE training_id = %s AND craftsman_id = %s
+            """, (
+                data['training_name'],
+                data['training_date'],
+                data['completion_date'],
+                data['training_provider'],
+                data['certification_received'],
+                data['training_status'],
+                data['training_id'],
+                data['craftsman_id']
+            ))
+            
+            connection.commit()
+            return cursor.rowcount > 0  # Return True if any rows were updated
+        except Error as e:
+            print(f"Error updating craftsman training: {e}")
             return False
         finally:
             self.close(connection)

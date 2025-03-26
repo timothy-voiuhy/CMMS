@@ -141,6 +141,19 @@ class CraftsmanDetailsDialog(QDialog):
             "Training Name", "Start Date", "Completion Date",
             "Provider", "Certification", "Status"
         ])
+        
+        # Set column widths
+        self.training_table.setColumnWidth(0, 150)  # Training Name
+        self.training_table.setColumnWidth(1, 100)  # Start Date
+        self.training_table.setColumnWidth(2, 100)  # Completion Date
+        self.training_table.setColumnWidth(3, 120)  # Provider
+        self.training_table.setColumnWidth(4, 120)  # Certification
+        self.training_table.setColumnWidth(5, 80)   # Status
+        
+        # Make table stretch to fill available space
+        self.training_table.horizontalHeader().setStretchLastSection(True)
+        self.training_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
         layout.addWidget(self.training_table)
         
         # Add new training button
@@ -148,8 +161,10 @@ class CraftsmanDetailsDialog(QDialog):
         add_training_btn.clicked.connect(self.add_training_dialog)
         layout.addWidget(add_training_btn)
         
-        self.load_training_records()
         self.tab_widget.addTab(training_widget, "Training Records")
+        
+        # Load training records immediately
+        self.load_training_records()
 
     def setup_schedule_tab(self):
         schedule_widget = QWidget()
@@ -223,7 +238,7 @@ class CraftsmanDetailsDialog(QDialog):
         skill_name = QLineEdit()
         skill_level = QComboBox()
         skill_level.addItems(["Basic", "Intermediate", "Advanced", "Expert"])
-        certification = QLineEdit()
+        certification_number = QLineEdit()  # Changed from certification to certification_number
         cert_date = QDateEdit()
         cert_date.setCalendarPopup(True)
         cert_date.setDate(datetime.now().date())
@@ -235,7 +250,7 @@ class CraftsmanDetailsDialog(QDialog):
         # Add fields to layout
         layout.addRow("Skill Name:", skill_name)
         layout.addRow("Skill Level:", skill_level)
-        layout.addRow("Certification:", certification)
+        layout.addRow("Certification Number:", certification_number)  # Updated label
         layout.addRow("Certification Date:", cert_date)
         layout.addRow("Expiry Date:", expiry_date)
         layout.addRow("Authority:", authority)
@@ -253,7 +268,7 @@ class CraftsmanDetailsDialog(QDialog):
             'craftsman_id': self.craftsman_id,
             'skill_name': skill_name.text(),
             'skill_level': skill_level.currentText(),
-            'certification': certification.text(),
+            'certification_number': certification_number.text(),  # Updated field name
             'certification_date': cert_date.date().toPython(),
             'expiry_date': expiry_date.date().toPython(),
             'certification_authority': authority.text()
@@ -263,24 +278,88 @@ class CraftsmanDetailsDialog(QDialog):
         dialog.exec()
 
     def save_skill(self, data, dialog):
-        if self.db_manager.add_craftsman_skill(data):
-            QMessageBox.information(self, "Success", "Skill added successfully!")
-            self.load_skills()
-            dialog.accept()
-        else:
-            QMessageBox.warning(self, "Error", "Failed to add skill!")
+        try:
+            # First, we need to get the craftsman's internal ID (craftsman_id) from the employee_id
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get the craftsman's internal ID if we received an employee_id
+            if not str(self.craftsman_id).isdigit():
+                cursor.execute("""
+                    SELECT craftsman_id FROM craftsmen 
+                    WHERE employee_id = %s
+                """, (self.craftsman_id,))
+                
+                result = cursor.fetchone()
+                if result:
+                    internal_id = result['craftsman_id']
+                else:
+                    QMessageBox.warning(self, "Error", f"Could not find craftsman with ID: {self.craftsman_id}")
+                    return False
+            else:
+                internal_id = self.craftsman_id
+            
+            # Update data with the correct internal ID
+            data['craftsman_id'] = internal_id
+            
+            # Fix the certification field name to match the database schema
+            # Rename 'certification' to 'certification_number' if needed
+            if 'certification' in data:
+                data['certification_number'] = data.pop('certification')
+            
+            if self.db_manager.add_craftsman_skill(data):
+                QMessageBox.information(self, "Success", "Skill added successfully!")
+                self.load_skills()
+                dialog.accept()
+                return True
+            else:
+                QMessageBox.warning(self, "Error", "Failed to add skill!")
+                return False
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"An error occurred: {str(e)}")
+            return False
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
 
     def load_skills(self):
-        skills = self.db_manager.get_craftsman_skills(self.craftsman_id)
-        self.skills_table.setRowCount(len(skills))
-        
-        for row, skill in enumerate(skills):
-            self.skills_table.setItem(row, 0, QTableWidgetItem(skill['skill_name']))
-            self.skills_table.setItem(row, 1, QTableWidgetItem(skill['skill_level']))
-            self.skills_table.setItem(row, 2, QTableWidgetItem(skill['certification']))
-            self.skills_table.setItem(row, 3, QTableWidgetItem(str(skill['certification_date'])))
-            self.skills_table.setItem(row, 4, QTableWidgetItem(str(skill['expiry_date'])))
-            self.skills_table.setItem(row, 5, QTableWidgetItem(skill['certification_authority']))
+        try:
+            # First, we need to get the craftsman's internal ID (craftsman_id) from the employee_id
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get the craftsman's internal ID if we received an employee_id
+            if not str(self.craftsman_id).isdigit():
+                cursor.execute("""
+                    SELECT craftsman_id FROM craftsmen 
+                    WHERE employee_id = %s
+                """, (self.craftsman_id,))
+                
+                result = cursor.fetchone()
+                if result:
+                    internal_id = result['craftsman_id']
+                else:
+                    print(f"Could not find craftsman with ID: {self.craftsman_id}")
+                    return
+            else:
+                internal_id = self.craftsman_id
+            
+            # Now get the skills using the internal ID
+            skills = self.db_manager.get_craftsman_skills(internal_id)
+            self.skills_table.setRowCount(len(skills))
+            
+            for row, skill in enumerate(skills):
+                self.skills_table.setItem(row, 0, QTableWidgetItem(skill['skill_name']))
+                self.skills_table.setItem(row, 1, QTableWidgetItem(skill['skill_level']))
+                self.skills_table.setItem(row, 2, QTableWidgetItem(skill.get('certification_number', '')))  # Updated field name
+                self.skills_table.setItem(row, 3, QTableWidgetItem(str(skill['certification_date'])))
+                self.skills_table.setItem(row, 4, QTableWidgetItem(str(skill['expiry_date'])))
+                self.skills_table.setItem(row, 5, QTableWidgetItem(skill['certification_authority']))
+        except Exception as e:
+            print(f"Error loading craftsman skills: {e}")
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
 
     def add_training_dialog(self):
         dialog = QDialog(self)
@@ -331,24 +410,85 @@ class CraftsmanDetailsDialog(QDialog):
         dialog.exec()
 
     def save_training(self, data, dialog):
-        if self.db_manager.add_craftsman_training(data):
-            QMessageBox.information(self, "Success", "Training record added successfully!")
-            self.load_training_records()
-            dialog.accept()
-        else:
-            QMessageBox.warning(self, "Error", "Failed to add training record!")
+        try:
+            # First, we need to get the craftsman's internal ID (craftsman_id) from the employee_id
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get the craftsman's internal ID if we received an employee_id
+            if not str(self.craftsman_id).isdigit():
+                cursor.execute("""
+                    SELECT craftsman_id FROM craftsmen 
+                    WHERE employee_id = %s
+                """, (self.craftsman_id,))
+                
+                result = cursor.fetchone()
+                if result:
+                    internal_id = result['craftsman_id']
+                else:
+                    QMessageBox.warning(self, "Error", f"Could not find craftsman with ID: {self.craftsman_id}")
+                    return False
+            else:
+                internal_id = self.craftsman_id
+            
+            # Update data with the correct internal ID
+            data['craftsman_id'] = internal_id
+            
+            if self.db_manager.add_craftsman_training(data):
+                QMessageBox.information(self, "Success", "Training record added successfully!")
+                dialog.accept()
+                # Make sure to reload the training records to update the UI
+                self.load_training_records()
+                return True
+            else:
+                QMessageBox.warning(self, "Error", "Failed to add training record!")
+                return False
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"An error occurred: {str(e)}")
+            return False
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
 
     def load_training_records(self):
-        records = self.db_manager.get_craftsman_training(self.craftsman_id)
-        self.training_table.setRowCount(len(records))
-        
-        for row, record in enumerate(records):
-            self.training_table.setItem(row, 0, QTableWidgetItem(record['training_name']))
-            self.training_table.setItem(row, 1, QTableWidgetItem(str(record['training_date'])))
-            self.training_table.setItem(row, 2, QTableWidgetItem(str(record['completion_date'])))
-            self.training_table.setItem(row, 3, QTableWidgetItem(record['training_provider']))
-            self.training_table.setItem(row, 4, QTableWidgetItem(record['certification_received']))
-            self.training_table.setItem(row, 5, QTableWidgetItem(record['training_status']))
+        """Load training records for the craftsman"""
+        try:
+            # First, we need to get the craftsman's internal ID (craftsman_id) from the employee_id
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get the craftsman's internal ID if we received an employee_id
+            if not str(self.craftsman_id).isdigit():
+                cursor.execute("""
+                    SELECT craftsman_id FROM craftsmen 
+                    WHERE employee_id = %s
+                """, (self.craftsman_id,))
+                
+                result = cursor.fetchone()
+                if result:
+                    internal_id = result['craftsman_id']
+                else:
+                    print(f"Could not find craftsman with ID: {self.craftsman_id}")
+                    return
+            else:
+                internal_id = self.craftsman_id
+            
+            # Now get the training records using the internal ID
+            records = self.db_manager.get_craftsman_training(internal_id)
+            self.training_table.setRowCount(len(records))
+            
+            for row, record in enumerate(records):
+                self.training_table.setItem(row, 0, QTableWidgetItem(record['training_name']))
+                self.training_table.setItem(row, 1, QTableWidgetItem(str(record['training_date'])))
+                self.training_table.setItem(row, 2, QTableWidgetItem(str(record['completion_date'])))
+                self.training_table.setItem(row, 3, QTableWidgetItem(record['training_provider']))
+                self.training_table.setItem(row, 4, QTableWidgetItem(record['certification_received']))
+                self.training_table.setItem(row, 5, QTableWidgetItem(record['training_status']))
+        except Exception as e:
+            print(f"Error loading craftsman training records: {e}")
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
 
     def load_work_history(self):
         history = self.db_manager.get_craftsman_work_history(self.craftsman_id)
