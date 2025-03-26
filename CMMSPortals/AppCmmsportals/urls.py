@@ -60,7 +60,7 @@ urlpatterns = [
     path('craftsmen/profile/', views.craftsmen_profile, name='craftsmen_profile'),
 ] 
 
-# this is an edit
+# this is an edit editdxtfhvhvjvv
 
 def redirect_to_login_or_404(request):
     if not request.user.is_authenticated:
