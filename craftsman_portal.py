@@ -773,9 +773,50 @@ class WorkOrderDetailsDialog(QDialog):
         super().__init__(parent)
         self.work_order = work_order
         self.db_manager = db_manager
+        self.parent_window = parent
         
         self.setWindowTitle(f"Work Order #{work_order['work_order_id']}")
-        self.setMinimumSize(600, 500)
+        self.setMinimumSize(700, 600)
+        
+        # Apply dark theme
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #2d2d2d;
+                color: #e0e0e0;
+            }
+            QLabel {
+                color: #e0e0e0;
+            }
+            QTextEdit, QTableWidget {
+                background-color: #3d3d3d;
+                color: #e0e0e0;
+                border: 1px solid #555555;
+                border-radius: 4px;
+            }
+            QTableWidget QHeaderView::section {
+                background-color: #444444;
+                color: #e0e0e0;
+                padding: 5px;
+                border: 1px solid #555555;
+            }
+            QPushButton {
+                background-color: #0d6efd;
+                color: white;
+                border-radius: 4px;
+                padding: 6px 12px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #0b5ed7;
+            }
+            QScrollBar {
+                background-color: #3d3d3d;
+            }
+            QScrollBar::handle {
+                background-color: #666666;
+                border-radius: 4px;
+            }
+        """)
         
         layout = QVBoxLayout(self)
         
@@ -800,10 +841,12 @@ class WorkOrderDetailsDialog(QDialog):
         status_layout = QHBoxLayout(status_widget)
         
         status_label = QLabel(f"Status: {work_order['status']}")
-        status_label.setStyleSheet(f"background-color: {self.parent().get_status_color(work_order['status']).name()}; padding: 5px; border-radius: 3px;")
+        status_color = self.parent_window.get_status_color(work_order['status'])
+        status_label.setStyleSheet(f"background-color: {status_color.name()}; padding: 5px; border-radius: 3px; color: black;")
         
         priority_label = QLabel(f"Priority: {work_order['priority']}")
-        priority_label.setStyleSheet(f"background-color: {self.parent().get_priority_color(work_order['priority']).name()}; padding: 5px; border-radius: 3px;")
+        priority_color = self.parent_window.get_priority_color(work_order['priority'])
+        priority_label.setStyleSheet(f"background-color: {priority_color.name()}; padding: 5px; border-radius: 3px; color: black;")
         
         status_layout.addWidget(status_label)
         status_layout.addWidget(priority_label)
@@ -814,21 +857,38 @@ class WorkOrderDetailsDialog(QDialog):
         # Details section
         details_frame = QFrame()
         details_frame.setFrameShape(QFrame.Shape.StyledPanel)
-        details_frame.setStyleSheet("background-color: #f5f5f5; padding: 10px; border-radius: 5px;")
+        details_frame.setStyleSheet("background-color: #3a3a3a; padding: 15px; border-radius: 5px;")
         details_layout = QFormLayout(details_frame)
         
         # Get equipment details
         equipment = self.db_manager.get_equipment_by_id(work_order['equipment_id'])
         equipment_name = equipment['equipment_name'] if equipment else "Unknown"
         
-        details_layout.addRow("Equipment:", QLabel(equipment_name))
-        details_layout.addRow("Created Date:", QLabel(str(work_order['created_date'])))
-        details_layout.addRow("Due Date:", QLabel(str(work_order['due_date'])))
+        # Create labels with better styling
+        equipment_label = QLabel(equipment_name)
+        equipment_label.setStyleSheet("font-weight: bold; color: #8ab4f8;")
+        details_layout.addRow("Equipment:", equipment_label)
+        
+        # Add equipment location if available
+        if equipment and equipment.get('location'):
+            location_label = QLabel(equipment['location'])
+            location_label.setStyleSheet("font-weight: bold; color: #8ab4f8;")
+            details_layout.addRow("Location:", location_label)
+        
+        created_date_label = QLabel(str(work_order['created_date']))
+        details_layout.addRow("Created Date:", created_date_label)
+        
+        due_date_label = QLabel(str(work_order['due_date']))
+        due_date_label.setStyleSheet("font-weight: bold; color: #f8c8c8;")
+        details_layout.addRow("Due Date:", due_date_label)
         
         if work_order['completed_date']:
-            details_layout.addRow("Completed Date:", QLabel(str(work_order['completed_date'])))
+            completed_date_label = QLabel(str(work_order['completed_date']))
+            completed_date_label.setStyleSheet("color: #a8e6a8;")
+            details_layout.addRow("Completed Date:", completed_date_label)
         
-        details_layout.addRow("Estimated Hours:", QLabel(str(work_order.get('estimated_hours', 'N/A'))))
+        est_hours_label = QLabel(str(work_order.get('estimated_hours', 'N/A')))
+        details_layout.addRow("Estimated Hours:", est_hours_label)
         
         content_layout.addWidget(details_frame)
         
@@ -841,6 +901,53 @@ class WorkOrderDetailsDialog(QDialog):
         description_text.setPlainText(work_order['description'])
         description_text.setReadOnly(True)
         content_layout.addWidget(description_text)
+        
+        # Required Tools section
+        tools_label = QLabel("Required Tools:")
+        tools_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
+        content_layout.addWidget(tools_label)
+        
+        # Create tools table
+        self.tools_table = QTableWidget()
+        self.tools_table.setColumnCount(4)
+        self.tools_table.setHorizontalHeaderLabels([
+            "Tool Name", "Quantity", "Status", "Location"
+        ])
+        
+        # Set column widths
+        self.tools_table.setColumnWidth(0, 200)  # Tool Name
+        self.tools_table.setColumnWidth(1, 80)   # Quantity
+        self.tools_table.setColumnWidth(2, 100)  # Status
+        self.tools_table.setColumnWidth(3, 150)  # Location
+        self.tools_table.setMinimumHeight(100)
+
+        # Load tools data
+        self.load_required_tools()
+        
+        content_layout.addWidget(self.tools_table)
+        
+        # Required Spares section
+        spares_label = QLabel("Required Spare Parts:")
+        spares_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
+        content_layout.addWidget(spares_label)
+        
+        # Create spares table
+        self.spares_table = QTableWidget()
+        self.spares_table.setColumnCount(4)
+        self.spares_table.setHorizontalHeaderLabels([
+            "Part Name", "Quantity", "Status", "Location"
+        ])
+        
+        # Set column widths
+        self.spares_table.setColumnWidth(0, 200)  # Part Name
+        self.spares_table.setColumnWidth(1, 80)   # Quantity
+        self.spares_table.setColumnWidth(2, 100)  # Status
+        self.spares_table.setColumnWidth(3, 150)  # Location
+        
+        # Load spares data
+        self.load_required_spares()
+        self.spares_table.setMinimumHeight(100)
+        content_layout.addWidget(self.spares_table)
         
         # Notes section
         if work_order.get('notes'):
@@ -857,10 +964,203 @@ class WorkOrderDetailsDialog(QDialog):
         scroll.setWidget(content_widget)
         layout.addWidget(scroll)
         
+        # Add buttons at the bottom
+        buttons_layout = QHBoxLayout()
+        
+        # Add update status button if work order is not completed
+        if work_order['status'] != 'Completed':
+            update_status_btn = QPushButton("Update Status")
+            update_status_btn.clicked.connect(lambda: self.parent_window.update_work_order_status(work_order['work_order_id']))
+            buttons_layout.addWidget(update_status_btn)
+        
+        # Add report button if work order is in progress
+        if work_order['status'] == 'In Progress':
+            report_btn = QPushButton("Add Report")
+            report_btn.clicked.connect(lambda: self.parent_window.add_maintenance_report(work_order['work_order_id']))
+            buttons_layout.addWidget(report_btn)
+        
         # Add close button
         close_btn = QPushButton("Close")
         close_btn.clicked.connect(self.accept)
-        layout.addWidget(close_btn)
+        buttons_layout.addWidget(close_btn)
+        
+        layout.addLayout(buttons_layout)
+    
+    def load_required_tools(self):
+        """Load required tools for the work order"""
+        try:
+            # Parse tools from JSON if available
+            tools_data = []
+            if self.work_order.get('tools_required'):
+                if isinstance(self.work_order['tools_required'], str):
+                    try:
+                        tools_data = json.loads(self.work_order['tools_required'])
+                    except json.JSONDecodeError:
+                        print(f"Error parsing tools JSON: {self.work_order['tools_required']}")
+                else:
+                    tools_data = self.work_order['tools_required']
+            
+            self.tools_table.setRowCount(len(tools_data))
+            
+            for row, tool in enumerate(tools_data):
+                # Get tool data by ID
+                tool_id = None
+                quantity = 1
+                
+                if isinstance(tool, dict):
+                    tool_id = tool.get('item_id')
+                    quantity = tool.get('quantity', 1)
+                
+                # Get tool info from inventory by ID
+                tool_info = None
+                if tool_id:
+                    tool_info = self.db_manager.get_inventory_item(tool_id)
+                
+                # Tool name
+                tool_name = "Unknown"
+                if tool_info and 'name' in tool_info:
+                    tool_name = tool_info['name']
+                
+                name_item = QTableWidgetItem(tool_name)
+                name_item.setForeground(QColor("#e0e0e0"))
+                self.tools_table.setItem(row, 0, name_item)
+                
+                # Quantity
+                qty_item = QTableWidgetItem(str(quantity))
+                qty_item.setForeground(QColor("#e0e0e0"))
+                self.tools_table.setItem(row, 1, qty_item)
+                
+                # Status
+                status = "Unknown"
+                if tool_info:
+                    if tool_info.get('quantity', 0) > 0:
+                        status = "Available"
+                        # Check if tool is checked out
+                        checkout_status = self.db_manager.get_tool_checkout_status(tool_id)
+                        if checkout_status:
+                            status = "Checked Out"
+                    else:
+                        status = "Out of Stock"
+                else:
+                    status = "Not Found"
+                
+                status_item = QTableWidgetItem(status)
+                status_item.setForeground(QColor("black"))
+                
+                if status == "Available":
+                    status_item.setBackground(QColor("#d9ead3"))  # Light green
+                elif status == "Checked Out":
+                    status_item.setBackground(QColor("#fff2cc"))  # Light yellow
+                else:
+                    status_item.setBackground(QColor("#f4cccc"))  # Light red
+                
+                self.tools_table.setItem(row, 2, status_item)
+                
+                # Location
+                location = "Unknown"
+                if tool_info:
+                    for key in ['location', 'storage_location']:
+                        if key in tool_info and tool_info[key]:
+                            location = tool_info[key]
+                            break
+                
+                location_item = QTableWidgetItem(location)
+                location_item.setForeground(QColor("#e0e0e0"))
+                self.tools_table.setItem(row, 3, location_item)
+        
+        except Exception as e:
+            print(f"Error loading required tools: {e}")
+            import traceback
+            traceback.print_exc()
+            # Set empty table if there's an error
+            self.tools_table.setRowCount(0)
+    
+    def load_required_spares(self):
+        """Load required spare parts for the work order"""
+        try:
+            # Parse spares from JSON if available
+            spares_data = []
+            if self.work_order.get('spares_required'):
+                if isinstance(self.work_order['spares_required'], str):
+                    try:
+                        spares_data = json.loads(self.work_order['spares_required'])
+                    except json.JSONDecodeError:
+                        print(f"Error parsing spares JSON: {self.work_order['spares_required']}")
+                else:
+                    spares_data = self.work_order['spares_required']
+            
+            self.spares_table.setRowCount(len(spares_data))
+            
+            for row, spare in enumerate(spares_data):
+                # Get spare part data by ID
+                spare_id = None
+                quantity = 1
+                
+                if isinstance(spare, dict):
+                    spare_id = spare.get('item_id')
+                    quantity = spare.get('quantity', 1)
+                
+                # Get spare part info from inventory by ID
+                part_info = None
+                if spare_id:
+                    part_info = self.db_manager.get_inventory_item(spare_id)
+                
+                # Part name
+                part_name = "Unknown"
+                if part_info and 'name' in part_info:
+                    part_name = part_info['name']
+                
+                name_item = QTableWidgetItem(part_name)
+                name_item.setForeground(QColor("#e0e0e0"))
+                self.spares_table.setItem(row, 0, name_item)
+                
+                # Quantity
+                qty_item = QTableWidgetItem(str(quantity))
+                qty_item.setForeground(QColor("#e0e0e0"))
+                self.spares_table.setItem(row, 1, qty_item)
+                
+                # Status
+                status = "Unknown"
+                if part_info:
+                    if part_info.get('quantity', 0) >= quantity:
+                        status = "In Stock"
+                    elif part_info.get('quantity', 0) > 0:
+                        status = "Low Stock"
+                    else:
+                        status = "Out of Stock"
+                else:
+                    status = "Not Found"
+                
+                status_item = QTableWidgetItem(status)
+                status_item.setForeground(QColor("black"))
+                
+                if status == "In Stock":
+                    status_item.setBackground(QColor("#d9ead3"))  # Light green
+                elif status == "Low Stock":
+                    status_item.setBackground(QColor("#fff2cc"))  # Light yellow
+                else:
+                    status_item.setBackground(QColor("#f4cccc"))  # Light red
+                
+                self.spares_table.setItem(row, 2, status_item)
+                
+                # Location
+                location = "Unknown"
+                if part_info:
+                    for key in ['location', 'storage_location']:
+                        if key in part_info and part_info[key]:
+                            location = part_info[key]
+                            break
+                
+                location_item = QTableWidgetItem(location)
+                location_item.setForeground(QColor("#e0e0e0"))
+                self.spares_table.setItem(row, 3, location_item)
+        
+        except Exception as e:
+            print(f"Error loading required spares: {e}")
+            import traceback
+            traceback.print_exc()
+            # Set empty table if there's an error
+            self.spares_table.setRowCount(0)
 
 
 class UpdateStatusDialog(QDialog):

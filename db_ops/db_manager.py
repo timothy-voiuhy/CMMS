@@ -2038,25 +2038,20 @@ class DatabaseManager:
             self.close(connection)
 
     def get_tool_checkout_status(self, item_id):
-        """Get the current checkout status of a tool"""
+        """Check if a tool is currently checked out"""
         try:
             connection = self.connect()
             cursor = connection.cursor(dictionary=True)
             
             cursor.execute("""
-                SELECT tc.*, CONCAT(c.first_name, ' ', c.last_name) as craftsman_name
-                FROM tool_checkouts tc
-                JOIN craftsmen c ON tc.craftsman_id = c.craftsman_id
-                WHERE tc.item_id = %s
-                AND tc.status = 'Checked Out'
-                AND tc.actual_return_date IS NULL
-                ORDER BY tc.checkout_date DESC
+                SELECT * FROM tool_checkouts
+                WHERE item_id = %s AND status = 'Checked Out'
                 LIMIT 1
             """, (item_id,))
             
             return cursor.fetchone()
         except Error as e:
-            print(f"Error getting tool checkout status: {e}")
+            print(f"Error checking tool checkout status: {e}")
             return None
         finally:
             self.close(connection)
@@ -3070,5 +3065,24 @@ class DatabaseManager:
         except Error as e:
             print(f"Error updating craftsman training: {e}")
             return False
+        finally:
+            self.close(connection)
+
+    def get_inventory_item_by_name(self, item_name):
+        """Get inventory item details by name"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT * FROM inventory_items
+                WHERE name LIKE %s
+                LIMIT 1
+            """, (f"%{item_name}%",))
+            
+            return cursor.fetchone()
+        except Error as e:
+            print(f"Error getting inventory item by name: {e}")
+            return None
         finally:
             self.close(connection)
