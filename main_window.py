@@ -341,6 +341,14 @@ class CMMSMainWindow(QMainWindow):
                 )
 
     def closeEvent(self, event):
+        # Stop the Django server if it's running
+        if hasattr(self, 'django_process') and self.django_process:
+            try:
+                self.django_process.terminate()
+                self.django_process.wait(timeout=2)  # Wait up to 2 seconds for termination
+            except:
+                pass  # Ignore errors during termination
+        
         # Stop the notification scheduler if it's running
         if hasattr(self, 'notification_service'):
             self.notification_service.stop_scheduler()
@@ -491,25 +499,63 @@ class CMMSMainWindow(QMainWindow):
                 portal.show()
 
     def launch_web_portal(self):
-        """Launch the web-based craftsman portal"""
+        """Launch the web-based portal using Django's runserver"""
         try:
+            # Get the path to the Django project
+            import os
+            import sys
+            import subprocess
             import threading
-            from webportal import start_web_portal
+            
+            project_root = os.path.dirname(os.path.abspath(__file__))
+            django_project_path = os.path.join(project_root, 'CMMSPortals')
+            
+            # Check if manage.py exists
+            manage_py_path = os.path.join(django_project_path, 'manage.py')
+            if not os.path.exists(manage_py_path):
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    f"Django project not found at {django_project_path}"
+                )
+                return
             
             # Show information dialog
             QMessageBox.information(
                 self,
                 "Web Portal",
-                "Starting the web-based craftsman portal...\n\n"
-                "Craftsmen can access the portal at:\n"
-                "http://localhost:5000\n\n"
+                "Starting the web-based portal...\n\n"
+                "Users can access the portal at:\n"
+                "http://localhost:8000\n\n"
                 "The portal will run until the application is closed."
             )
             
-            # Start the web portal in a separate thread
+            # Get Python executable path
+            python_exe = sys.executable
+            
+            # Function to run the Django server
+            def run_django_server():
+                try:
+                    # Start the Django server
+                    process = subprocess.Popen(
+                        [python_exe, manage_py_path, 'runserver', '8000'],
+                        cwd=django_project_path,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True
+                    )
+                    
+                    # Store the process reference so we can terminate it later
+                    self.django_process = process
+                    
+                    # Wait for the process to complete (which it won't unless terminated)
+                    process.wait()
+                except Exception as e:
+                    print(f"Error in Django server thread: {str(e)}")
+            
+            # Start the Django server in a separate thread
             portal_thread = threading.Thread(
-                target=start_web_portal,
-                kwargs={'debug': False},
+                target=run_django_server,
                 daemon=True  # This ensures the thread will exit when the main program exits
             )
             portal_thread.start()
@@ -517,13 +563,17 @@ class CMMSMainWindow(QMainWindow):
             # Store the thread reference
             self.portal_thread = portal_thread
             
+            # Open the browser to the portal
+            import webbrowser
+            webbrowser.open('http://127.0.0.1:8000/')
+            
         except Exception as e:
             QMessageBox.critical(
                 self,
                 "Error",
                 f"Failed to start web portal: {str(e)}\n\n"
-                "Make sure Flask is installed by running:\n"
-                "pip install flask flask-login"
+                "Make sure Django is installed by running:\n"
+                "pip install django"
             )
 
     def open_admin_window(self):

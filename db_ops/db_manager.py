@@ -2912,3 +2912,110 @@ class DatabaseManager:
         finally:
             cursor.close()
             connection.close()
+
+    def update_inventory_item(self, data):
+        """Update an existing inventory item"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            # Get category_id if category name is provided
+            category_id = data.get('category_id')
+            if not category_id and 'category' in data:
+                cursor.execute("""
+                    SELECT category_id FROM inventory_categories
+                    WHERE name = %s
+                """, (data['category'],))
+                result = cursor.fetchone()
+                if result:
+                    category_id = result[0]
+                else:
+                    # Create new category
+                    cursor.execute("""
+                        INSERT INTO inventory_categories (name)
+                        VALUES (%s)
+                    """, (data['category'],))
+                    category_id = cursor.lastrowid
+            
+            # Update item
+            cursor.execute("""
+                UPDATE inventory_items SET
+                    category_id = %s,
+                    supplier_id = %s,
+                    name = %s,
+                    description = %s,
+                    unit = %s,
+                    unit_cost = %s,
+                    quantity = %s,
+                    minimum_quantity = %s,
+                    reorder_point = %s,
+                    location = %s
+                WHERE item_id = %s
+            """, (
+                category_id,
+                data.get('supplier_id'),
+                data['name'],
+                data.get('description'),
+                data.get('unit'),
+                data.get('unit_cost', 0.00),
+                data.get('quantity', 0),
+                data.get('minimum_quantity', 0),
+                data.get('reorder_point', 0),
+                data.get('location'),
+                data['item_id']
+            ))
+            
+            connection.commit()
+            return True
+        except Error as e:
+            print(f"Error updating inventory item: {e}")
+            return False
+        finally:
+            self.close(connection)
+
+    def remove_inventory_item(self, item_id):
+        """Remove an inventory item"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            # Check if item is referenced in other tables
+            cursor.execute("""
+                SELECT COUNT(*) FROM inventory_transactions
+                WHERE item_id = %s
+            """, (item_id,))
+            transaction_count = cursor.fetchone()[0]
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM tool_checkouts
+                WHERE item_id = %s
+            """, (item_id,))
+            checkout_count = cursor.fetchone()[0]
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM purchase_order_items
+                WHERE item_id = %s
+            """, (item_id,))
+            po_count = cursor.fetchone()[0]
+            
+            # If item is referenced, mark as inactive instead of deleting
+            if transaction_count > 0 or checkout_count > 0 or po_count > 0:
+                cursor.execute("""
+                    UPDATE inventory_items
+                    SET status = 'Inactive'
+                    WHERE item_id = %s
+                """, (item_id,))
+            else:
+                # If not referenced, delete the item
+                cursor.execute("""
+                    DELETE FROM inventory_items
+                    WHERE item_id = %s
+                """, (item_id,))
+            
+            connection.commit()
+            return True
+        except Error as e:
+            print(f"Error removing inventory item: {e}")
+            return False
+        finally:
+            self.close(connection)

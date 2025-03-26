@@ -343,13 +343,19 @@ class Supplier(models.Model):
 # Inventory Item model
 class InventoryItem(models.Model):
     item_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255)
+    category = models.ForeignKey(InventoryCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True)
+    item_code = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
-    category_id = models.IntegerField(null=True, blank=True)
+    unit = models.CharField(max_length=20, null=True, blank=True)
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     quantity = models.IntegerField(default=0)
     minimum_quantity = models.IntegerField(default=0)
+    reorder_point = models.IntegerField(default=0)
     location = models.CharField(max_length=100, null=True, blank=True)
-    supplier_id = models.IntegerField(null=True, blank=True)
+    status = models.CharField(max_length=20, default='Active')
+    last_restock_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     
@@ -358,7 +364,7 @@ class InventoryItem(models.Model):
         db_table = 'inventory_items'
     
     def __str__(self):
-        return self.name
+        return f"{self.item_code} - {self.name}"
 
 # Inventory Transaction model
 class InventoryTransaction(models.Model):

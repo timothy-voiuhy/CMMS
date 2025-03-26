@@ -311,6 +311,8 @@ class InventoryWindow(QMainWindow):
         self.inventory_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.inventory_table.horizontalHeader().setStretchLastSection(True)
         self.inventory_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.inventory_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.inventory_table.setEditTriggers(QTableWidget.NoEditTriggers)
         layout.addWidget(self.inventory_table, 1)  # Give table more vertical space with stretch factor
         
         # Buttons
@@ -320,6 +322,12 @@ class InventoryWindow(QMainWindow):
         
         add_item_btn = QPushButton("Add New Item")
         add_item_btn.clicked.connect(self.show_add_item_dialog)
+        
+        edit_item_btn = QPushButton("Edit Item")
+        edit_item_btn.clicked.connect(self.show_edit_item_dialog)
+        
+        remove_item_btn = QPushButton("Remove Item")
+        remove_item_btn.clicked.connect(self.show_remove_item_dialog)
         
         import_btn = QPushButton("Import Items")
         import_btn.clicked.connect(self.import_items)
@@ -336,6 +344,8 @@ class InventoryWindow(QMainWindow):
         demo_data_btn.setStyleSheet("background-color: #FF9800; color: white;")
         
         button_layout.addWidget(add_item_btn)
+        button_layout.addWidget(edit_item_btn)
+        button_layout.addWidget(remove_item_btn)
         button_layout.addWidget(import_btn)
         button_layout.addWidget(export_btn)
         button_layout.addWidget(refresh_btn)
@@ -2240,6 +2250,71 @@ class InventoryWindow(QMainWindow):
                 status = self.po_table.item(row, 2).text()  # Status is in column 2
                 self.po_table.setRowHidden(row, status != status_filter)
 
+    def show_edit_item_dialog(self):
+        """Show dialog for editing an inventory item"""
+        # Get selected item
+        selected_rows = self.inventory_table.selectedItems()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Selection", "Please select an item to edit.")
+            return
+        
+        row = selected_rows[0].row()
+        item_code = self.inventory_table.item(row, 0).text()
+        
+        # Get item data from database
+        items = self.db_manager.get_inventory_items()
+        item_data = None
+        for item in items:
+            if str(item.get('item_code', '')) == item_code:
+                item_data = item
+                break
+        
+        if not item_data:
+            QMessageBox.critical(self, "Error", "Could not find item data!")
+            return
+        
+        # Create dialog
+        dialog = EditItemDialog(self.db_manager, self, item_data)
+        if dialog.exec() == QDialog.Accepted:
+            self.refresh_inventory()
+            self.add_alert("info", "Item Updated", f"Item {item_data['name']} updated successfully", datetime.now())
+
+    def show_remove_item_dialog(self):
+        """Show confirmation dialog for removing an inventory item"""
+        # Get selected item
+        selected_rows = self.inventory_table.selectedItems()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Selection", "Please select an item to remove.")
+            return
+        
+        row = selected_rows[0].row()
+        item_code = self.inventory_table.item(row, 0).text()
+        item_name = self.inventory_table.item(row, 1).text()
+        
+        # Confirm deletion
+        confirm = QMessageBox.question(
+            self,
+            "Confirm Removal",
+            f"Are you sure you want to remove {item_name} ({item_code}) from inventory?\n\nThis action cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if confirm == QMessageBox.Yes:
+            # Get item ID from database
+            items = self.db_manager.get_inventory_items()
+            item_id = None
+            for item in items:
+                if str(item.get('item_code', '')) == item_code:
+                    item_id = item['item_id']
+                    break
+            
+            if item_id and self.db_manager.remove_inventory_item(item_id):
+                self.refresh_inventory()
+                self.add_alert("warning", "Item Removed", f"Item {item_name} has been removed from inventory", datetime.now())
+            else:
+                QMessageBox.critical(self, "Error", "Failed to remove item from inventory!")
+
 class AddItemDialog(QDialog):
     def __init__(self, db_manager, parent=None):
         super().__init__(parent)
@@ -2664,3 +2739,143 @@ class CreatePurchaseOrderDialog(QDialog):
             self.accept()
         else:
             QMessageBox.critical(self, "Error", "Failed to create purchase order!")
+
+class EditItemDialog(QDialog):
+    def __init__(self, db_manager, parent=None, item_data=None):
+        super().__init__(parent)
+        self.db_manager = db_manager
+        self.item_data = item_data
+        self.setWindowTitle("Edit Inventory Item")
+        self.setMinimumWidth(400)
+        
+        layout = QVBoxLayout(self)
+        
+        # Create form layout
+        form_layout = QFormLayout()
+        
+        # Item code (read-only)
+        self.item_code = QLineEdit(str(item_data.get('item_code', '')))
+        self.item_code.setReadOnly(True)
+        form_layout.addRow("Item Code:", self.item_code)
+        
+        # Name
+        self.name = QLineEdit(str(item_data.get('name', '')))
+        form_layout.addRow("Name:", self.name)
+        
+        # Category
+        self.category = QComboBox()
+        categories = self.db_manager.get_inventory_categories()
+        self.category.addItem("Select Category")
+        for category in categories:
+            self.category.addItem(category['name'])
+        
+        # Set current category
+        current_category = item_data.get('category', '')
+        index = self.category.findText(current_category)
+        if index >= 0:
+            self.category.setCurrentIndex(index)
+        form_layout.addRow("Category:", self.category)
+        
+        # Description
+        self.description = QTextEdit()
+        self.description.setText(str(item_data.get('description', '')))
+        form_layout.addRow("Description:", self.description)
+        
+        # Quantity
+        self.quantity = QSpinBox()
+        self.quantity.setRange(0, 100000)
+        self.quantity.setValue(int(item_data.get('quantity', 0)))
+        form_layout.addRow("Quantity:", self.quantity)
+        
+        # Unit
+        self.unit = QLineEdit(str(item_data.get('unit', '')))
+        form_layout.addRow("Unit:", self.unit)
+        
+        # Location
+        self.location = QLineEdit(str(item_data.get('location', '')))
+        form_layout.addRow("Location:", self.location)
+        
+        # Minimum quantity
+        self.min_quantity = QSpinBox()
+        self.min_quantity.setRange(0, 100000)
+        self.min_quantity.setValue(int(item_data.get('minimum_quantity', 0)))
+        form_layout.addRow("Minimum Quantity:", self.min_quantity)
+        
+        # Reorder point
+        self.reorder_point = QSpinBox()
+        self.reorder_point.setRange(0, 100000)
+        self.reorder_point.setValue(int(item_data.get('reorder_point', 0)))
+        form_layout.addRow("Reorder Point:", self.reorder_point)
+        
+        # Unit cost
+        self.unit_cost = QDoubleSpinBox()
+        self.unit_cost.setRange(0, 1000000)
+        self.unit_cost.setDecimals(2)
+        self.unit_cost.setPrefix("$")
+        self.unit_cost.setValue(float(item_data.get('unit_cost', 0)))
+        form_layout.addRow("Unit Cost:", self.unit_cost)
+        
+        # Supplier
+        self.supplier = QComboBox()
+        suppliers = self.db_manager.get_suppliers()
+        self.supplier.addItem("Select Supplier", None)
+        
+        # Set current supplier
+        current_supplier_id = item_data.get('supplier_id')
+        current_supplier_index = 0
+        
+        for i, supplier in enumerate(suppliers, 1):
+            self.supplier.addItem(supplier['name'], supplier['supplier_id'])
+            if supplier['supplier_id'] == current_supplier_id:
+                current_supplier_index = i
+        
+        self.supplier.setCurrentIndex(current_supplier_index)
+        form_layout.addRow("Supplier:", self.supplier)
+        
+        layout.addLayout(form_layout)
+        
+        # Buttons
+        button_box = QHBoxLayout()
+        save_btn = QPushButton("Save")
+        save_btn.clicked.connect(self.save_item)
+        
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.clicked.connect(self.reject)
+        
+        button_box.addWidget(save_btn)
+        button_box.addWidget(cancel_btn)
+        
+        layout.addLayout(button_box)
+    
+    def save_item(self):
+        """Save the edited item"""
+        # Validate required fields
+        if not self.name.text():
+            QMessageBox.warning(self, "Validation Error", "Name is required!")
+            return
+        
+        if self.category.currentText() == "Select Category":
+            QMessageBox.warning(self, "Validation Error", "Category is required!")
+            return
+        
+        # Prepare data
+        item_data = {
+            'item_id': self.item_data['item_id'],
+            'item_code': self.item_code.text(),
+            'name': self.name.text(),
+            'category': self.category.currentText(),
+            'description': self.description.toPlainText(),
+            'quantity': self.quantity.value(),
+            'unit': self.unit.text(),
+            'location': self.location.text(),
+            'minimum_quantity': self.min_quantity.value(),
+            'reorder_point': self.reorder_point.value(),
+            'unit_cost': self.unit_cost.value(),
+            'supplier_id': self.supplier.currentData()
+        }
+        
+        # Update item in database
+        if self.db_manager.update_inventory_item(item_data):
+            self.accept()
+        else:
+            QMessageBox.critical(self, "Error", "Failed to update inventory item!")

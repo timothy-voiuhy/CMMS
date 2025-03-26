@@ -797,27 +797,27 @@ def inventory_dashboard(request):
         messages.error(request, 'Access denied. You need inventory personnel permissions.')
         return redirect('logout')
     
-    # Get inventory statistics
+    # Get inventory statistics from database
+    total_items = InventoryItem.objects.count()
+    low_stock_count = InventoryItem.objects.filter(quantity__lte=F('minimum_quantity')).count()
+    
+    # Calculate total inventory value using the unit_cost field
+    total_value = InventoryItem.objects.filter(
+        unit_cost__isnull=False
+    ).annotate(
+        item_value=F('quantity') * F('unit_cost')
+    ).aggregate(
+        total=Sum('item_value')
+    )['total'] or 0
+    
     stats = {
-        'total_items': InventoryItem.objects.count(),
-        'low_stock': InventoryItem.objects.filter(quantity__lte=F('minimum_quantity')).count(),
-        'total_value': 0,  # We'll calculate this differently
+        'total_items': total_items,
+        'low_stock': low_stock_count,
+        'total_value': total_value,
         'active_pos': PurchaseOrder.objects.filter(status__in=['Pending', 'Approved', 'Ordered']).count()
     }
     
-    # Get recent activities - format them to match template expectations
-    recent_transactions = InventoryTransaction.objects.all().order_by('-transaction_date')[:10]
-    activities = []
-    
-    for transaction in recent_transactions:
-        activities.append({
-            'date': transaction.transaction_date.strftime('%Y-%m-%d %H:%M'),
-            'type': transaction.transaction_type,
-            'description': f"{transaction.transaction_type} - {transaction.quantity} of item #{transaction.item_id}",
-            'status': 'Completed'
-        })
-    
-    # Get low stock items and format them to match template expectations
+    # Get low stock items with more details
     low_stock_items_query = InventoryItem.objects.filter(
         quantity__lte=F('minimum_quantity')
     ).order_by('quantity')[:10]
@@ -825,20 +825,38 @@ def inventory_dashboard(request):
     low_stock_items = []
     for item in low_stock_items_query:
         low_stock_items.append({
-            'item_code': f"ITEM-{item.item_id}",  # Generate a code since item_code doesn't exist
+            'item_id': item.item_id,
+            'item_code': item.item_code,
             'name': item.name,
             'quantity': item.quantity,
             'minimum_quantity': item.minimum_quantity,
-            'reorder_point': item.minimum_quantity,  # Use minimum_quantity as reorder_point
-            'unit': 'units'  # Default unit
+            'reorder_point': getattr(item, 'reorder_point', item.minimum_quantity),
+            'unit': item.unit or 'units'
         })
+    
+    # Get recent activities - actual transactions from database
+    recent_activities = InventoryTransaction.objects.all().order_by('-transaction_date')[:10]
+    activities = []
+    
+    for transaction in recent_activities:
+        activities.append({
+            'date': transaction.transaction_date.strftime('%Y-%m-%d %H:%M'),
+            'type': transaction.transaction_type,
+            'description': f"{transaction.transaction_type} - {transaction.quantity} of {transaction.item.name}",
+            'status': 'Completed'
+        })
+    
+    # Get pending purchase orders
+    pending_pos = PurchaseOrder.objects.filter(
+        status__in=['Pending', 'Approved', 'Ordered']
+    ).order_by('-created_at')[:5]
     
     # Make sure we're using the correct template for inventory dashboard
     return render(request, 'inventory/dashboard.html', {
         'stats': stats,
         'recent_activities': activities,
         'low_stock_items': low_stock_items,
-        'user': request.user  # Pass the user to the template
+        'user': request.user
     })
 
 @login_required
