@@ -97,7 +97,7 @@ def index(request):
         if request.user.role == 'inventory':
             return redirect('inventory_dashboard')
         else:
-            return redirect('dashboard')
+            return redirect('craftsmen_dashboard')
     return redirect('login')
 
 def login_view(request):
@@ -303,10 +303,96 @@ def craftsmen_view_work_order(request, work_order_id):
     except MaintenanceReport.DoesNotExist:
         pass
     
+    # Process tools and spare parts data
+    tools_data = []
+    spares_data = []
+    
+    # Process tools required
+    if work_order.tools_required:
+        try:
+            if isinstance(work_order.tools_required, str):
+                tools_list = json.loads(work_order.tools_required)
+            else:
+                tools_list = work_order.tools_required
+                
+            for tool in tools_list:
+                tool_info = {}
+                if isinstance(tool, dict) and 'item_id' in tool:
+                    # Get tool details from inventory
+                    try:
+                        item = InventoryItem.objects.get(item_id=tool['item_id'])
+                        tool_info = {
+                            'name': item.name,
+                            'quantity': tool.get('quantity', 1),
+                            'location': item.location or 'Unknown',
+                            'status': 'Available' if item.quantity > 0 else 'Out of Stock'
+                        }
+                    except InventoryItem.DoesNotExist:
+                        tool_info = {
+                            'name': f"Unknown (ID: {tool['item_id']})",
+                            'quantity': tool.get('quantity', 1),
+                            'location': 'Unknown',
+                            'status': 'Not Found'
+                        }
+                tools_data.append(tool_info)
+        except (json.JSONDecodeError, TypeError):
+            # Handle invalid JSON
+            pass
+    
+    # Process spare parts required
+    if work_order.spares_required:
+        try:
+            if isinstance(work_order.spares_required, str):
+                spares_list = json.loads(work_order.spares_required)
+            else:
+                spares_list = work_order.spares_required
+                
+            for spare in spares_list:
+                spare_info = {}
+                if isinstance(spare, dict) and 'item_id' in spare:
+                    # Get spare part details from inventory
+                    try:
+                        item = InventoryItem.objects.get(item_id=spare['item_id'])
+                        required_qty = spare.get('quantity', 1)
+                        
+                        # Determine status based on available quantity
+                        if item.quantity >= required_qty:
+                            status = 'In Stock'
+                        elif item.quantity > 0:
+                            status = 'Low Stock'
+                        else:
+                            status = 'Out of Stock'
+                            
+                        spare_info = {
+                            'name': item.name,
+                            'quantity': required_qty,
+                            'location': item.location or 'Unknown',
+                            'status': status
+                        }
+                    except InventoryItem.DoesNotExist:
+                        spare_info = {
+                            'name': f"Unknown (ID: {spare['item_id']})",
+                            'quantity': spare.get('quantity', 1),
+                            'location': 'Unknown',
+                            'status': 'Not Found'
+                        }
+                spares_data.append(spare_info)
+        except (json.JSONDecodeError, TypeError):
+            # Handle invalid JSON
+            pass
+    
+    # Get equipment location if available
+    equipment_location = 'Unknown'
+    if work_order.equipment and work_order.equipment.location:
+        equipment_location = work_order.equipment.location
+    
     return render(request, 'craftsmen/view_work_order.html', {
         'work_order': work_order,
         'has_report': has_report,
-        'report_id': report_id
+        'report_id': report_id,
+        'tools': tools_data,
+        'spares': spares_data,
+        'equipment_location': equipment_location
     })
 
 @login_required
@@ -1635,3 +1721,76 @@ def generate_report(request):
         # Handle the report generation logic here
         pass
     return render(request, 'inventory/report_result.html')
+
+@login_required
+def craftsmen_equipment(request):
+    """View equipment assigned to craftsman"""
+    # Ensure user is a craftsman
+    if request.user.role != 'craftsman':
+        messages.error(request, 'Access denied.')
+        return redirect('logout')
+    
+    # Get the craftsman record
+    try:
+        craftsman = Craftsman.objects.get(employee_id=request.user.employee_id)
+    except Craftsman.DoesNotExist:
+        messages.error(request, 'Craftsman profile not found for your account')
+        return redirect('craftsmen_dashboard')
+    
+    # Get equipment assigned to this craftsman through work orders
+    equipment_ids = WorkOrder.objects.filter(
+        craftsman=craftsman
+    ).values_list('equipment_id', flat=True).distinct()
+    
+    equipment_list = Equipment.objects.filter(equipment_id__in=equipment_ids)
+    
+    return render(request, 'craftsmen/equipment.html', {
+        'equipment_list': equipment_list
+    })
+
+@login_required
+def craftsmen_profile(request):
+    """View and edit craftsman profile"""
+    # Ensure user is a craftsman
+    if request.user.role != 'craftsman':
+        messages.error(request, 'Access denied.')
+        return redirect('logout')
+    
+    # Get the craftsman record
+    try:
+        craftsman = Craftsman.objects.get(employee_id=request.user.employee_id)
+        
+        # Get craftsman skills
+        skills = CraftsmanSkill.objects.filter(craftsman=craftsman)
+        
+        # Get craftsman training
+        trainings = CraftsmanTraining.objects.filter(craftsman=craftsman)
+        
+        # Get craftsman team
+        teams = CraftsmanTeam.objects.filter(craftsman=craftsman)
+        
+    except Craftsman.DoesNotExist:
+        messages.error(request, 'Craftsman profile not found for your account')
+        return redirect('craftsmen_dashboard')
+    
+    # Handle form submission for profile update
+    if request.method == 'POST':
+        # Update basic information
+        craftsman.phone = request.POST.get('phone', craftsman.phone)
+        craftsman.email = request.POST.get('email', craftsman.email)
+        craftsman.save()
+        
+        # Update user record as well
+        user = request.user
+        user.email = request.POST.get('email', user.email)
+        user.save()
+        
+        messages.success(request, 'Profile updated successfully')
+        return redirect('craftsmen_profile')
+    
+    return render(request, 'craftsmen/profile.html', {
+        'craftsman': craftsman,
+        'skills': skills,
+        'trainings': trainings,
+        'teams': teams
+    })

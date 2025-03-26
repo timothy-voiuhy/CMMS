@@ -53,7 +53,11 @@ urlpatterns = [
 
     # other paths that redirect to login
     path('craftsmen/', views.craftsmen, name='craftsmen'),
-    path('inventory/', views.inventory, name='inventory')
+    path('inventory/', views.inventory, name='inventory'),
+
+    # Add this to your urlpatterns
+    path('craftsmen/equipment/', views.craftsmen_equipment, name='craftsmen_equipment'),
+    path('craftsmen/profile/', views.craftsmen_profile, name='craftsmen_profile'),
 ] 
 
 def redirect_to_login_or_404(request):

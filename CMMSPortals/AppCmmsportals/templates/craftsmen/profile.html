@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMMS - Craftsman Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #34495e;
+        }
+        nav {
+            background-color: #34495e;
+            padding: 10px 20px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 5px 0;
+        }
+        nav a:hover, nav a.active {
+            border-bottom: 2px solid #3498db;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .profile-section {
+            margin-bottom: 30px;
+        }
+        .profile-section h2 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .profile-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .info-item {
+            margin-bottom: 15px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 16px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #3498db;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .data-table th, .data-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .data-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .data-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-message {
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .flash-message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .flash-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .flash-message.warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .flash-message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        form {
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">CMMS Portal</div>
+        <div class="user-info">
+            <img src="/static/images/user-avatar.png" alt="User Avatar">
+            <span>{{ request.user.first_name }} {{ request.user.last_name }}</span>
+        </div>
+    </header>
+    
+    <nav>
+        <a href="{% url 'craftsmen_dashboard' %}">Dashboard</a>
+        <a href="{% url 'craftsmen_work_orders' %}">Work Orders</a>
+        <a href="{% url 'craftsmen_profile' %}" class="active">Profile</a>
+        <a href="{% url 'logout' %}">Logout</a>
+    </nav>
+    
+    <div class="container">
+        {% if messages %}
+        <div class="flash-messages">
+            {% for message in messages %}
+            <div class="flash-message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="page-header">
+            <h1>Craftsman Profile</h1>
+        </div>
+        
+        <div class="card">
+            <div class="profile-section">
+                <h2>Personal Information</h2>
+                <div class="profile-info">
+                    <div class="info-item">
+                        <div class="info-label">Employee ID</div>
+                        <div class="info-value">{{ craftsman.employee_id }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Name</div>
+                        <div class="info-value">{{ craftsman.first_name }} {{ craftsman.last_name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Email</div>
+                        <div class="info-value">{{ craftsman.email }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Phone</div>
+                        <div class="info-value">{{ craftsman.phone|default:"Not provided" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Specialization</div>
+                        <div class="info-value">{{ craftsman.specialization|default:"Not specified" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Experience Level</div>
+                        <div class="info-value">{{ craftsman.experience_level|default:"Not specified" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Hire Date</div>
+                        <div class="info-value">{{ craftsman.hire_date|default:"Not specified" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Status</div>
+                        <div class="info-value">{{ craftsman.status }}</div>
+                    </div>
+                </div>
+                
+                <button id="editProfileBtn" class="btn btn-primary">Edit Profile</button>
+                
+                <form id="profileForm" action="{% url 'craftsmen_profile' %}" method="post" style="display: none;">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" value="{{ craftsman.email }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" name="phone" value="{{ craftsman.phone|default:'' }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" id="cancelEditBtn" class="btn btn-secondary">Cancel</button>
+                </form>
+            </div>
+            
+            {% if skills %}
+            <div class="profile-section">
+                <h2>Skills & Certifications</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Skill Name</th>
+                            <th>Skill Level</th>
+                            <th>Certification</th>
+                            <th>Certification Date</th>
+                            <th>Expiry Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for skill in skills %}
+                        <tr>
+                            <td>{{ skill.skill_name }}</td>
+                            <td>{{ skill.skill_level|default:"N/A" }}</td>
+                            <td>{{ skill.certification_authority|default:"N/A" }}</td>
+                            <td>{{ skill.certification_date|default:"N/A" }}</td>
+                            <td>{{ skill.expiry_date|default:"N/A" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            
+            {% if trainings %}
+            <div class="profile-section">
+                <h2>Training History</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Training Name</th>
+                            <th>Training Date</th>
+                            <th>Completion Date</th>
+                            <th>Provider</th>
+                            <th>Certification</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for training in trainings %}
+                        <tr>
+                            <td>{{ training.training_name }}</td>
+                            <td>{{ training.training_date|default:"N/A" }}</td>
+                            <td>{{ training.completion_date|default:"N/A" }}</td>
+                            <td>{{ training.training_provider|default:"N/A" }}</td>
+                            <td>{{ training.certification_received|default:"N/A" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            
+            {% if teams %}
+            <div class="profile-section">
+                <h2>Team Membership</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Team Name</th>
+                            <th>Role</th>
+                            <th>Joined Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in teams %}
+                        <tr>
+                            <td>{{ team.team_name }}</td>
+                            <td>{{ team.role|default:"Member" }}</td>
+                            <td>{{ team.joined_date|default:"N/A" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        // Simple JavaScript to toggle the edit form
+        document.addEventListener('DOMContentLoaded', function() {
+            const editBtn = document.getElementById('editProfileBtn');
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            const profileForm = document.getElementById('profileForm');
+            
+            editBtn.addEventListener('click', function() {
+                editBtn.style.display = 'none';
+                profileForm.style.display = 'block';
+            });
+            
+            cancelBtn.addEventListener('click', function() {
+                profileForm.style.display = 'none';
+                editBtn.style.display = 'inline-block';
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -134,6 +134,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
+            margin-bottom: 20px;
         }
         .detail-section {
             margin-bottom: 20px;
@@ -222,23 +223,133 @@
             color: #155724;
             border: 1px solid #c3e6cb;
         }
+        .full-width {
+            width: 100%;
+            grid-column: 1 / -1;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #34495e;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .data-table tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        .data-table tr:hover {
+            background-color: #eef2f7;
+            transition: background-color 0.2s ease;
+        }
+        .data-table td {
+            border-bottom: 1px solid #e9ecef;
+        }
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        .status-cell {
+            font-weight: 600;
+            position: relative;
+            padding-left: 25px !important;
+        }
+        .status-cell::before {
+            content: "";
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .status-available {
+            color: #27ae60;
+        }
+        .status-available::before {
+            background-color: #27ae60;
+        }
+        .status-low {
+            color: #f39c12;
+        }
+        .status-low::before {
+            background-color: #f39c12;
+        }
+        .status-unavailable {
+            color: #e74c3c;
+        }
+        .status-unavailable::before {
+            background-color: #e74c3c;
+        }
+        .detail-section h2 {
+            display: flex;
+            align-items: center;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 20px;
+        }
+        .detail-section h2::after {
+            content: "";
+            flex-grow: 1;
+            height: 1px;
+            background-color: #e9ecef;
+            margin-left: 15px;
+        }
+        .table-container {
+            position: relative;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .table-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .table-count {
+            background-color: #eef2f7;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #34495e;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>CMMS Craftsman Portal</h1>
+        <div class="logo">CMMS Portal</div>
         <div class="user-info">
-            <img src="#" alt="User">
-            <span>{{ current_user.first_name }} {{ current_user.last_name }}</span>
+            <img src="/static/images/user-avatar.png" alt="User Avatar">
+            <span>{{ request.user.first_name }} {{ request.user.last_name }}</span>
         </div>
     </header>
     
     <nav>
         <a href="{% url 'craftsmen_dashboard' %}">Dashboard</a>
         <a href="{% url 'craftsmen_work_orders' %}" class="active">Work Orders</a>
-        <a href="{% url 'craftsmen_maintenance_history' %}">Maintenance History</a>
-        <a href="{% url 'craftsmen_skills' %}">Skills & Training</a>
-        <a href="{% url 'craftsmen_notifications' %}">Notifications</a>
+        <!-- Remove or update the equipment link -->
+        <!-- <a href="{% url 'craftsmen_equipment' %}">Equipment</a> -->
+        <!-- a href="{% url 'craftsmen_profile' %}">Profile</!-->
         <a href="{% url 'logout' %}">Logout</a>
     </nav>
     
@@ -246,14 +357,18 @@
         {% if messages %}
         <div class="flash-messages">
             {% for message in messages %}
-            <div class="flash-message {{ message.tags }}">{{ message }}</div>
+            <div class="flash-message {{ message.tags }}">
+                {{ message }}
+            </div>
             {% endfor %}
         </div>
         {% endif %}
         
         <div class="page-header">
             <h1>Work Order Details</h1>
-            <a href="{% url 'craftsmen_work_orders' %}" class="btn btn-secondary">Back to Work Orders</a>
+            <div>
+                <a href="{% url 'craftsmen_work_orders' %}" class="btn btn-secondary">Back to Work Orders</a>
+            </div>
         </div>
         
         <div class="card">
@@ -266,33 +381,27 @@
                     </div>
                 </div>
                 <div class="work-order-status">
-                    <div class="status-badge status-{{ work_order.status|cut:" "|default:"-" }}">{{ work_order.status }}</div>
-                    <div class="priority-badge priority-{{ work_order.get_priority_display }}">Priority: {{ work_order.get_priority_display }}</div>
+                    <div class="status-badge status-{{ work_order.status|cut:' ' }}">{{ work_order.status }}</div>
+                    <div class="priority-badge priority-{% if work_order.priority == 1 %}Low{% elif work_order.priority == 2 %}Medium{% elif work_order.priority == 3 %}High{% else %}Critical{% endif %}">
+                        Priority: {% if work_order.priority == 1 %}Low{% elif work_order.priority == 2 %}Medium{% elif work_order.priority == 3 %}High{% else %}Critical{% endif %}
+                    </div>
                 </div>
             </div>
             
             <div class="work-order-details">
                 <div class="detail-section">
-                    <h2>Equipment Information</h2>
+                    <h2>Basic Information</h2>
                     <div class="detail-item">
                         <div class="detail-label">Equipment</div>
                         <div class="detail-value">{{ work_order.equipment.equipment_name }}</div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Location</div>
-                        <div class="detail-value">{{ work_order.equipment.location|default:"Not specified" }}</div>
+                        <div class="detail-label">Equipment Location</div>
+                        <div class="detail-value">{{ equipment_location }}</div>
                     </div>
-                </div>
-                
-                <div class="detail-section">
-                    <h2>Schedule Information</h2>
                     <div class="detail-item">
                         <div class="detail-label">Due Date</div>
                         <div class="detail-value">{{ work_order.due_date }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Estimated Hours</div>
-                        <div class="detail-value">{{ work_order.estimated_hours|default:"Not specified" }}</div>
                     </div>
                     {% if work_order.completed_date %}
                     <div class="detail-item">
@@ -301,26 +410,101 @@
                     </div>
                     {% endif %}
                 </div>
-            </div>
-            
-            <div class="detail-section">
-                <h2>Description</h2>
-                <div class="description-box">
-                    {{ work_order.description|default:"No description provided."|linebreaks }}
+                
+                <div class="detail-section">
+                    <h2>Description</h2>
+                    <div class="description-box">
+                        {{ work_order.description|linebreaks }}
+                    </div>
                 </div>
             </div>
             
+            {% if tools %}
+            <div class="detail-section full-width">
+                <h2>Required Tools</h2>
+                <div class="table-container">
+                    <div class="table-info">
+                        <div class="table-count">{{ tools|length }} item{% if tools|length != 1 %}s{% endif %}</div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tool Name</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tool in tools %}
+                            <tr>
+                                <td>{{ tool.name }}</td>
+                                <td>{{ tool.quantity }}</td>
+                                <td class="status-cell {% if tool.status == 'Available' %}status-available{% elif tool.status == 'Low Stock' %}status-low{% else %}status-unavailable{% endif %}">
+                                    {{ tool.status }}
+                                </td>
+                                <td>{{ tool.location }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if spares %}
+            <div class="detail-section full-width">
+                <h2>Required Spare Parts</h2>
+                <div class="table-container">
+                    <div class="table-info">
+                        <div class="table-count">{{ spares|length }} item{% if spares|length != 1 %}s{% endif %}</div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Part Name</th>
+                                <th>Quantity</th>
+                                <th>Status</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for spare in spares %}
+                            <tr>
+                                <td>{{ spare.name }}</td>
+                                <td>{{ spare.quantity }}</td>
+                                <td class="status-cell {% if spare.status == 'In Stock' %}status-available{% elif spare.status == 'Low Stock' %}status-low{% else %}status-unavailable{% endif %}">
+                                    {{ spare.status }}
+                                </td>
+                                <td>{{ spare.location }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if work_order.notes %}
+            <div class="detail-section full-width">
+                <h2>Notes</h2>
+                <div class="description-box">
+                    {{ work_order.notes|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+            
             <div class="action-buttons">
                 {% if work_order.status != 'Completed' and work_order.status != 'Cancelled' %}
-                <a href="{% url 'craftsmen_update_work_order_status' work_order_id=work_order.work_order_id %}" class="btn btn-warning">Update Status</a>
+                <a href="{% url 'craftsmen_update_work_order_status' work_order.work_order_id %}" class="btn btn-primary">Update Status</a>
                 {% endif %}
                 
-                {% if not has_report and work_order.status == 'Completed' or work_order.status == 'In Progress' %}
-                <a href="{% url 'craftsmen_add_report' work_order_id=work_order.work_order_id %}" class="btn btn-success">Add Maintenance Report</a>
+                {% if not has_report and work_order.status != 'Cancelled' %}
+                <a href="{% url 'craftsmen_add_report' work_order.work_order_id %}" class="btn btn-success">Add Maintenance Report</a>
                 {% endif %}
                 
                 {% if has_report %}
-                <a href="{% url 'craftsmen_view_report' report_id=report_id %}" class="btn btn-primary">View Maintenance Report</a>
+                <a href="{% url 'craftsmen_view_report' report_id %}" class="btn btn-secondary">View Maintenance Report</a>
                 {% endif %}
             </div>
         </div>
