@@ -35,6 +35,8 @@ class InventoryWindow(QMainWindow):
         self.setup_inventory_tab()
         self.setup_tools_tab()
         self.setup_suppliers_tab()
+        self.setup_personnel_tab()
+        self.setup_purchase_orders_tab()
         
         # Setup menu bar
         self.setup_menu_bar()
@@ -140,7 +142,12 @@ class InventoryWindow(QMainWindow):
         self.alerts_table.setItem(row_position, 0, QTableWidgetItem(priority))
         self.alerts_table.setItem(row_position, 1, QTableWidgetItem(alert_type))
         self.alerts_table.setItem(row_position, 2, QTableWidgetItem(message))
-        self.alerts_table.setItem(row_position, 3, QTableWidgetItem(date.strftime('%Y-%m-%d %H:%M')))
+        # Check if date is already a string
+        if isinstance(date, str):
+            date_str = date
+        else:
+            date_str = date.strftime('%Y-%m-%d %H:%M')
+        self.alerts_table.setItem(row_position, 3, QTableWidgetItem(date_str))
 
     def refresh_recent_transactions(self):
         """Refresh recent transactions table in dashboard"""
@@ -467,6 +474,222 @@ class InventoryWindow(QMainWindow):
         
         scroll.setWidget(content)
         self.tab_widget.addTab(scroll, "Suppliers")
+
+    def setup_personnel_tab(self):
+        """Set up the personnel tab"""
+        personnel_tab = QWidget()
+        layout = QVBoxLayout(personnel_tab)
+        
+        # Controls area
+        controls_layout = QHBoxLayout()
+        
+        # Add button
+        add_btn = QPushButton("Add Personnel")
+        add_btn.clicked.connect(self.show_add_personnel_dialog)
+        controls_layout.addWidget(add_btn)
+        
+        # Edit button
+        edit_btn = QPushButton("Edit Personnel")
+        edit_btn.clicked.connect(self.show_edit_personnel_dialog)
+        controls_layout.addWidget(edit_btn)
+        
+        # Export button
+        export_btn = QPushButton("Export")
+        export_btn.clicked.connect(self.export_personnel)
+        controls_layout.addWidget(export_btn)
+        
+        # Import button
+        import_btn = QPushButton("Import")
+        import_btn.clicked.connect(self.import_personnel)
+        controls_layout.addWidget(import_btn)
+        
+        # Refresh button
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.clicked.connect(self.refresh_personnel)
+        controls_layout.addWidget(refresh_btn)
+        
+        # Search area
+        search_layout = QHBoxLayout()
+        search_label = QLabel("Search:")
+        self.personnel_search = QLineEdit()
+        self.personnel_search.setPlaceholderText("Search by name or ID")
+        self.personnel_search.textChanged.connect(self.filter_personnel)
+        
+        status_label = QLabel("Status:")
+        self.personnel_status_filter = QComboBox()
+        self.personnel_status_filter.addItems(["All", "Active", "Inactive"])
+        self.personnel_status_filter.currentTextChanged.connect(self.filter_personnel)
+        
+        search_layout.addWidget(search_label)
+        search_layout.addWidget(self.personnel_search)
+        search_layout.addWidget(status_label)
+        search_layout.addWidget(self.personnel_status_filter)
+        
+        # Table
+        self.personnel_table = QTableWidget()
+        self.personnel_table.setColumnCount(9)
+        self.personnel_table.setHorizontalHeaderLabels([
+            "ID", "Employee ID", "Name", "Phone", "Email", 
+            "Role", "Access Level", "Hire Date", "Status"
+        ])
+        self.personnel_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.personnel_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.personnel_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        
+        layout.addLayout(controls_layout)
+        layout.addLayout(search_layout)
+        layout.addWidget(self.personnel_table)
+        
+        self.tab_widget.addTab(personnel_tab, "Personnel")
+        self.refresh_personnel()
+
+    def show_add_personnel_dialog(self):
+        """Show dialog to add new personnel"""
+        dialog = AddPersonnelDialog(self.db_manager, self)
+        if dialog.exec():
+            self.refresh_personnel()
+            # Pass datetime object instead of formatted string
+            self.add_alert("success", "Personnel Added", 
+                          f"Personnel {dialog.first_name.text()} {dialog.last_name.text()} added successfully", 
+                          datetime.now())
+
+    def show_edit_personnel_dialog(self):
+        """Show dialog to edit personnel"""
+        selected_rows = self.personnel_table.selectedItems()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Selection", "Please select a personnel to edit.")
+            return
+        
+        row = selected_rows[0].row()
+        personnel_id = int(self.personnel_table.item(row, 0).text())
+        
+        dialog = AddPersonnelDialog(self.db_manager, self, personnel_id=personnel_id)
+        if dialog.exec():
+            self.refresh_personnel()
+            self.add_alert("info", "Personnel Updated", f"Personnel {dialog.first_name.text()} {dialog.last_name.text()} updated successfully", datetime.now().strftime("%Y-%m-%d %H:%M"))
+
+    def refresh_personnel(self):
+        """Refresh the personnel table"""
+        self.personnel_table.setRowCount(0)
+        personnel_list = self.db_manager.get_inventory_personnel()
+        
+        for row, person in enumerate(personnel_list):
+            self.personnel_table.insertRow(row)
+            self.personnel_table.setItem(row, 0, QTableWidgetItem(str(person['personnel_id'])))
+            self.personnel_table.setItem(row, 1, QTableWidgetItem(person['employee_id']))
+            self.personnel_table.setItem(row, 2, QTableWidgetItem(f"{person['first_name']} {person['last_name']}"))
+            self.personnel_table.setItem(row, 3, QTableWidgetItem(person['phone'] or ""))
+            self.personnel_table.setItem(row, 4, QTableWidgetItem(person['email'] or ""))
+            self.personnel_table.setItem(row, 5, QTableWidgetItem(person['role'] or ""))
+            self.personnel_table.setItem(row, 6, QTableWidgetItem(person['access_level'] or ""))
+            
+            # Convert hire_date to string before creating QTableWidgetItem
+            if person['hire_date']:
+                if isinstance(person['hire_date'], datetime):
+                    hire_date_str = person['hire_date'].strftime("%Y-%m-%d")
+                else:
+                    hire_date_str = str(person['hire_date'])
+                self.personnel_table.setItem(row, 7, QTableWidgetItem(hire_date_str))
+            else:
+                self.personnel_table.setItem(row, 7, QTableWidgetItem(""))
+                
+            self.personnel_table.setItem(row, 8, QTableWidgetItem(person['status']))
+
+    def filter_personnel(self):
+        """Filter the personnel table based on search text and status"""
+        search_text = self.personnel_search.text().lower()
+        status_filter = self.personnel_status_filter.currentText()
+        
+        for row in range(self.personnel_table.rowCount()):
+            visible = True
+            
+            # Apply text search
+            if search_text:
+                text_match = False
+                for col in [1, 2, 3, 4, 5]:  # Check ID, Name, Phone, Email, Role
+                    if search_text in self.personnel_table.item(row, col).text().lower():
+                        text_match = True
+                        break
+                visible = text_match
+            
+            # Apply status filter
+            if visible and status_filter != "All":
+                status = self.personnel_table.item(row, 8).text()
+                visible = (status == status_filter)
+            
+            self.personnel_table.setRowHidden(row, not visible)
+
+    def export_personnel(self):
+        """Export personnel to CSV or Excel"""
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Export Personnel", "", "CSV Files (*.csv);;Excel Files (*.xlsx)"
+        )
+        
+        if not file_path:
+            return
+            
+        personnel_list = self.db_manager.get_inventory_personnel()
+        
+        if file_path.endswith('.csv'):
+            self.db_manager.export_to_csv(file_path, personnel_list)
+        elif file_path.endswith('.xlsx'):
+            self.db_manager.export_to_excel(file_path, personnel_list)
+            
+        self.show_report_success_message(file_path)
+
+    def import_personnel(self):
+        """Import personnel from CSV"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Import Personnel", "", "CSV Files (*.csv)"
+        )
+        
+        if not file_path:
+            return
+            
+        try:
+            import csv
+            with open(file_path, 'r', newline='', encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+                count = 0
+                
+                for row in reader:
+                    data = {
+                        'employee_id': row.get('employee_id', ''),
+                        'first_name': row.get('first_name', ''),
+                        'last_name': row.get('last_name', ''),
+                        'phone': row.get('phone', ''),
+                        'email': row.get('email', ''),
+                        'role': row.get('role', ''),
+                        'access_level': row.get('access_level', 'Standard'),
+                        'hire_date': row.get('hire_date', ''),
+                        'status': row.get('status', 'Active')
+                    }
+                    
+                    # Skip if required fields are missing
+                    if not data['employee_id'] or not data['first_name'] or not data['last_name']:
+                        continue
+                        
+                    # Check if employee_id exists and update instead
+                    existing_personnel = None
+                    all_personnel = self.db_manager.get_inventory_personnel()
+                    for person in all_personnel:
+                        if person['employee_id'] == data['employee_id']:
+                            existing_personnel = person
+                            break
+                    
+                    if existing_personnel:
+                        data['personnel_id'] = existing_personnel['personnel_id']
+                        self.db_manager.update_inventory_personnel(data)
+                    else:
+                        self.db_manager.add_inventory_personnel(data)
+                    
+                    count += 1
+                
+                self.refresh_personnel()
+                QMessageBox.information(self, "Import Successful", f"{count} personnel records imported/updated successfully.")
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Import Error", f"Error importing personnel: {str(e)}")
 
     def setup_menu_bar(self):
         """Setup the menu bar"""
@@ -1790,6 +2013,96 @@ class InventoryWindow(QMainWindow):
             # Commit all changes
             connection.commit()
             
+            # Add sample inventory personnel
+            personnel_data = [
+                {
+                    'employee_id': 'INV001',
+                    'first_name': 'Michael',
+                    'last_name': 'Thompson',
+                    'phone': f"555-{random.randint(1000,9999)}",
+                    'email': 'michael.thompson@company.com',
+                    'role': 'Inventory Manager',
+                    'access_level': 'Admin',
+                    'hire_date': '2022-01-15',
+                    'status': 'Active'
+                },
+                {
+                    'employee_id': 'INV002',
+                    'first_name': 'Sarah',
+                    'last_name': 'Martinez',
+                    'phone': f"555-{random.randint(1000,9999)}",
+                    'email': 'sarah.martinez@company.com',
+                    'role': 'Warehouse Associate',
+                    'access_level': 'Standard',
+                    'hire_date': '2022-03-20',
+                    'status': 'Active'
+                },
+                {
+                    'employee_id': 'INV003',
+                    'first_name': 'David',
+                    'last_name': 'Chen',
+                    'phone': f"555-{random.randint(1000,9999)}",
+                    'email': 'david.chen@company.com',
+                    'role': 'Receiving Clerk',
+                    'access_level': 'Standard',
+                    'hire_date': '2022-06-10',
+                    'status': 'Active'
+                },
+                {
+                    'employee_id': 'INV004',
+                    'first_name': 'Emily',
+                    'last_name': 'Johnson',
+                    'phone': f"555-{random.randint(1000,9999)}",
+                    'email': 'emily.johnson@company.com',
+                    'role': 'Inventory Clerk',
+                    'access_level': 'Limited',
+                    'hire_date': '2022-08-05',
+                    'status': 'Active'
+                },
+                {
+                    'employee_id': 'INV005',
+                    'first_name': 'James',
+                    'last_name': 'Wilson',
+                    'phone': f"555-{random.randint(1000,9999)}",
+                    'email': 'james.wilson@company.com',
+                    'role': 'Shipping Clerk',
+                    'access_level': 'Standard',
+                    'hire_date': '2022-09-15',
+                    'status': 'Active'
+                }
+            ]
+
+            # Generate additional random personnel
+            first_names = ['Alex', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Sam', 'Pat']
+            last_names = ['Brown', 'Davis', 'Garcia', 'Miller', 'Anderson', 'Taylor', 'Thomas', 'Moore']
+            roles = ['Inventory Clerk', 'Warehouse Associate', 'Receiving Clerk', 'Shipping Clerk']
+            access_levels = ['Standard', 'Limited']
+            
+            # Generate 3-5 additional random personnel
+            for i in range(random.randint(3, 5)):
+                hire_date = datetime.now() - timedelta(days=random.randint(30, 730))  # Random date within last 2 years
+                personnel_data.append({
+                    'employee_id': f'INV{6+i:03d}',
+                    'first_name': random.choice(first_names),
+                    'last_name': random.choice(last_names),
+                    'phone': f"555-{random.randint(1000,9999)}",
+                    'email': f"employee{6+i}@company.com",
+                    'role': random.choice(roles),
+                    'access_level': random.choice(access_levels),
+                    'hire_date': hire_date.strftime('%Y-%m-%d'),
+                    'status': random.choice(['Active', 'Active', 'Active', 'On Leave'])  # Weight towards Active
+                })
+
+            # Add personnel to database
+            personnel_success_count = 0
+            for person in personnel_data:
+                try:
+                    if self.db_manager.add_inventory_personnel(person):
+                        personnel_success_count += 1
+                except Exception as e:
+                    print(f"Error adding demo personnel {person['employee_id']}: {e}")
+                    continue
+            
             # Refresh the inventory
             self.refresh_inventory()
             
@@ -1800,7 +2113,8 @@ class InventoryWindow(QMainWindow):
                 f"Successfully added:\n"
                 f"- {len(categories)} categories\n"
                 f"- {len(suppliers)} suppliers\n"
-                f"- {success_count} inventory items"
+                f"- {success_count} inventory items\n"
+                f"- {personnel_success_count} inventory personnel"
             )
             
         except Exception as e:
@@ -1816,6 +2130,115 @@ class InventoryWindow(QMainWindow):
                 cursor.close()
             if connection:
                 connection.close()
+
+    def setup_purchase_orders_tab(self):
+        """Setup the purchase orders management tab"""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        
+        # Controls area
+        controls_layout = QHBoxLayout()
+        
+        create_po_btn = QPushButton("Create Purchase Order")
+        create_po_btn.clicked.connect(self.show_create_po_dialog)
+        
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.clicked.connect(self.refresh_purchase_orders)
+        
+        self.po_status_filter = QComboBox()
+        self.po_status_filter.addItems(["All", "Pending", "Approved", "Received", "Cancelled"])
+        self.po_status_filter.currentTextChanged.connect(self.filter_purchase_orders)
+        
+        controls_layout.addWidget(create_po_btn)
+        controls_layout.addWidget(refresh_btn)
+        controls_layout.addWidget(QLabel("Status:"))
+        controls_layout.addWidget(self.po_status_filter)
+        controls_layout.addStretch()
+        
+        # Purchase Orders table
+        self.po_table = QTableWidget()
+        self.po_table.setColumnCount(8)
+        self.po_table.setHorizontalHeaderLabels([
+            "PO Number", "Supplier", "Status", "Total Amount",
+            "Created By", "Created Date", "Expected Delivery", "Notes"
+        ])
+        
+        layout.addLayout(controls_layout)
+        layout.addWidget(self.po_table)
+        
+        self.tab_widget.addTab(tab, "Purchase Orders")
+        self.refresh_purchase_orders()
+
+    def show_create_po_dialog(self):
+        """Show dialog to create a new purchase order"""
+        # Get low stock items
+        items = self.db_manager.get_inventory_items()
+        low_stock_items = [
+            item for item in items 
+            if item['quantity'] <= item['minimum_quantity']
+        ]
+        
+        if not low_stock_items:
+            QMessageBox.information(
+                self,
+                "No Low Stock Items",
+                "There are no items that need to be reordered at this time."
+            )
+            return
+        
+        dialog = CreatePurchaseOrderDialog(self.db_manager, low_stock_items, self)
+        if dialog.exec():
+            self.refresh_purchase_orders()
+            self.refresh_inventory()
+
+    def refresh_purchase_orders(self):
+        """Refresh the purchase orders table"""
+        try:
+            # Clear the table
+            self.po_table.setRowCount(0)
+            
+            # Get purchase orders
+            purchase_orders = self.db_manager.get_purchase_orders()
+            
+            # Populate the table
+            for po in purchase_orders:
+                row_position = self.po_table.rowCount()
+                self.po_table.insertRow(row_position)
+                
+                # Format dates
+                created_date = po['created_at'].strftime('%Y-%m-%d') if po['created_at'] else ''
+                expected_delivery = po['expected_delivery'].strftime('%Y-%m-%d') if po['expected_delivery'] else ''
+                
+                # Set purchase order data
+                self.po_table.setItem(row_position, 0, QTableWidgetItem(po['po_number']))
+                self.po_table.setItem(row_position, 1, QTableWidgetItem(po['supplier_name']))
+                self.po_table.setItem(row_position, 2, QTableWidgetItem(po['status']))
+                self.po_table.setItem(row_position, 3, QTableWidgetItem(f"${po['total_amount']:.2f}"))
+                self.po_table.setItem(row_position, 4, QTableWidgetItem(po['created_by_name']))
+                self.po_table.setItem(row_position, 5, QTableWidgetItem(created_date))
+                self.po_table.setItem(row_position, 6, QTableWidgetItem(expected_delivery))
+                self.po_table.setItem(row_position, 7, QTableWidgetItem(po.get('notes', '')))
+            
+            # Resize columns to content
+            self.po_table.resizeColumnsToContents()
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"An error occurred while refreshing purchase orders:\n{str(e)}"
+            )
+
+    def filter_purchase_orders(self):
+        """Filter purchase orders based on status"""
+        status_filter = self.po_status_filter.currentText()
+        
+        for row in range(self.po_table.rowCount()):
+            if status_filter == "All":
+                self.po_table.setRowHidden(row, False)
+            else:
+                status = self.po_table.item(row, 2).text()  # Status is in column 2
+                self.po_table.setRowHidden(row, status != status_filter)
 
 class AddItemDialog(QDialog):
     def __init__(self, db_manager, parent=None):
@@ -1985,3 +2408,259 @@ class AddSupplierDialog(QDialog):
                 QMessageBox.critical(self, "Error", "Failed to add supplier!")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error adding supplier: {str(e)}")
+
+class AddPersonnelDialog(QDialog):
+    def __init__(self, db_manager, parent=None, personnel_id=None):
+        super().__init__(parent)
+        self.db_manager = db_manager
+        self.personnel_id = personnel_id
+        
+        self.setWindowTitle("Add Inventory Personnel" if not personnel_id else "Edit Inventory Personnel")
+        self.setMinimumWidth(400)
+        
+        layout = QVBoxLayout(self)
+        
+        form_layout = QFormLayout()
+        
+        # Employee ID
+        self.employee_id = QLineEdit()
+        form_layout.addRow("Employee ID*:", self.employee_id)
+        
+        # Name fields
+        self.first_name = QLineEdit()
+        form_layout.addRow("First Name*:", self.first_name)
+        
+        self.last_name = QLineEdit()
+        form_layout.addRow("Last Name*:", self.last_name)
+        
+        # Contact info
+        self.phone = QLineEdit()
+        form_layout.addRow("Phone:", self.phone)
+        
+        self.email = QLineEdit()
+        form_layout.addRow("Email:", self.email)
+        
+        # Role
+        self.role = QComboBox()
+        self.role.addItems(["Inventory Clerk", "Inventory Manager", "Warehouse Associate", 
+                           "Receiving Clerk", "Shipping Clerk", "Other"])
+        self.role.setEditable(True)
+        form_layout.addRow("Role:", self.role)
+        
+        # Access level
+        self.access_level = QComboBox()
+        self.access_level.addItems(["Standard", "Limited", "Admin"])
+        form_layout.addRow("Access Level:", self.access_level)
+        
+        # Hire date
+        self.hire_date = QDateEdit()
+        self.hire_date.setCalendarPopup(True)
+        self.hire_date.setDate(QDate.currentDate())
+        form_layout.addRow("Hire Date:", self.hire_date)
+        
+        # Status
+        self.status = QComboBox()
+        self.status.addItems(["Active", "Inactive", "On Leave"])
+        form_layout.addRow("Status:", self.status)
+        
+        layout.addLayout(form_layout)
+        
+        # Required fields note
+        note_label = QLabel("* Required fields")
+        layout.addWidget(note_label)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        self.save_button = QPushButton("Save")
+        self.save_button.clicked.connect(self.save_personnel)
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.reject)
+        
+        button_layout.addWidget(self.save_button)
+        button_layout.addWidget(self.cancel_button)
+        layout.addLayout(button_layout)
+        
+        # Load data if editing
+        if personnel_id:
+            self.load_personnel_data()
+    
+    def load_personnel_data(self):
+        """Load personnel data for editing"""
+        personnel = self.db_manager.get_personnel_by_id(self.personnel_id)
+        if not personnel:
+            return
+        
+        self.employee_id.setText(personnel['employee_id'])
+        self.first_name.setText(personnel['first_name'])
+        self.last_name.setText(personnel['last_name'])
+        self.phone.setText(personnel['phone'] or "")
+        self.email.setText(personnel['email'] or "")
+        
+        # Set role
+        index = self.role.findText(personnel['role'])
+        if index >= 0:
+            self.role.setCurrentIndex(index)
+        else:
+            self.role.setEditText(personnel['role'] or "")
+        
+        # Set access level
+        index = self.access_level.findText(personnel['access_level'])
+        if index >= 0:
+            self.access_level.setCurrentIndex(index)
+        
+        # Set hire date
+        if personnel['hire_date']:
+            hire_date = QDate.fromString(str(personnel['hire_date']), "yyyy-MM-dd")
+            self.hire_date.setDate(hire_date)
+        
+        # Set status
+        index = self.status.findText(personnel['status'])
+        if index >= 0:
+            self.status.setCurrentIndex(index)
+    
+    def save_personnel(self):
+        """Save personnel data"""
+        # Validate required fields
+        if not self.employee_id.text() or not self.first_name.text() or not self.last_name.text():
+            QMessageBox.warning(self, "Required Fields", "Please fill in all required fields")
+            return
+        
+        # Prepare data
+        data = {
+            'employee_id': self.employee_id.text(),
+            'first_name': self.first_name.text(),
+            'last_name': self.last_name.text(),
+            'phone': self.phone.text(),
+            'email': self.email.text(),
+            'role': self.role.currentText(),
+            'access_level': self.access_level.currentText(),
+            'hire_date': self.hire_date.date().toString("yyyy-MM-dd"),
+            'status': self.status.currentText()
+        }
+        
+        if self.personnel_id:
+            data['personnel_id'] = self.personnel_id
+            success = self.db_manager.update_inventory_personnel(data)
+        else:
+            success = self.db_manager.add_inventory_personnel(data)
+        
+        if success:
+            self.accept()
+        else:
+            QMessageBox.critical(self, "Error", "Failed to save personnel data")
+
+class CreatePurchaseOrderDialog(QDialog):
+    def __init__(self, db_manager, low_stock_items, parent=None):
+        super().__init__(parent)
+        self.db_manager = db_manager
+        self.low_stock_items = low_stock_items
+        
+        self.setWindowTitle("Create Purchase Order")
+        self.setModal(True)
+        self.setMinimumWidth(600)
+        
+        layout = QVBoxLayout(self)
+        
+        # Supplier selection
+        form_layout = QFormLayout()
+        self.supplier_combo = QComboBox()
+        suppliers = self.db_manager.get_suppliers()
+        for supplier in suppliers:
+            self.supplier_combo.addItem(supplier['name'], supplier['supplier_id'])
+        form_layout.addRow("Supplier:", self.supplier_combo)
+        
+        # Expected delivery date
+        self.delivery_date = QDateEdit()
+        self.delivery_date.setDate(QDate.currentDate().addDays(7))
+        self.delivery_date.setCalendarPopup(True)
+        form_layout.addRow("Expected Delivery:", self.delivery_date)
+        
+        layout.addLayout(form_layout)
+        
+        # Items table
+        self.items_table = QTableWidget()
+        self.items_table.setColumnCount(6)
+        self.items_table.setHorizontalHeaderLabels([
+            "Item Code", "Name", "Current Qty", "Min Qty", "Order Qty", "Unit Price"
+        ])
+        
+        # Add low stock items to table
+        self.items_table.setRowCount(len(low_stock_items))
+        for row, item in enumerate(low_stock_items):
+            self.items_table.setItem(row, 0, QTableWidgetItem(item['item_code']))
+            self.items_table.setItem(row, 1, QTableWidgetItem(item['name']))
+            self.items_table.setItem(row, 2, QTableWidgetItem(str(item['quantity'])))
+            self.items_table.setItem(row, 3, QTableWidgetItem(str(item['minimum_quantity'])))
+            
+            # Calculate suggested order quantity
+            suggested_qty = max(
+                item['minimum_quantity'] - item['quantity'],
+                item['reorder_point']
+            )
+            qty_spin = QSpinBox()
+            qty_spin.setMinimum(0)
+            qty_spin.setMaximum(9999)
+            qty_spin.setValue(suggested_qty)
+            self.items_table.setCellWidget(row, 4, qty_spin)
+            
+            price_spin = QDoubleSpinBox()
+            price_spin.setMinimum(0)
+            price_spin.setMaximum(999999.99)
+            price_spin.setValue(float(item['unit_cost']))
+            self.items_table.setCellWidget(row, 5, price_spin)
+        
+        layout.addWidget(self.items_table)
+        
+        # Notes
+        self.notes = QTextEdit()
+        self.notes.setPlaceholderText("Enter any additional notes...")
+        layout.addWidget(self.notes)
+        
+        # Buttons
+        button_box = QHBoxLayout()
+        create_btn = QPushButton("Create Purchase Order")
+        create_btn.clicked.connect(self.create_po)
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.clicked.connect(self.reject)
+        
+        button_box.addWidget(create_btn)
+        button_box.addWidget(cancel_btn)
+        layout.addLayout(button_box)
+    
+    def create_po(self):
+        """Create the purchase order"""
+        # Gather items data
+        items = []
+        total_amount = 0
+        
+        for row in range(self.items_table.rowCount()):
+            qty = self.items_table.cellWidget(row, 4).value()
+            if qty > 0:
+                item = {
+                    'item_id': self.low_stock_items[row]['item_id'],
+                    'quantity': qty,
+                    'unit_price': self.items_table.cellWidget(row, 5).value()
+                }
+                items.append(item)
+                total_amount += qty * item['unit_price']
+        
+        if not items:
+            QMessageBox.warning(self, "No Items", "Please specify quantities for at least one item.")
+            return
+        
+        # Create purchase order data
+        po_data = {
+            'supplier_id': self.supplier_combo.currentData(),
+            'total_amount': total_amount,
+            'created_by': 1,  # TODO: Get actual logged-in user ID
+            'expected_delivery': self.delivery_date.date().toPython(),
+            'notes': self.notes.toPlainText(),
+            'items': items
+        }
+        
+        # Create purchase order
+        if self.db_manager.create_purchase_order(po_data):
+            QMessageBox.information(self, "Success", "Purchase order created successfully!")
+            self.accept()
+        else:
+            QMessageBox.critical(self, "Error", "Failed to create purchase order!")

@@ -1172,7 +1172,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     
     # For testing purposes, create a database manager
-    from db_manager import DatabaseManager
+    from db_ops.db_manager import DatabaseManager
     db_manager = DatabaseManager()
     
     # For testing, use a hardcoded craftsman ID

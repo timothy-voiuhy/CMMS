@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMMS - Update Work Order Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #34495e;
+        }
+        nav {
+            background-color: #34495e;
+            padding: 10px 20px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 5px 0;
+        }
+        nav a:hover, nav a.active {
+            border-bottom: 2px solid #3498db;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .work-order-header {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .work-order-header h1 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        .work-order-meta {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        select, textarea, input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 10px;
+            border: none;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .flash-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .flash-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .status-option {
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #eee;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .status-option:hover {
+            border-color: #3498db;
+        }
+        .status-option.selected {
+            border-color: #3498db;
+            background-color: #ebf5fb;
+        }
+        .status-option-Open {
+            border-color: #d0e0e3;
+        }
+        .status-option-In-Progress {
+            border-color: #fff2cc;
+        }
+        .status-option-Completed {
+            border-color: #d9ead3;
+        }
+        .status-option-On-Hold {
+            border-color: #d9d2e9;
+        }
+        .status-option-Cancelled {
+            border-color: #efefef;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Status option selection
+            const statusOptions = document.querySelectorAll('.status-option');
+            const statusInput = document.getElementById('status');
+            
+            statusOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    // Remove selected class from all options
+                    statusOptions.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selected class to clicked option
+                    option.classList.add('selected');
+                    
+                    // Update hidden input value
+                    statusInput.value = option.getAttribute('data-status');
+                    
+                    // Show/hide completed date field based on status
+                    const completedDateGroup = document.getElementById('completed-date-group');
+                    if (statusInput.value === 'Completed') {
+                        completedDateGroup.style.display = 'block';
+                    } else {
+                        completedDateGroup.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Set initial selection based on current status
+            const currentStatus = statusInput.value;
+            if (currentStatus) {
+                const currentOption = document.querySelector(`.status-option[data-status="${currentStatus}"]`);
+                if (currentOption) {
+                    currentOption.classList.add('selected');
+                }
+                
+                // Show/hide completed date field based on initial status
+                const completedDateGroup = document.getElementById('completed-date-group');
+                if (currentStatus === 'Completed') {
+                    completedDateGroup.style.display = 'block';
+                } else {
+                    completedDateGroup.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <h1>CMMS Craftsman Portal</h1>
+        <div class="user-info">
+            <img src="#" alt="User">
+            <span>{{ current_user.first_name }} {{ current_user.last_name }}</span>
+        </div>
+    </header>
+    
+    <nav>
+        <a href="{% url 'craftsmen_dashboard' %}">Dashboard</a>
+        <a href="{% url 'craftsmen_work_orders' %}" class="active">Work Orders</a>
+        <a href="{% url 'craftsmen_maintenance_history' %}">Maintenance History</a>
+        <a href="{% url 'craftsmen_skills' %}">Skills & Training</a>
+        <a href="{% url 'craftsmen_notifications' %}">Notifications</a>
+        <a href="{% url 'logout' %}">Logout</a>
+    </nav>
+    
+    <div class="container">
+        {% if messages %}
+        <div class="flash-messages">
+            {% for message in messages %}
+            <div class="flash-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="page-header">
+            <h1>Update Work Order Status</h1>
+            <a href="{% url 'craftsmen_view_work_order' work_order_id=work_order.work_order_id %}" class="btn btn-secondary">Back to Work Order</a>
+        </div>
+        
+        <div class="card">
+            <div class="work-order-header">
+                <h1>{{ work_order.title }}</h1>
+                <div class="work-order-meta">
+                    <div>Work Order #{{ work_order.work_order_id }}</div>
+                    <div>Equipment: {{ work_order.equipment.equipment_name }}</div>
+                    <div>Current Status: {{ work_order.status }}</div>
+                </div>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="work_order_id" value="{{ work_order.work_order_id }}">
+                <input type="hidden" id="status" name="status" value="{{ work_order.status }}">
+                
+                <div class="form-group">
+                    <label>Select New Status</label>
+                    <div class="status-options">
+                        <div class="status-option status-option-Open" data-status="Open">
+                            <h3>Open</h3>
+                            <p>Work not yet started</p>
+                        </div>
+                        
+                        <div class="status-option status-option-In-Progress" data-status="In Progress">
+                            <h3>In Progress</h3>
+                            <p>Work has started</p>
+                        </div>
+                        
+                        <div class="status-option status-option-Completed" data-status="Completed">
+                            <h3>Completed</h3>
+                            <p>Work is finished</p>
+                        </div>
+                        
+                        <div class="status-option status-option-On-Hold" data-status="On Hold">
+                            <h3>On Hold</h3>
+                            <p>Work temporarily paused</p>
+                        </div>
+                        
+                        <div class="status-option status-option-Cancelled" data-status="Cancelled">
+                            <h3>Cancelled</h3>
+                            <p>Work order cancelled</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="completed-date-group" style="display: none;">
+                    <label for="completed_date">Completion Date</label>
+                    <input type="date" id="completed_date" name="completed_date" value="{{ today|date:'Y-m-d' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" placeholder="Enter any notes about this status update">{{ work_order.notes }}</textarea>
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-success">Update Status</button>
+                    <a href="{% url 'craftsmen_view_work_order' work_order_id=work_order.work_order_id %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

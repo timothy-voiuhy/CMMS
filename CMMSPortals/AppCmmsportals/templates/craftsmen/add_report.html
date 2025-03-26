@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMMS - Add Maintenance Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #34495e;
+        }
+        nav {
+            background-color: #34495e;
+            padding: 10px 20px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 5px 0;
+        }
+        nav a:hover, nav a.active {
+            border-bottom: 2px solid #3498db;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .report-header {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .report-header h1 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        .report-meta {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-right: 10px;
+        }
+        .tab.active {
+            border-bottom: 2px solid #3498db;
+            color: #3498db;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        input[type="time"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .checkbox-group {
+            margin-bottom: 10px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .checkbox-label input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 10px;
+            border: none;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .flash-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .flash-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .section-title {
+            margin-top: 20px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .parts-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .parts-table th, .parts-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .parts-table th {
+            background-color: #f9f9f9;
+        }
+        .add-part-btn {
+            margin-bottom: 20px;
+        }
+        .file-input {
+            margin-bottom: 15px;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab functionality
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs and contents
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    tab.classList.add('active');
+                    const contentId = tab.getAttribute('data-tab');
+                    document.getElementById(contentId).classList.add('active');
+                });
+            });
+            
+            // Parts functionality
+            let partCount = 0;
+            const partsTable = document.getElementById('parts-table');
+            const partsTableBody = document.getElementById('parts-table-body');
+            const partCountInput = document.getElementById('part-count');
+            
+            document.getElementById('add-part-btn').addEventListener('click', () => {
+                partCount++;
+                partCountInput.value = partCount;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" name="part_name_${partCount}" placeholder="Part Name"></td>
+                    <td><input type="text" name="part_number_${partCount}" placeholder="Part Number"></td>
+                    <td><input type="number" name="quantity_${partCount}" placeholder="Quantity" min="1" value="1"></td>
+                    <td><button type="button" class="btn btn-secondary remove-part">Remove</button></td>
+                `;
+                
+                partsTableBody.appendChild(row);
+                
+                // Add event listener to remove button
+                row.querySelector('.remove-part').addEventListener('click', () => {
+                    row.remove();
+                    partCount--;
+                    partCountInput.value = partCount;
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <h1>CMMS Craftsman Portal</h1>
+        <div class="user-info">
+            <img src="#" alt="User">
+            <span>{{ current_user.first_name }} {{ current_user.last_name }}</span>
+        </div>
+    </header>
+    
+    <nav>
+        <a href="{% url 'craftsmen_dashboard' %}">Dashboard</a>
+        <a href="{% url 'craftsmen_work_orders' %}" class="active">Work Orders</a>
+        <a href="{% url 'craftsmen_maintenance_history' %}">Maintenance History</a>
+        <a href="{% url 'craftsmen_skills' %}">Skills & Training</a>
+        <a href="{% url 'craftsmen_notifications' %}">Notifications</a>
+        <a href="{% url 'logout' %}">Logout</a>
+    </nav>
+    
+    <div class="container">
+        {% if messages %}
+        <div class="flash-messages">
+            {% for message in messages %}
+            <div class="flash-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="page-header">
+            <h1>Add Maintenance Report</h1>
+            <a href="{% url 'craftsmen_view_work_order' work_order_id=work_order.work_order_id %}" class="btn btn-secondary">Back to Work Order</a>
+        </div>
+        
+        <div class="card">
+            <div class="report-header">
+                <h1>{{ work_order.title }}</h1>
+                <div class="report-meta">
+                    <div>Work Order #{{ work_order.work_order_id }}</div>
+                    <div>Equipment: {{ work_order.equipment.equipment_name }}</div>
+                </div>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="tabs">
+                    <div class="tab active" data-tab="general-tab">General</div>
+                    <div class="tab" data-tab="inspection-tab">Inspection</div>
+                    <div class="tab" data-tab="equipment-tab">Equipment Specific</div>
+                    <div class="tab" data-tab="measurements-tab">Measurements</div>
+                    <div class="tab" data-tab="parts-tab">Parts Used</div>
+                    <div class="tab" data-tab="attachments-tab">Attachments</div>
+                </div>
+                
+                <!-- General Tab -->
+                <div id="general-tab" class="tab-content active">
+                    <div class="form-group">
+                        <label for="maintenance_type">Maintenance Type</label>
+                        <select id="maintenance_type" name="maintenance_type" required>
+                            <option value="">Select Type</option>
+                            <option value="Preventive">Preventive</option>
+                            <option value="Corrective">Corrective</option>
+                            <option value="Predictive">Predictive</option>
+                            <option value="Emergency">Emergency</option>
+                        </select>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="maintenance_date">Date</label>
+                            <input type="date" id="maintenance_date" name="maintenance_date" value="{{ today|date:'Y-m-d' }}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="maintenance_time">Time</label>
+                            <input type="time" id="maintenance_time" name="maintenance_time" value="{{ now|time:'H:i' }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="hours">Duration (Hours)</label>
+                            <input type="number" id="hours" name="hours" min="0" max="24" step="1" value="0">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="minutes">Duration (Minutes)</label>
+                            <input type="number" id="minutes" name="minutes" min="0" max="59" step="1" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="initial_condition">Initial Condition</label>
+                            <select id="initial_condition" name="initial_condition">
+                                <option value="Operational">Operational</option>
+                                <option value="Partially Operational">Partially Operational</option>
+                                <option value="Non-Operational">Non-Operational</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="final_condition">Final Condition</label>
+                            <select id="final_condition" name="final_condition">
+                                <option value="Operational">Operational</option>
+                                <option value="Partially Operational">Partially Operational</option>
+                                <option value="Non-Operational">Non-Operational</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Inspection Tab -->
+                <div id="inspection-tab" class="tab-content">
+                    <h3 class="section-title">Visual Inspection</h3>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="visual_external_damage" name="visual_external_damage">
+                            <label for="visual_external_damage">External Damage</label>
+                        </div>
+                        
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="visual_corrosion" name="visual_corrosion">
+                            <label for="visual_corrosion">Corrosion</label>
+                        </div>
+                        
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="visual_leaks" name="visual_leaks">
+                            <label for="visual_leaks">Leaks</label>
+                        </div>
+                        
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="visual_wear" name="visual_wear">
+                            <label for="visual_wear">Wear and Tear</label>
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title">Operational Inspection</h3>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="operational_unusual_noise" name="operational_unusual_noise">
+                            <label for="operational_unusual_noise">Unusual Noise</label>
+                        </div>
+                        
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="operational_vibration" name="operational_vibration">
+                            <label for="operational_vibration">Excessive Vibration</label>
+                        </div>
+                        
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="operational_overheating" name="operational_overheating">
+                            <label for="operational_overheating">Overheating</label>
+                        </div>
+                        
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="operational_performance" name="operational_performance">
+                            <label for="operational_performance">Performance Issues</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="additional_findings">Additional Findings</label>
+                        <textarea id="additional_findings" name="additional_findings" placeholder="Enter any additional findings or observations"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Equipment Specific Tab -->
+                <div id="equipment-tab" class="tab-content">
+                    {% if equipment_type == 'mechanical' %}
+                    <h3 class="section-title">Mechanical Components</h3>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="lubrication_performed" name="lubrication_performed">
+                            <label for="lubrication_performed">Lubrication Performed</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lubrication_type">Lubrication Type/Details</label>
+                        <input type="text" id="lubrication_type" name="lubrication_type">
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="alignment_checked" name="alignment_checked">
+                            <label for="alignment_checked">Alignment Checked</label>
+                        </div>
+                        
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="alignment_adjusted" name="alignment_adjusted">
+                            <label for="alignment_adjusted">Alignment Adjusted</label>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="bearings_inspected" name="bearings_inspected">
+                            <label for="bearings_inspected">Bearings Inspected</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bearings_condition">Bearings Condition</label>
+                        <select id="bearings_condition" name="bearings_condition">
+                            <option value="">Select Condition</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                            <option value="Replaced">Replaced</option>
+                        </select>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="belt_tension_checked" name="belt_tension_checked">
+                            <label for="belt_tension_checked">Belt Tension Checked</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="belt_condition">Belt Condition</label>
+                        <select id="belt_condition" name="belt_condition">
+                            <option value="">Select Condition</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                            <option value="Replaced">Replaced</option>
+                        </select>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="coupling_inspected" name="coupling_inspected">
+                            <label for="coupling_inspected">Coupling Inspected</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="coupling_condition">Coupling Condition</label>
+                        <select id="coupling_condition" name="coupling_condition">
+                            <option value="">Select Condition</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                            <option value="Replaced">Replaced</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="mechanical_notes">Notes</label>
+                        <textarea id="mechanical_notes" name="mechanical_notes" placeholder="Enter any additional notes about mechanical components"></textarea>
+                    </div>
+                    
+                    {% elif equipment_type == 'electrical' %}
+                    <h3 class="section-title">Electrical Components</h3>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="voltage_measured" name="voltage_measured">
+                            <label for="voltage_measured">Voltage Measured</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="voltage_reading">Voltage Reading</label>
+                        <input type="text" id="voltage_reading" name="voltage_reading" placeholder="e.g., 120V, 240V">
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="current_measured" name="current_measured">
+                            <label for="current_measured">Current Measured</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="current_reading">Current Reading</label>
+                        <input type="text" id="current_reading" name="current_reading" placeholder="e.g., 5A, 10A">
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="resistance_measured" name="resistance_measured">
+                            <label for="resistance_measured">Resistance Measured</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resistance_reading">Resistance Reading</label>
+                        <input type="text" id="resistance_reading" name="resistance_reading" placeholder="e.g., 0.5Ω, 1.2Ω">
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="connections_tightened" name="connections_tightened">
+                            <label for="connections_tightened">Connections Tightened</label>
+                        </div>
+                        
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="insulation_tested" name="insulation_tested">
+                            <label for="insulation_tested">Insulation Tested</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="insulation_condition">Insulation Condition</label>
+                        <select id="insulation_condition" name="insulation_condition">
+                            <option value="">Select Condition</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                            <option value="Replaced">Replaced</option>
+                        </select>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="grounding_checked" name="grounding_checked">
+                            <label for="grounding_checked">Grounding Checked</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="electrical_notes">Notes</label>
+                        <textarea id="electrical_notes" name="electrical_notes" placeholder="Enter any additional notes about electrical components"></textarea>
+                    </div>
+                    
+                    {% elif equipment_type == 'hvac' %}
+                    <h3 class="section-title">HVAC Components</h3>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="filters_replaced" name="filters_replaced">
+                            <label for="filters_replaced">Filters Replaced</label>
+                        </div>
+                        
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="coils_cleaned" name="coils_cleaned">
+                            <label for="coils_cleaned">Coils Cleaned</label>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="refrigerant_level_checked" name="refrigerant_level_checked">
+                            <label for="refrigerant_level_checked">Refrigerant Level Checked</label>
+                        </div>
+                        
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="refrigerant_added" name="refrigerant_added">
+                            <label for="refrigerant_added">Refrigerant Added</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="refrigerant_amount">Refrigerant Amount Added</label>
+                        <input type="text" id="refrigerant_amount" name="refrigerant_amount">
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="ductwork_inspected" name="ductwork_inspected">
+                            <label for="ductwork_inspected">Ductwork Inspected</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ductwork_condition">Ductwork Condition</label>
+                        <select id="ductwork_condition" name="ductwork_condition">
+                            <option value="">Select Condition</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                            <option value="Repaired">Repaired</option>
+                        </select>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="thermostat_calibrated" name="thermostat_calibrated">
+                            <label for="thermostat_calibrated">Thermostat Calibrated</label>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="supply_temp">Supply Temperature</label>
+                            <input type="text" id="supply_temp" name="supply_temp" placeholder="e.g., 55°F">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="return_temp">Return Temperature</label>
+                            <input type="text" id="return_temp" name="return_temp" placeholder="e.g., 75°F">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="hvac_notes">Notes</label>
+                        <textarea id="hvac_notes" name="hvac_notes" placeholder="Enter any additional notes about HVAC components"></textarea>
+                    </div>
+                    
+                    {% elif equipment_type == 'plumbing' %}
+                    <h3 class="section-title">Plumbing Components</h3>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="water_pressure_checked" name="water_pressure_checked">
+                            <label for="water_pressure_checked">Water Pressure Checked</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="water_pressure">Water Pressure Reading</label>
+                        <input type="text" id="water_pressure" name="water_pressure" placeholder="e.g., 60 PSI">
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="leak_test_performed" name="leak_test_performed">
+                            <label for="leak_test_performed">Leak Test Performed</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="leak_test_result">Leak Test Result</label>
+                        <select id="leak_test_result" name="leak_test_result">
+                            <option value="">Select Result</option>
+                            <option value="No Leaks">No Leaks</option>
+                            <option value="Minor Leaks">Minor Leaks</option>
+                            <option value="Major Leaks">Major Leaks</option>
+                            <option value="Leaks Repaired">Leaks Repaired</option>
+                        </select>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="drain_flow_checked" name="drain_flow_checked">
+                            <label for="drain_flow_checked">Drain Flow Checked</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="drain_condition">Drain Condition</label>
+                        <select id="drain_condition" name="drain_condition">
+                            <option value="">Select Condition</option>
+                            <option value="Good Flow">Good Flow</option>
+                            <option value="Partial Blockage">Partial Blockage</option>
+                            <option value="Blocked">Blocked</option>
+                            <option value="Cleared">Cleared</option>
+                        </select>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="valves_exercised" name="valves_exercised">
+                            <label for="valves_exercised">Valves Exercised</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="valve_condition">Valve Condition</label>
+                        <select id="valve_condition" name="valve_condition">
+                            <option value="">Select Condition</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                            <option value="Replaced">Replaced</option>
+                        </select>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="seals_replaced" name="seals_replaced">
+                            <label for="seals_replaced">Seals Replaced</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="plumbing_notes">Notes</label>
+                        <textarea id="plumbing_notes" name="plumbing_notes" placeholder="Enter any additional notes about plumbing components"></textarea>
+                    </div>
+                    {% else %}
+                    <p>No equipment-specific fields available for this equipment type.</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Measurements Tab -->
+                <div id="measurements-tab" class="tab-content">
+                    <h3 class="section-title">Vibration Measurements</h3>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="vibration_measured" name="vibration_measured">
+                            <label for="vibration_measured">Vibration Measured</label>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="vibration_level">Vibration Level</label>
+                            <input type="text" id="vibration_level" name="vibration_level" placeholder="e.g., 2.5 mm/s">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vibration_location">Measurement Location</label>
+                            <input type="text" id="vibration_location" name="vibration_location" placeholder="e.g., Motor bearing">
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title">Temperature Measurements</h3>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="temperature_measured" name="temperature_measured">
+                            <label for="temperature_measured">Temperature Measured</label>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label for="temp_location_1">Location 1</label>
+                            <input type="text" id="temp_location_1" name="temp_location_1" placeholder="e.g., Motor housing">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="temperature_1">Temperature 1</label>
+                            <input type="text" id="temperature_1" name="temperature_1" placeholder="e.g., 65°C">
+                        </div>
+                    </div>
+                    
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label for="temp_location_2">Location 2</label>
+                            <input type="text" id="temp_location_2" name="temp_location_2">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="temperature_2">Temperature 2</label>
+                            <input type="text" id="temperature_2" name="temperature_2">
+                        </div>
+                    </div>
+                    
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label for="temp_location_3">Location 3</label>
+                            <input type="text" id="temp_location_3" name="temp_location_3">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="temperature_3">Temperature 3</label>
+                            <input type="text" id="temperature_3" name="temperature_3">
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title">Noise Measurements</h3>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-label">
+                            <input type="checkbox" id="noise_measured" name="noise_measured">
+                            <label for="noise_measured">Noise Measured</label>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="noise_level">Noise Level</label>
+                            <input type="text" id="noise_level" name="noise_level" placeholder="e.g., 75 dB">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="noise_description">Noise Description</label>
+                            <input type="text" id="noise_description" name="noise_description" placeholder="e.g., Grinding, Whistling">
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title">Custom Measurements</h3>
+                    
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label for="custom_name_1">Measurement Name</label>
+                            <input type="text" id="custom_name_1" name="custom_name_1">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="custom_value_1">Value</label>
+                            <input type="text" id="custom_value_1" name="custom_value_1">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="custom_unit_1">Unit</label>
+                            <input type="text" id="custom_unit_1" name="custom_unit_1">
+                        </div>
+                    </div>
+                    
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label for="custom_name_2">Measurement Name</label>
+                            <input type="text" id="custom_name_2" name="custom_name_2">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="custom_value_2">Value</label>
+                            <input type="text" id="custom_value_2" name="custom_value_2">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="custom_unit_2">Unit</label>
+                            <input type="text" id="custom_unit_2" name="custom_unit_2">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Parts Tab -->
+                <div id="parts-tab" class="tab-content">
+                    <h3 class="section-title">Parts Used</h3>
+                    
+                    <button type="button" id="add-part-btn" class="btn btn-primary add-part-btn">Add Part</button>
+                    
+                    <input type="hidden" id="part-count" name="part_count" value="0">
+                    
+                    <table class="parts-table" id="parts-table">
+                        <thead>
+                            <tr>
+                                <th>Part Name</th>
+                                <th>Part Number</th>
+                                <th>Quantity</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="parts-table-body">
+                            <!-- Parts will be added here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Attachments Tab -->
+                <div id="attachments-tab" class="tab-content">
+                    <h3 class="section-title">Attachments</h3>
+                    
+                    <div class="form-group file-input">
+                        <label for="attachment1">Attachment 1</label>
+                        <input type="file" id="attachment1" name="attachment1">
+                    </div>
+                    
+                    <div class="form-group file-input">
+                        <label for="attachment2">Attachment 2</label>
+                        <input type="file" id="attachment2" name="attachment2">
+                    </div>
+                    
+                    <div class="form-group file-input">
+                        <label for="attachment3">Attachment 3</label>
+                        <input type="file" id="attachment3" name="attachment3">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="comments">Comments</label>
+                        <textarea id="comments" name="comments" placeholder="Enter any additional comments about this maintenance report"></textarea>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-success">Submit Report</button>
+                    <a href="{% url 'craftsmen_view_work_order' work_order_id=work_order.work_order_id %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

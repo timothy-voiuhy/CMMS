@@ -10,7 +10,7 @@ import time
 import threading
 import logging
 from datetime import datetime, timedelta
-from db_manager import DatabaseManager
+from db_ops.db_manager import DatabaseManager
 
 class MaintenanceScheduler:
     """

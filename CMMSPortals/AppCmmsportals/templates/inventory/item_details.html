@@ -1,0 +1,150 @@
+{% extends "inventory/layout.html" %}
+
+{% block title %}Item Details: {{ item.name }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Item Details</h1>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <a href="{% url 'inventory_items' %}" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left"></i> Back to Items
+        </a>
+        <a href="{% url 'edit_inventory_item' item_id=item.item_id %}" class="btn btn-primary me-2">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{% url 'update_item_quantity' item_id=item.item_id %}" class="btn btn-success me-2">
+            <i class="fas fa-plus-minus"></i> Update Quantity
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Item Details -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Basic Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Item Code:</div>
+                    <div class="col-md-8">{{ item.item_code }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Name:</div>
+                    <div class="col-md-8">{{ item.name }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Category:</div>
+                    <div class="col-md-8">{{ item.category.name }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Supplier:</div>
+                    <div class="col-md-8">{{ item.supplier.name }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Description:</div>
+                    <div class="col-md-8">{{ item.description|default:"N/A" }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Location:</div>
+                    <div class="col-md-8">{{ item.location|default:"N/A" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stock Information -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Stock Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Current Quantity:</div>
+                    <div class="col-md-8">
+                        {% if item.quantity <= 0 %}
+                        <span class="badge bg-danger">{{ item.quantity }} {{ item.unit }}</span>
+                        {% elif item.quantity <= item.minimum_quantity %}
+                        <span class="badge bg-warning text-dark">{{ item.quantity }} {{ item.unit }}</span>
+                        {% else %}
+                        <span class="badge bg-success">{{ item.quantity }} {{ item.unit }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Minimum Quantity:</div>
+                    <div class="col-md-8">{{ item.minimum_quantity }} {{ item.unit }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Reorder Point:</div>
+                    <div class="col-md-8">{{ item.reorder_point }} {{ item.unit }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Unit Cost:</div>
+                    <div class="col-md-8">${{ item.unit_cost|floatformat:2 }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Total Value:</div>
+                    <div class="col-md-8">${{ item.quantity|multiply:item.unit_cost|floatformat:2 }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Status:</div>
+                    <div class="col-md-8">
+                        {% if item.quantity <= 0 %}
+                        <span class="badge bg-danger">Out of Stock</span>
+                        {% elif item.quantity <= item.minimum_quantity %}
+                        <span class="badge bg-warning text-dark">Low Stock</span>
+                        {% else %}
+                        <span class="badge bg-success">In Stock</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Transaction History -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Transaction History</h5>
+            </div>
+            <div class="card-body">
+                {% if transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Reference</th>
+                                <th>Performed By</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                                <td>{{ transaction.transaction_type }}</td>
+                                <td>{{ transaction.quantity }} {{ item.unit }}</td>
+                                <td>{{ transaction.reference|default:"N/A" }}</td>
+                                <td>{{ transaction.personnel.first_name }} {{ transaction.personnel.last_name }}</td>
+                                <td>{{ transaction.notes|default:"" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">No transaction history available for this item.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

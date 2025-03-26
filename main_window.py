@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                                 QPushButton, QLabel, QStackedWidget, QFrame, QGridLayout, QMessageBox, QScrollArea, QSizePolicy)
+                                 QPushButton, QLabel, QStackedWidget, QFrame, QGridLayout, QMessageBox, QScrollArea, QSizePolicy, QInputDialog, QLineEdit)
 from PySide6.QtCore import Qt, Slot, QSize, QTimer, QEvent, QPoint, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QFont, QIcon, QPixmap, QEnterEvent
 from ui.equipment_registration import EquipmentRegistrationWindow
@@ -7,7 +7,7 @@ from ui.equipment_list import EquipmentListWindow
 from craftsmen import CraftsMenWindow
 from workOrders.work_orders import WorkOrdersWindow
 from inventory import InventoryWindow
-from db_manager import DatabaseManager
+from db_ops.db_manager import DatabaseManager
 from styles.theme_settings_widget import ThemeSettingsWidget
 from styles.dark_theme import DarkTheme
 from styles.theme_config import ThemeConfig
@@ -17,6 +17,8 @@ from craftsman_portal import CraftsmanPortal
 from craftsman_login import CraftsmanLoginDialog
 from scheduler import MaintenanceScheduler
 from schedules_window import SchedulesWindow
+from inventory_personnel_portal import InventoryPersonnelPortal
+from inventory_personnel_login import InventoryPersonnelLoginDialog
 import logging
 
 class CMMSMainWindow(QMainWindow):
@@ -421,12 +423,25 @@ class CMMSMainWindow(QMainWindow):
         schedules_action.setShortcut("Ctrl+6")
         schedules_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(5))
         
-        portal_action = menu_bar.addAction("Craftsman Portal")
-        portal_action.setShortcut("Ctrl+7")
-        portal_action.triggered.connect(self.open_craftsman_portal)
+        # Create Portals menu
+        portals_menu = menu_bar.addMenu("Portals")
         
-        web_portal_action = menu_bar.addAction("Web Portal")
+        # Add portal options
+        craftsman_portal_action = portals_menu.addAction("Craftsman Portal")
+        craftsman_portal_action.setShortcut("Ctrl+7")
+        craftsman_portal_action.triggered.connect(self.open_craftsman_portal)
+        
+        inventory_portal_action = portals_menu.addAction("Inventory Personnel Portal")
+        inventory_portal_action.setShortcut("Ctrl+8")
+        inventory_portal_action.triggered.connect(self.open_inventory_portal)
+        
+        web_portal_action = portals_menu.addAction("Web Portal")
         web_portal_action.triggered.connect(self.launch_web_portal)
+        
+        # Add Administration menu option
+        admin_action = menu_bar.addAction("Administration")
+        admin_action.setShortcut("Ctrl+A")
+        admin_action.triggered.connect(self.open_admin_window)
         
         # View menu
         view_menu = menu_bar.addMenu("View")
@@ -510,3 +525,40 @@ class CMMSMainWindow(QMainWindow):
                 "Make sure Flask is installed by running:\n"
                 "pip install flask flask-login"
             )
+
+    def open_admin_window(self):
+        """Open the administration window"""
+        # Import here to avoid circular imports
+        from admin_window import AdminWindow
+        
+        # Create authentication dialog to verify admin access
+        password, ok = QInputDialog.getText(
+            self, 
+            "Admin Authentication", 
+            "Enter Admin Password:",
+            QLineEdit.Password
+        )
+        
+        if ok and password:
+            # Verify admin password - in a real app this would check against stored credentials
+            if self.db_manager.verify_admin_password(password):
+                # Open the admin window
+                admin_window = AdminWindow(self.db_manager, self)
+                admin_window.showMaximized()
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Authentication Failed",
+                    "Incorrect admin password. Access denied."
+                )
+
+    def open_inventory_portal(self):
+        """Open the inventory personnel portal with login dialog"""
+        # Create a login dialog
+        login_dialog = InventoryPersonnelLoginDialog(self.db_manager, self)
+        if login_dialog.exec():
+            # If login successful, open the portal with the personnel ID
+            personnel_id = login_dialog.get_personnel_id()
+            if personnel_id:
+                portal = InventoryPersonnelPortal(self.db_manager, personnel_id, parent=self)
+                portal.show()

@@ -1,0 +1,107 @@
+{% extends "inventory/layout.html" %}
+
+{% load custom_filters %}
+
+{% block title %}Inventory Items{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Inventory Items</h1>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" value="{{ search_text }}" placeholder="Search by name">
+            </div>
+            <div class="col-md-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category" name="category">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.category_id }}" {% if category.category_id|stringformat:"s" == selected_category %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Status</option>
+                    <option value="In Stock" {% if selected_status == 'In Stock' %}selected{% endif %}>In Stock</option>
+                    <option value="Low Stock" {% if selected_status == 'Low Stock' %}selected{% endif %}>Low Stock</option>
+                    <option value="Out of Stock" {% if selected_status == 'Out of Stock' %}selected{% endif %}>Out of Stock</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Action buttons -->
+<div class="mb-3">
+    <a href="{% url 'add_inventory_item' %}" class="btn btn-primary me-2">Add New Item</a>
+    <a href="#" class="btn btn-success me-2">Import Items</a>
+    <a href="#" class="btn btn-secondary">Export Items</a>
+</div>
+
+<!-- Inventory Items Table -->
+<div class="card">
+    <div class="card-body">
+        {% if items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Item ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Min Qty</th>
+                        <th>Location</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>ITEM-{{ item.item_id }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>
+                            {% if item.category %}
+                                {{ item.category.name }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.quantity <= 0 %}
+                            <span class="badge bg-danger">{{ item.quantity }}</span>
+                            {% elif item.quantity <= item.minimum_quantity %}
+                            <span class="badge bg-warning text-dark">{{ item.quantity }}</span>
+                            {% else %}
+                            {{ item.quantity }}
+                            {% endif %}
+                        </td>
+                        <td>{{ item.minimum_quantity }}</td>
+                        <td>{{ item.location|default:"-" }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'edit_inventory_item' item_id=item.item_id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                <a href="{% url 'item_details' item_id=item.item_id %}" class="btn btn-sm btn-outline-info">Details</a>
+                                <a href="{% url 'update_item_quantity' item_id=item.item_id %}" class="btn btn-sm btn-outline-success">Update Qty</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center">No inventory items found matching your criteria.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
