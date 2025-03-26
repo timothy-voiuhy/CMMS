@@ -61,6 +61,7 @@ urlpatterns = [
 ] 
 
 # this is an edit
+# this is another edit. 
 
 def redirect_to_login_or_404(request):
     if not request.user.is_authenticated:
