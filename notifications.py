@@ -622,15 +622,12 @@ class EmailNotificationService:
             # Get work orders due that are yet due.
             upcoming_work_orders = self.db_manager.get_work_orders_by_date(upcoming_date)
             upcoming_sent = 0
-            print(f"Found {len(upcoming_work_orders)} upcoming work orders")
             for work_order in upcoming_work_orders:
                 # Skip if notification already sent
                 if has_notification_column and work_order.get('notification_sent'):
-                    print(f"Notification already sent for work order {work_order['work_order_id']}")
                     continue
                     
                 if work_order['status'] not in ['Completed', 'Cancelled']:
-                    print(f"Sending notification for work order {work_order['work_order_id']}")
                     if self.send_work_order_notification(work_order, 'upcoming'):
                         upcoming_sent += 1
                         # Mark as sent if column exists
