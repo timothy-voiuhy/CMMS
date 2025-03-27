@@ -3318,3 +3318,48 @@ class DatabaseManager:
         finally:
             if 'connection' in locals() and connection:
                 self.close(connection)
+
+    def delete_team(self, team_id):
+        """Delete a team and all associated data"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            # Begin transaction
+            connection.start_transaction()
+            
+            # 1. Update work orders assigned to this team
+            cursor.execute("""
+                UPDATE work_orders
+                SET team_id = NULL, assignment_type = 'Unassigned'
+                WHERE team_id = %s AND status != 'Completed'
+            """, (team_id,))
+            
+            # 2. Delete team members
+            cursor.execute("DELETE FROM team_members WHERE team_id = %s", (team_id,))
+            
+            # 3. Delete team schedule
+            cursor.execute("DELETE FROM team_schedules WHERE team_id = %s", (team_id,))
+            
+            # 4. Delete team from work order templates
+            cursor.execute("""
+                UPDATE work_order_templates
+                SET team_id = NULL
+                WHERE team_id = %s
+            """, (team_id,))
+            
+            # 5. Finally, delete the team record
+            cursor.execute("DELETE FROM craftsmen_teams WHERE team_id = %s", (team_id,))
+            
+            # Commit transaction
+            connection.commit()
+            return True
+        except Exception as e:
+            print(f"Error deleting team: {e}")
+            if 'connection' in locals() and connection:
+                connection.rollback()
+            return False
+        finally:
+            if 'connection' in locals() and connection:
+                self.close(connection)
+

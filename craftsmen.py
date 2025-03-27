@@ -645,7 +645,7 @@ class CraftsMenWindow(QMainWindow):
         self.craftsmen_cards.set_display_fields(display_fields)
         
         # Connect signals
-        self.craftsmen_cards.itemClicked.connect(self.handle_craftsman_click)
+        # self.craftsmen_cards.itemClicked.connect(self.handle_craftsman_click)
         # self.craftsmen_cards.itemDoubleClicked.connect(self.show_craftsman_details)
         self.craftsmen_cards.itemEditClicked.connect(self.edit_craftsman)
         
@@ -2440,6 +2440,218 @@ class CraftsMenWindow(QMainWindow):
         finally:
             if 'connection' in locals() and connection:
                 self.db_manager.close(connection)
+
+    def handle_team_click(self, data):
+        """Handle click on a team card"""
+        # Show context menu with options
+        menu = QMenu(self)
+        
+        view_action = menu.addAction("View Team Details")
+        edit_action = menu.addAction("Edit Team")
+        menu.addSeparator()
+        delete_action = menu.addAction("Delete Team")
+        delete_action.setIcon(QIcon.fromTheme("edit-delete"))
+        
+        # Connect actions
+        view_action.triggered.connect(lambda: self.show_team_details(data))
+        edit_action.triggered.connect(lambda: self.edit_team(data))
+        delete_action.triggered.connect(lambda: self.delete_team(data))
+        
+        # Show the menu at cursor position
+        menu.exec(QCursor.pos())
+
+    def delete_team(self, data):
+        """Delete a team with proper cleanup"""
+        # Get team ID and name
+        team_id = data.get('team_id')
+        team_name = data.get('team_name')
+        
+        if not team_id or not team_name:
+            QMessageBox.warning(self, "Error", "Could not identify team to delete.")
+            return
+        
+        # First confirmation
+        initial_confirm = QMessageBox.question(
+            self,
+            "Confirm Team Deletion",
+            f"Are you sure you want to delete the team '{team_name}'?\n\n"
+            "This will affect all associated data including work orders and team memberships.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if initial_confirm != QMessageBox.Yes:
+            return
+        
+        # Check for associated work orders
+        associated_work_orders = self.check_team_work_orders(team_id)
+        
+        if associated_work_orders:
+            # Show work order resolution dialog
+            if not self.resolve_team_work_orders(team_id, team_name, associated_work_orders):
+                return  # User canceled the operation
+        
+        # Final confirmation
+        final_confirm = QMessageBox.question(
+            self,
+            "Final Confirmation",
+            f"You are about to permanently delete the team '{team_name}'.\n\n"
+            "All team members will be removed from this team, but their individual records will remain intact.\n\n"
+            "This action cannot be undone. Continue?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if final_confirm != QMessageBox.Yes:
+            return
+        
+        # Perform the actual deletion
+        success = self.db_manager.delete_team(team_id)
+        
+        if success:
+            QMessageBox.information(
+                self,
+                "Success",
+                f"Team '{team_name}' has been successfully deleted."
+            )
+            # Refresh the teams list
+            self.load_teams()
+        else:
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to delete team '{team_name}'. Please try again."
+            )
+
+    def check_team_work_orders(self, team_id):
+        """Check if team has any associated work orders"""
+        try:
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get work orders assigned to this team
+            cursor.execute("""
+                SELECT work_order_id, title, status, due_date, priority
+                FROM work_orders
+                WHERE team_id = %s AND status != 'Completed'
+            """, (team_id,))
+            
+            return cursor.fetchall()
+        except Exception as e:
+            print(f"Error checking team work orders: {e}")
+            return []
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
+
+    def resolve_team_work_orders(self, team_id, team_name, work_orders):
+        """Show dialog to resolve work orders before team deletion"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Resolve Work Orders for Team: {team_name}")
+        dialog.setMinimumWidth(700)
+        dialog.setMinimumHeight(500)
+        
+        layout = QVBoxLayout(dialog)
+        
+        # Explanation label
+        layout.addWidget(QLabel(
+            f"<b>Team '{team_name}'</b> has {len(work_orders)} incomplete work orders. "
+            "Please decide how to handle these work orders:"
+        ))
+        
+        # Work orders table
+        table = QTableWidget()
+        table.setColumnCount(6)
+        table.setHorizontalHeaderLabels([
+            "ID", "Title", "Status", "Due Date", "Priority", "Action"
+        ])
+        
+        # Set column widths
+        table.setColumnWidth(0, 60)   # ID
+        table.setColumnWidth(1, 200)  # Title
+        table.setColumnWidth(2, 100)  # Status
+        table.setColumnWidth(3, 100)  # Due Date
+        table.setColumnWidth(4, 80)   # Priority
+        table.setColumnWidth(5, 120)  # Action
+        
+        table.setRowCount(len(work_orders))
+        
+        # Action options
+        actions = ["Reassign", "Complete", "Delete"]
+        
+        # Fill table with work orders
+        for row, work_order in enumerate(work_orders):
+            table.setItem(row, 0, QTableWidgetItem(str(work_order['work_order_id'])))
+            table.setItem(row, 1, QTableWidgetItem(work_order['title']))
+            table.setItem(row, 2, QTableWidgetItem(work_order['status']))
+            table.setItem(row, 3, QTableWidgetItem(str(work_order['due_date'])))
+            table.setItem(row, 4, QTableWidgetItem(work_order['priority']))
+            
+            # Add action combobox
+            action_combo = QComboBox()
+            action_combo.addItems(actions)
+            table.setCellWidget(row, 5, action_combo)
+        
+        layout.addWidget(table)
+        
+        # Add buttons for bulk actions
+        bulk_widget = QWidget()
+        bulk_layout = QHBoxLayout(bulk_widget)
+        
+        bulk_layout.addWidget(QLabel("Set all to:"))
+        
+        bulk_reassign = QPushButton("Reassign")
+        bulk_complete = QPushButton("Complete")
+        bulk_delete = QPushButton("Delete")
+        
+        bulk_reassign.clicked.connect(lambda: self.set_all_actions(table, "Reassign"))
+        bulk_complete.clicked.connect(lambda: self.set_all_actions(table, "Complete"))
+        bulk_delete.clicked.connect(lambda: self.set_all_actions(table, "Delete"))
+        
+        bulk_layout.addWidget(bulk_reassign)
+        bulk_layout.addWidget(bulk_complete)
+        bulk_layout.addWidget(bulk_delete)
+        
+        layout.addWidget(bulk_widget)
+        
+        # Add buttons
+        buttons = QHBoxLayout()
+        process_btn = QPushButton("Process Work Orders")
+        cancel_btn = QPushButton("Cancel")
+        
+        buttons.addWidget(process_btn)
+        buttons.addWidget(cancel_btn)
+        
+        layout.addLayout(buttons)
+        
+        # Connect buttons
+        process_btn.clicked.connect(dialog.accept)
+        cancel_btn.clicked.connect(dialog.reject)
+        
+        # Execute dialog
+        if dialog.exec() != QDialog.Accepted:
+            return False
+        
+        # Process work orders based on selected actions
+        success = True
+        for row in range(table.rowCount()):
+            work_order_id = int(table.item(row, 0).text())
+            action = table.cellWidget(row, 5).currentText()
+            
+            if action == "Reassign":
+                # Show reassignment dialog
+                if not self.reassign_work_order(work_order_id, table.item(row, 1).text()):
+                    success = False
+            elif action == "Complete":
+                # Mark as completed
+                if not self.db_manager.update_work_order_status(work_order_id, "Completed"):
+                    success = False
+            elif action == "Delete":
+                # Delete the work order
+                if not self.db_manager.delete_work_order(work_order_id):
+                    success = False
+        
+        return success
 
 
 class DemoDataGenerator:
