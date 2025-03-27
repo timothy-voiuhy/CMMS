@@ -804,3 +804,30 @@
 2025-03-27 16:44:48,502 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
 2025-03-27 16:44:48,502 - INFO - Notification check completed. Processed 3 upcoming, 1 due today, and 0 overdue work orders.
 2025-03-27 16:46:28,042 - INFO - Notification scheduler stopped.
+2025-03-27 16:50:40,163 - INFO - Starting notification scheduler...
+2025-03-27 16:50:40,163 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:50:40,185 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:50:40,243 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 16:50:40,259 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:50:44,632 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:50:44,671 - INFO - EMAIL ACTIVITY [send_success]: notification_id=34, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 16:50:44,685 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:50:44,698 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=3, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 16:50:44,711 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:50:44,711 - INFO - Notification check completed. Processed 3 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 16:50:45,143 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:50:45,172 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:50:45,268 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 16:50:45,285 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:50:48,830 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:50:48,841 - INFO - EMAIL ACTIVITY [send_success]: notification_id=35, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 16:50:48,867 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:50:48,879 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=3, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 16:50:48,890 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:50:48,890 - INFO - Notification check completed. Processed 3 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 16:50:51,336 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 16:50:51,352 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:50:54,268 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 16:50:54,298 - INFO - EMAIL ACTIVITY [send_success]: notification_id=36, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 16:50:54,329 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 17:14:12,849 - INFO - Notification scheduler stopped.
