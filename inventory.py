@@ -3271,7 +3271,7 @@ class InventoryWindow(QMainWindow):
             return
         
         # Show edit dialog with the item data
-        dialog = AddItemDialog(self.db_manager, self, item_data=selected_item)
+        dialog = EditItemDialog(self.db_manager, self, item_data=selected_item)
         if dialog.exec() == QDialog.Accepted:
             self.refresh_inventory()
 
