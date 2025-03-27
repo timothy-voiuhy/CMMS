@@ -80,7 +80,8 @@
                             <div class="btn-group">
                                 <a href="{% url 'view_purchase_order' po.pk %}" class="btn btn-sm btn-outline-primary">View</a>
                                 {% if po.status != 'Received' and po.status != 'Cancelled' %}
-                                <a href="{% url 'update_purchase_order' po.pk %}" class="btn btn-sm btn-outline-success">Update</a>
+                                <!-- Commenting out the update button until the functionality is implemented -->
+                                <!-- <a href="{% url 'update_purchase_order' po.pk %}" class="btn btn-sm btn-outline-success">Update</a> -->
                                 {% endif %}
                             </div>
                         </td>

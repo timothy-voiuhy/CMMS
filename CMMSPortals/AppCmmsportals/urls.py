@@ -34,8 +34,7 @@ urlpatterns = [
     path('inventory/items/', views.inventory_items, name='inventory_items'),
     path('inventory/purchase_orders/', views.purchase_orders, name='purchase_orders'),
     path('inventory/reports/', views.inventory_reports, name='inventory_reports'),
-    path('inventory/item/<int:item_id>/', views.item_details, name='item_details'),
-    path('inventory/edit_item/<int:item_id>/', views.edit_inventory_item, name='edit_inventory_item'),
+    path('inventory/item/<int:item_id>/', views.edit_inventory_item, name='edit_inventory_item'),
     path('inventory/add_item/', views.add_inventory_item, name='add_inventory_item'),
     path('inventory/save_item/', views.save_inventory_item, name='save_inventory_item'),
     path('inventory/update_quantity/<int:item_id>/', views.update_item_quantity, name='update_item_quantity'),
@@ -60,6 +59,9 @@ urlpatterns = [
     # Add this to your urlpatterns
     path('craftsmen/equipment/', views.craftsmen_equipment, name='craftsmen_equipment'),
     path('craftsmen/profile/', views.craftsmen_profile, name='craftsmen_profile'),
+    path('inventory/edit_item/<int:item_id>/', views.edit_inventory_item, name='edit_inventory_item_alt'),
+    path('dashboard/', views.index, name='dashboard'),
+    path('inventory/purchase_order/update/<int:po_id>/', views.update_purchase_order, name='update_purchase_order'),
 ] 
 
 def redirect_to_login_or_404(request):

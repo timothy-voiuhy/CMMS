@@ -21,6 +21,7 @@ from .models import (
     Supplier, InventoryItem, InventoryTransaction, 
     PurchaseOrder, PurchaseOrderItem, CraftsmanSkill, CraftsmanTraining, CraftsmanTeam
 )
+from .forms import InventoryItemForm  # You'll need to create this form
 
 # Helper functions to replace db_ops functionality
 def get_db_connection():
@@ -1229,40 +1230,21 @@ def item_details(request, item_id):
 
 @login_required
 def edit_inventory_item(request, item_id):
-    """Edit an inventory item"""
-    # Ensure user is inventory personnel
-    if request.user.role != 'inventory':
-        messages.error(request, 'Access denied')
-        return redirect('logout')
+    # Get the item or return 404 if not found
+    item = get_object_or_404(InventoryItem, item_id=item_id)
     
-    try:
-        # Get inventory personnel record
-        inventory_person = InventoryPersonnel.objects.get(employee_id=request.user.employee_id)
-        
-        # Check access level for edit permissions
-        if inventory_person.access_level not in ['Admin', 'Manager']:
-            messages.error(request, 'You do not have permission to edit items')
-            return redirect('item_details', item_id=item_id)
-        
-        try:
-            item = InventoryItem.objects.get(item_id=item_id)
-        except InventoryItem.DoesNotExist:
-            messages.error(request, 'Item not found')
-            return redirect('inventory_items')
-        
-        # Get categories and suppliers for dropdown
-        categories = InventoryCategory.objects.all().order_by('name')
-        suppliers = Supplier.objects.all().order_by('name')
-        
-        return render(request, 'inventory/item_form.html', {
-            'item': item,
-            'categories': categories,
-            'suppliers': suppliers
-        })
-        
-    except InventoryPersonnel.DoesNotExist:
-        messages.error(request, 'Inventory personnel profile not found')
-        return redirect('inventory_items')
+    if request.method == 'POST':
+        form = InventoryItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            return redirect('inventory_items')  # Redirect to the items list
+    else:
+        form = InventoryItemForm(instance=item)
+    
+    return render(request, 'inventory/edit_item.html', {
+        'form': form,
+        'item': item,
+    })  # This closing parenthesis was missing
 
 @login_required
 def add_inventory_item(request):
@@ -2084,3 +2066,62 @@ def export_items(request):
         ])
     
     return response
+
+@login_required
+def dashboard_redirect(request):
+    """Redirect to the appropriate dashboard based on user role"""
+    if request.user.role == 'inventory':
+        return redirect('inventory_dashboard')
+    else:
+        return redirect('craftsmen_dashboard')
+
+@login_required
+def update_purchase_order(request, po_id):
+    """Update a purchase order"""
+    # Ensure user is inventory personnel
+    if request.user.role != 'inventory':
+        messages.error(request, 'Access denied')
+        return redirect('logout')
+    
+    try:
+        po = PurchaseOrder.objects.get(po_id=po_id)
+        
+        # Check if PO can be updated
+        if po.status in ['Received', 'Cancelled']:
+            messages.error(request, 'This purchase order cannot be updated')
+            return redirect('view_purchase_order', po_id=po_id)
+        
+        # Get purchase order items
+        items = PurchaseOrderItem.objects.filter(po=po)
+        
+        # Get suppliers for dropdown
+        suppliers = Supplier.objects.all().order_by('name')
+        
+        if request.method == 'POST':
+            # Process form data
+            supplier_id = request.POST.get('supplier')
+            expected_delivery = request.POST.get('expected_delivery')
+            shipping_address = request.POST.get('shipping_address')
+            notes = request.POST.get('notes')
+            status = request.POST.get('status')
+            
+            # Update purchase order
+            po.supplier_id = supplier_id
+            po.expected_delivery = expected_delivery
+            po.shipping_address = shipping_address
+            po.notes = notes
+            po.status = status
+            po.save()
+            
+            messages.success(request, 'Purchase order updated successfully')
+            return redirect('view_purchase_order', po_id=po_id)
+        
+        return render(request, 'inventory/update_purchase_order.html', {
+            'po': po,
+            'items': items,
+            'suppliers': suppliers
+        })
+        
+    except PurchaseOrder.DoesNotExist:
+        messages.error(request, 'Purchase order not found')
+        return redirect('purchase_orders')
