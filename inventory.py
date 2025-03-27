@@ -360,6 +360,11 @@ class InventoryWindow(QMainWindow):
         demo_data_btn.clicked.connect(self.generate_demo_data)
         demo_data_btn.setStyleSheet("background-color: #FF9800; color: white;")
         
+        # Add Equipment Inventory button
+        equipment_inventory_btn = QPushButton("Generate Equipment Inventory")
+        equipment_inventory_btn.clicked.connect(self.generate_equipment_inventory)
+        equipment_inventory_btn.setStyleSheet("background-color: #2196F3; color: white;")
+        
         button_layout.addWidget(add_item_btn)
         button_layout.addWidget(edit_item_btn)
         button_layout.addWidget(remove_item_btn)
@@ -367,6 +372,7 @@ class InventoryWindow(QMainWindow):
         button_layout.addWidget(export_btn)
         button_layout.addWidget(refresh_btn)
         button_layout.addWidget(demo_data_btn)
+        button_layout.addWidget(equipment_inventory_btn)
         button_layout.addStretch()  # Add stretch to keep buttons left-aligned
         
         layout.addWidget(button_widget)
@@ -3382,6 +3388,531 @@ class InventoryWindow(QMainWindow):
             
         except Exception as e:
             print(f"Error sending PO email notification: {e}")
+
+    def generate_equipment_inventory(self):
+        """Generate inventory items for Coca-Cola production line equipment"""
+        try:
+            # Show confirmation dialog
+            reply = QMessageBox.question(
+                self,
+                "Generate Equipment Inventory",
+                "This will create inventory items for Coca-Cola production line equipment.\n"
+                "Do you want to continue?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+                
+            # Create inventory items for different equipment types
+            inventory_items = self.create_equipment_inventory_data()
+            
+            # Add items to database
+            success_count = 0
+            error_count = 0
+            
+            for item in inventory_items:
+                try:
+                    if self.db_manager.add_inventory_item(item):
+                        success_count += 1
+                    else:
+                        error_count += 1
+                except Exception as e:
+                    error_count += 1
+                    print(f"Error adding inventory item: {e}")
+            
+            # Refresh the inventory table
+            self.refresh_inventory()
+            
+            # Show success message
+            QMessageBox.information(
+                self,
+                "Equipment Inventory Generated",
+                f"Successfully added {success_count} equipment-related inventory items.\n"
+                f"Failed to add {error_count} items."
+            )
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"An error occurred while generating equipment inventory:\n{str(e)}"
+            )
+
+    def create_equipment_inventory_data(self):
+        """Create inventory items for Coca-Cola production line equipment"""
+        inventory_items = []
+        current_year = datetime.now().year
+        
+        # 1. Conveyor Belt Parts and Supplies
+        conveyor_items = [
+            {
+                'item_code': f"CB-BELT-{current_year}",
+                'name': "Conveyor Belt Replacement Roll",
+                'category': "Mechanical",
+                'quantity': random.randint(5, 20),
+                'unit': "rolls",
+                'location': "Warehouse A-12",
+                'minimum_quantity': 3,
+                'reorder_point': 5,
+                'unit_cost': round(random.uniform(200, 800), 2),
+                'description': "PVC replacement belt material for Coca-Cola conveyor systems"
+            },
+            {
+                'item_code': f"CB-ROLLER-{current_year}",
+                'name': "Conveyor Rollers",
+                'category': "Mechanical",
+                'quantity': random.randint(30, 100),
+                'unit': "pcs",
+                'location': "Warehouse A-14",
+                'minimum_quantity': 15,
+                'reorder_point': 25,
+                'unit_cost': round(random.uniform(40, 120), 2),
+                'description': "Standard rollers for conveyor belt systems"
+            },
+            {
+                'item_code': f"CB-MOTOR-{current_year}",
+                'name': "Conveyor Drive Motor",
+                'category': "Electrical",
+                'quantity': random.randint(2, 8),
+                'unit': "pcs",
+                'location': "Warehouse B-05",
+                'minimum_quantity': 1,
+                'reorder_point': 2,
+                'unit_cost': round(random.uniform(500, 1500), 2),
+                'description': "Replacement motors for conveyor belt systems, 1.5-3.0 kW"
+            },
+            {
+                'item_code': f"CB-CTRL-{current_year}",
+                'name': "Conveyor Control Board",
+                'category': "Electronics",
+                'quantity': random.randint(3, 10),
+                'unit': "pcs",
+                'location': "Electronics Cabinet C-03",
+                'minimum_quantity': 2,
+                'reorder_point': 3,
+                'unit_cost': round(random.uniform(300, 900), 2),
+                'description': "Electronic control boards for conveyor systems"
+            },
+            {
+                'item_code': f"CB-LUBE-{current_year}",
+                'name': "Conveyor Bearing Lubricant",
+                'category': "Maintenance",
+                'quantity': random.randint(10, 30),
+                'unit': "bottles",
+                'location': "Maintenance Supply Room",
+                'minimum_quantity': 5,
+                'reorder_point': 10,
+                'unit_cost': round(random.uniform(15, 40), 2),
+                'description': "Food-grade lubricant for conveyor bearings and moving parts"
+            }
+        ]
+        inventory_items.extend(conveyor_items)
+        
+        # 2. Forklift Parts and Supplies
+        forklift_items = [
+            {
+                'item_code': f"FL-BATT-{current_year}",
+                'name': "Forklift Battery Pack",
+                'category': "Electrical",
+                'quantity': random.randint(2, 6),
+                'unit': "pcs",
+                'location': "Charging Station Area",
+                'minimum_quantity': 1,
+                'reorder_point': 2,
+                'unit_cost': round(random.uniform(1200, 3500), 2),
+                'description': "Replacement battery packs for electric forklifts"
+            },
+            {
+                'item_code': f"FL-TIRE-{current_year}",
+                'name': "Forklift Tires",
+                'category': "Mechanical",
+                'quantity': random.randint(8, 24),
+                'unit': "pcs",
+                'location': "Warehouse D-08",
+                'minimum_quantity': 4,
+                'reorder_point': 8,
+                'unit_cost': round(random.uniform(150, 350), 2),
+                'description': "Heavy-duty solid rubber tires for warehouse forklifts"
+            },
+            {
+                'item_code': f"FL-HYDFL-{current_year}",
+                'name': "Hydraulic Fluid",
+                'category': "Maintenance",
+                'quantity': random.randint(10, 25),
+                'unit': "gallons",
+                'location': "Fluid Storage Area",
+                'minimum_quantity': 5,
+                'reorder_point': 10,
+                'unit_cost': round(random.uniform(25, 60), 2),
+                'description': "Premium hydraulic fluid for forklift lifting systems"
+            },
+            {
+                'item_code': f"FL-CHAIN-{current_year}",
+                'name': "Forklift Lift Chain",
+                'category': "Mechanical",
+                'quantity': random.randint(3, 10),
+                'unit': "sets",
+                'location': "Warehouse D-10",
+                'minimum_quantity': 1,
+                'reorder_point': 2,
+                'unit_cost': round(random.uniform(200, 600), 2),
+                'description': "Heavy-duty lift chains for forklift mast assemblies"
+            },
+            {
+                'item_code': f"FL-CTRL-{current_year}",
+                'name': "Forklift Control Module",
+                'category': "Electronics",
+                'quantity': random.randint(2, 5),
+                'unit': "pcs",
+                'location': "Electronics Cabinet C-05",
+                'minimum_quantity': 1,
+                'reorder_point': 2,
+                'unit_cost': round(random.uniform(400, 1200), 2),
+                'description': "Electronic control modules for forklift operation"
+            }
+        ]
+        inventory_items.extend(forklift_items)
+        
+        # 3. AGV Parts and Supplies
+        agv_items = [
+            {
+                'item_code': f"AGV-SENS-{current_year}",
+                'name': "AGV Proximity Sensors",
+                'category': "Electronics",
+                'quantity': random.randint(10, 30),
+                'unit': "pcs",
+                'location': "Electronics Cabinet C-08",
+                'minimum_quantity': 5,
+                'reorder_point': 10,
+                'unit_cost': round(random.uniform(80, 250), 2),
+                'description': "Proximity sensors for AGV obstacle detection systems"
+            },
+            {
+                'item_code': f"AGV-BATT-{current_year}",
+                'name': "AGV Battery Pack",
+                'category': "Electrical",
+                'quantity': random.randint(3, 8),
+                'unit': "pcs",
+                'location': "Charging Station Area",
+                'minimum_quantity': 1,
+                'reorder_point': 2,
+                'unit_cost': round(random.uniform(800, 2500), 2),
+                'description': "Lithium-ion battery packs for automated guided vehicles"
+            },
+            {
+                'item_code': f"AGV-WHEEL-{current_year}",
+                'name': "AGV Wheel Assembly",
+                'category': "Mechanical",
+                'quantity': random.randint(6, 16),
+                'unit': "sets",
+                'location': "Warehouse D-12",
+                'minimum_quantity': 2,
+                'reorder_point': 4,
+                'unit_cost': round(random.uniform(300, 700), 2),
+                'description': "Precision wheel assemblies for AGV navigation"
+            },
+            {
+                'item_code': f"AGV-CTRL-{current_year}",
+                'name': "AGV Main Controller",
+                'category': "Electronics",
+                'quantity': random.randint(2, 5),
+                'unit': "pcs",
+                'location': "Electronics Cabinet C-10",
+                'minimum_quantity': 1,
+                'reorder_point': 2,
+                'unit_cost': round(random.uniform(1500, 4000), 2),
+                'description': "Main control units for AGV operation and navigation"
+            },
+            {
+                'item_code': f"AGV-QR-{current_year}",
+                'name': "AGV QR Code Markers",
+                'category': "Navigation",
+                'quantity': random.randint(50, 200),
+                'unit': "pcs",
+                'location': "Navigation Supply Cabinet",
+                'minimum_quantity': 20,
+                'reorder_point': 40,
+                'unit_cost': round(random.uniform(5, 15), 2),
+                'description': "QR code floor markers for AGV navigation systems"
+            }
+        ]
+        inventory_items.extend(agv_items)
+        
+        # 4. Cold Storage Parts and Supplies
+        cold_storage_items = [
+            {
+                'item_code': f"CS-COMP-{current_year}",
+                'name': "Cold Storage Compressor",
+                'category': "HVAC",
+                'quantity': random.randint(1, 4),
+                'unit': "pcs",
+                'location': "HVAC Supply Room",
+                'minimum_quantity': 1,
+                'reorder_point': 1,
+                'unit_cost': round(random.uniform(2000, 6000), 2),
+                'description': "Industrial compressors for cold storage refrigeration systems"
+            },
+            {
+                'item_code': f"CS-REFG-{current_year}",
+                'name': "Refrigerant R-404A",
+                'category': "HVAC",
+                'quantity': random.randint(5, 15),
+                'unit': "cylinders",
+                'location': "HVAC Supply Room",
+                'minimum_quantity': 2,
+                'reorder_point': 4,
+                'unit_cost': round(random.uniform(150, 400), 2),
+                'description': "R-404A refrigerant for cold storage cooling systems"
+            },
+            {
+                'item_code': f"CS-SEAL-{current_year}",
+                'name': "Cold Storage Door Seals",
+                'category': "Maintenance",
+                'quantity': random.randint(10, 30),
+                'unit': "sets",
+                'location': "Maintenance Supply Room",
+                'minimum_quantity': 5,
+                'reorder_point': 10,
+                'unit_cost': round(random.uniform(50, 150), 2),
+                'description': "Replacement door seals for cold storage units"
+            },
+            {
+                'item_code': f"CS-TEMP-{current_year}",
+                'name': "Temperature Sensors",
+                'category': "Electronics",
+                'quantity': random.randint(8, 20),
+                'unit': "pcs",
+                'location': "Electronics Cabinet C-12",
+                'minimum_quantity': 3,
+                'reorder_point': 6,
+                'unit_cost': round(random.uniform(40, 120), 2),
+                'description': "Precision temperature sensors for cold storage monitoring"
+            },
+            {
+                'item_code': f"CS-CTRL-{current_year}",
+                'name': "Cold Storage Controller",
+                'category': "Electronics",
+                'quantity': random.randint(2, 6),
+                'unit': "pcs",
+                'location': "Electronics Cabinet C-14",
+                'minimum_quantity': 1,
+                'reorder_point': 2,
+                'unit_cost': round(random.uniform(600, 1800), 2),
+                'description': "Digital controllers for cold storage temperature regulation"
+            }
+        ]
+        inventory_items.extend(cold_storage_items)
+        
+        # 5. Bottling Machine Parts and Supplies
+        bottling_items = [
+            {
+                'item_code': f"BM-FILL-{current_year}",
+                'name': "Bottle Filling Nozzles",
+                'category': "Mechanical",
+                'quantity': random.randint(20, 60),
+                'unit': "pcs",
+                'location': "Production Supply Room A",
+                'minimum_quantity': 10,
+                'reorder_point': 20,
+                'unit_cost': round(random.uniform(30, 90), 2),
+                'description': "Precision filling nozzles for Coca-Cola bottling machines"
+            },
+            {
+                'item_code': f"BM-SEAL-{current_year}",
+                'name': "Bottle Cap Sealer",
+                'category': "Mechanical",
+                'quantity': random.randint(5, 15),
+                'unit': "pcs",
+                'location': "Production Supply Room A",
+                'minimum_quantity': 2,
+                'reorder_point': 5,
+                'unit_cost': round(random.uniform(200, 600), 2),
+                'description': "Cap sealing mechanisms for bottling machines"
+            },
+            {
+                'item_code': f"BM-SENS-{current_year}",
+                'name': "Liquid Level Sensors",
+                'category': "Electronics",
+                'quantity': random.randint(10, 25),
+                'unit': "pcs",
+                'location': "Electronics Cabinet C-16",
+                'minimum_quantity': 5,
+                'reorder_point': 8,
+                'unit_cost': round(random.uniform(100, 300), 2),
+                'description': "Precision liquid level sensors for bottling machines"
+            },
+            {
+                'item_code': f"BM-BELT-{current_year}",
+                'name': "Bottling Machine Conveyor Belt",
+                'category': "Mechanical",
+                'quantity': random.randint(3, 10),
+                'unit': "rolls",
+                'location': "Warehouse A-16",
+                'minimum_quantity': 1,
+                'reorder_point': 2,
+                'unit_cost': round(random.uniform(300, 900), 2),
+                'description': "Food-grade conveyor belts for bottling machine systems"
+            },
+            {
+                'item_code': f"BM-CTRL-{current_year}",
+                'name': "Bottling Machine PLC",
+                'category': "Electronics",
+                'quantity': random.randint(1, 4),
+                'unit': "pcs",
+                'location': "Electronics Cabinet C-18",
+                'minimum_quantity': 1,
+                'reorder_point': 1,
+                'unit_cost': round(random.uniform(2000, 5000), 2),
+                'description': "Programmable Logic Controllers for bottling machine automation"
+            },
+            {
+                'item_code': f"BM-CLEAN-{current_year}",
+                'name': "CIP Cleaning Solution",
+                'category': "Maintenance",
+                'quantity': random.randint(15, 40),
+                'unit': "gallons",
+                'location': "Chemical Storage Room",
+                'minimum_quantity': 8,
+                'reorder_point': 15,
+                'unit_cost': round(random.uniform(40, 100), 2),
+                'description': "Clean-in-Place solution for bottling machine sanitization"
+            }
+        ]
+        inventory_items.extend(bottling_items)
+        
+        # 6. General Maintenance Supplies for All Equipment
+        general_items = [
+            {
+                'item_code': f"GEN-TOOL-{current_year}",
+                'name': "Maintenance Tool Kit",
+                'category': "Tool",
+                'quantity': random.randint(5, 15),
+                'unit': "kits",
+                'location': "Tool Storage Room",
+                'minimum_quantity': 2,
+                'reorder_point': 4,
+                'unit_cost': round(random.uniform(200, 500), 2),
+                'description': "Complete tool kits for equipment maintenance"
+            },
+            {
+                'item_code': f"GEN-SAFE-{current_year}",
+                'name': "Safety Equipment Set",
+                'category': "Safety",
+                'quantity': random.randint(10, 30),
+                'unit': "sets",
+                'location': "Safety Equipment Room",
+                'minimum_quantity': 5,
+                'reorder_point': 10,
+                'unit_cost': round(random.uniform(80, 200), 2),
+                'description': "Personal protective equipment for maintenance personnel"
+            },
+            {
+                'item_code': f"GEN-FAST-{current_year}",
+                'name': "Assorted Fasteners",
+                'category': "Mechanical",
+                'quantity': random.randint(50, 200),
+                'unit': "boxes",
+                'location': "Warehouse B-10",
+                'minimum_quantity': 20,
+                'reorder_point': 40,
+                'unit_cost': round(random.uniform(15, 40), 2),
+                'description': "Assorted nuts, bolts, screws, and washers for equipment maintenance"
+            },
+            {
+                'item_code': f"GEN-WIRE-{current_year}",
+                'name': "Electrical Wire Spools",
+                'category': "Electrical",
+                'quantity': random.randint(10, 30),
+                'unit': "spools",
+                'location': "Electrical Supply Room",
+                'minimum_quantity': 5,
+                'reorder_point': 10,
+                'unit_cost': round(random.uniform(50, 150), 2),
+                'description': "Various gauge electrical wires for equipment repairs"
+            },
+            {
+                'item_code': f"GEN-SEAL-{current_year}",
+                'name': "Industrial Sealant",
+                'category': "Maintenance",
+                'quantity': random.randint(20, 50),
+                'unit': "tubes",
+                'location': "Maintenance Supply Room",
+                'minimum_quantity': 10,
+                'reorder_point': 20,
+                'unit_cost': round(random.uniform(10, 30), 2),
+                'description': "Food-grade sealant for equipment maintenance"
+            }
+        ]
+        inventory_items.extend(general_items)
+        
+        # 7. Coca-Cola Specific Production Supplies
+        production_items = [
+            {
+                'item_code': f"CC-SYRUP-{current_year}",
+                'name': "Coca-Cola Syrup Concentrate",
+                'category': "Raw Materials",
+                'quantity': random.randint(50, 200),
+                'unit': "containers",
+                'location': "Ingredient Storage Room",
+                'minimum_quantity': 25,
+                'reorder_point': 50,
+                'unit_cost': round(random.uniform(100, 300), 2),
+                'description': "Coca-Cola syrup concentrate for beverage production"
+            },
+            {
+                'item_code': f"CC-CO2-{current_year}",
+                'name': "CO2 Cylinders",
+                'category': "Raw Materials",
+                'quantity': random.randint(10, 40),
+                'unit': "cylinders",
+                'location': "Gas Storage Area",
+                'minimum_quantity': 5,
+                'reorder_point': 10,
+                'unit_cost': round(random.uniform(60, 150), 2),
+                'description': "Carbon dioxide cylinders for beverage carbonation"
+            },
+            {
+                'item_code': f"CC-BOTTLE-{current_year}",
+                'name': "PET Bottle Preforms",
+                'category': "Packaging",
+                'quantity': random.randint(5000, 20000),
+                'unit': "pcs",
+                'location': "Packaging Materials Storage",
+                'minimum_quantity': 2000,
+                'reorder_point': 5000,
+                'unit_cost': round(random.uniform(0.05, 0.15), 2),
+                'description': "PET preforms for blow molding Coca-Cola bottles"
+            },
+            {
+                'item_code': f"CC-CAP-{current_year}",
+                'name': "Bottle Caps",
+                'category': "Packaging",
+                'quantity': random.randint(10000, 50000),
+                'unit': "pcs",
+                'location': "Packaging Materials Storage",
+                'minimum_quantity': 5000,
+                'reorder_point': 10000,
+                'unit_cost': round(random.uniform(0.01, 0.03), 2),
+                'description': "Plastic bottle caps with Coca-Cola branding"
+            },
+            {
+                'item_code': f"CC-LABEL-{current_year}",
+                'name': "Bottle Labels",
+                'category': "Packaging",
+                'quantity': random.randint(10000, 50000),
+                'unit': "rolls",
+                'location': "Packaging Materials Storage",
+                'minimum_quantity': 5000,
+                'reorder_point': 10000,
+                'unit_cost': round(random.uniform(0.02, 0.05), 2),
+                'description': "Adhesive labels for Coca-Cola bottles"
+            }
+        ]
+        inventory_items.extend(production_items)
+        
+        return inventory_items
 
 class AddItemDialog(QDialog):
     def __init__(self, db_manager, parent=None):

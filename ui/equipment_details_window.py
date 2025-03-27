@@ -1029,6 +1029,22 @@ class EquipmentDetailsWindow(QMainWindow):
             "Tool Name", "Specification", "Purpose", "Location"
         ])
         
+        # Set table to expand to fill available space
+        self.tools_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.tools_table.horizontalHeader().setStretchLastSection(True)
+        
+        # Set column widths - distribute space proportionally
+        header = self.tools_table.horizontalHeader()
+        header.setSectionResizeMode(0, header.ResizeMode.ResizeToContents)  # Tool Name
+        header.setSectionResizeMode(1, header.ResizeMode.Stretch)           # Specification
+        header.setSectionResizeMode(2, header.ResizeMode.Stretch)           # Purpose
+        header.setSectionResizeMode(3, header.ResizeMode.ResizeToContents)  # Location
+        
+        # Set alternating row colors and selection behavior
+        self.tools_table.setAlternatingRowColors(True)
+        self.tools_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.tools_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        
         # Add new tool section
         tool_form = QFormLayout()
         
@@ -1058,6 +1074,22 @@ class EquipmentDetailsWindow(QMainWindow):
                     padding: 5px;
                 }
             """)
+        
+        # Style the table
+        self.tools_table.setStyleSheet("""
+            QTableWidget {
+                background-color: #1e1e1e;
+                alternate-background-color: #262626;
+                color: #e0e0e0;
+                gridline-color: #2a2a2a;
+            }
+            QHeaderView::section {
+                background-color: #2a2a2a;
+                color: #e0e0e0;
+                padding: 5px;
+                border: 1px solid #3a3a3a;
+            }
+        """)
 
         # Connect the add tool button
         add_tool_button.clicked.connect(self.add_special_tool)
@@ -1125,6 +1157,13 @@ class EquipmentDetailsWindow(QMainWindow):
             label = QLabel(title)
             label.setStyleSheet("color: #e0e0e0; font-weight: bold; margin-top: 10px;")
             layout.addWidget(label)
+            
+            # Configure text edit to adjust height based on content
+            text_edit.setMinimumHeight(80)  # Set a reasonable minimum height
+            text_edit.document().contentsChanged.connect(
+                lambda te=text_edit: self.adjust_text_edit_height(te)
+            )
+            
             layout.addWidget(text_edit)
         
         save_button = QPushButton("Save Safety Information")
@@ -1158,6 +1197,26 @@ class EquipmentDetailsWindow(QMainWindow):
         
         self.tab_widget.addTab(scroll, "Safety")
 
+    def adjust_text_edit_height(self, text_edit):
+        """Adjust the height of a text edit based on its content"""
+        # Get the document size and add some padding
+        doc_height = text_edit.document().size().height()
+        
+        # Set a maximum height to prevent extremely tall text edits
+        max_height = 300
+        
+        # Calculate new height with some padding
+        new_height = min(doc_height + 20, max_height)
+        
+        # Set the new height, but don't go below minimum height
+        text_edit.setMinimumHeight(max(80, new_height))
+        
+        # If content exceeds max height, ensure scrollbars are enabled
+        if doc_height + 20 > max_height:
+            text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        else:
+            text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
     def save_safety_info(self):
         """Save safety information"""
         data = {
@@ -1176,6 +1235,8 @@ class EquipmentDetailsWindow(QMainWindow):
         if safety_info:
             for field, text_edit in self.safety_fields.items():
                 text_edit.setText(safety_info.get(field, ''))
+                # Adjust height after setting text
+                self.adjust_text_edit_height(text_edit)
 
     def setup_additional_info_tab(self):
         """Additional custom fields"""
