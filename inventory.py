@@ -17,6 +17,8 @@ import subprocess
 from notifications import EmailNotificationService
 
 class InventoryWindow(QMainWindow):
+    sig_inventory_updated = Signal()
+
     def __init__(self, db_manager,
                  notification_service,
                  parent=None):
@@ -600,6 +602,7 @@ class InventoryWindow(QMainWindow):
         if dialog.exec():
             self.refresh_personnel()
             self.add_alert("info", "Personnel Updated", f"Personnel {dialog.first_name.text()} {dialog.last_name.text()} updated successfully", datetime.now().strftime("%Y-%m-%d %H:%M"))
+            self.sig_inventory_updated.emit()
 
     def refresh_personnel(self):
         """Refresh the personnel table"""
