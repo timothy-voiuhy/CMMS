@@ -424,6 +424,22 @@ class DatabaseManager:
         finally:
             self.close(connection)
 
+    def get_maintenance_task_by_id(self, task_id):
+        """Get maintenance task details by ID"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT * FROM maintenance_schedule 
+                WHERE task_id = %s
+            """, (task_id,))
+            return cursor.fetchone()
+        except Error as e:
+            print(f"Error fetching maintenance task: {e}")
+            return None
+        finally:
+            self.close(connection)
+
     def get_maintenance_task_by_name(self, equipment_id, task_name):
         try:
             connection = self.connect()
@@ -3219,3 +3235,86 @@ class DatabaseManager:
         except Exception as e:
             print(f"Error auto-creating purchase order: {e}")
             return None
+
+    def delete_craftsman(self, craftsman_id):
+        """Delete a craftsman and all associated data"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor()
+            
+            # Begin transaction
+            connection.start_transaction()
+            
+            # First, check if this is an employee_id or craftsman_id
+            if not str(craftsman_id).isdigit():
+                cursor.execute("""
+                    SELECT craftsman_id FROM craftsmen 
+                    WHERE employee_id = %s
+                """, (craftsman_id,))
+                
+                result = cursor.fetchone()
+                if result:
+                    craftsman_id = result[0]
+                else:
+                    return False
+            
+            # Delete craftsman from all tables
+            # Note: Most tables have ON DELETE CASCADE, but we'll be explicit for clarity
+            
+            # 1. Remove from team_members
+            cursor.execute("DELETE FROM team_members WHERE craftsman_id = %s", (craftsman_id,))
+            
+            # 2. Update teams where this craftsman is leader
+            cursor.execute("""
+                UPDATE craftsmen_teams 
+                SET team_leader_id = NULL 
+                WHERE team_leader_id = %s
+            """, (craftsman_id,))
+            
+            # 3. Delete craftsman's schedule
+            cursor.execute("DELETE FROM craftsmen_schedule WHERE craftsman_id = %s", (craftsman_id,))
+            
+            # 4. Delete craftsman's training records
+            cursor.execute("DELETE FROM craftsmen_training WHERE craftsman_id = %s", (craftsman_id,))
+            
+            # 5. Delete craftsman's work history
+            cursor.execute("DELETE FROM craftsmen_work_history WHERE craftsman_id = %s", (craftsman_id,))
+            
+            # 6. Delete craftsman's skills
+            cursor.execute("DELETE FROM craftsmen_skills WHERE craftsman_id = %s", (craftsman_id,))
+            
+            # 7. Handle work order templates
+            cursor.execute("""
+                UPDATE work_order_templates
+                SET craftsman_id = NULL
+                WHERE craftsman_id = %s
+            """, (craftsman_id,))
+            
+            # 8. Handle work orders
+            cursor.execute("""
+                UPDATE work_orders
+                SET craftsman_id = NULL, assignment_type = 'Unassigned'
+                WHERE craftsman_id = %s
+            """, (craftsman_id,))
+            
+            # 9. Handle maintenance reports
+            cursor.execute("""
+                UPDATE maintenance_reports
+                SET craftsman_id = NULL
+                WHERE craftsman_id = %s
+            """, (craftsman_id,))
+            
+            # 10. Finally, delete the craftsman record
+            cursor.execute("DELETE FROM craftsmen WHERE craftsman_id = %s", (craftsman_id,))
+            
+            # Commit transaction
+            connection.commit()
+            return True
+        except Exception as e:
+            print(f"Error deleting craftsman: {e}")
+            if 'connection' in locals() and connection:
+                connection.rollback()
+            return False
+        finally:
+            if 'connection' in locals() and connection:
+                self.close(connection)

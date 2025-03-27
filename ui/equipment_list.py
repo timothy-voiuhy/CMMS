@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                               QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
                               QDialog, QFormLayout, QScrollArea, QFrame, QMenu,
-                              QMessageBox)
+                              QMessageBox, QHeaderView)
 from PySide6.QtCore import Qt, QSize, QPoint
 from PySide6.QtGui import QFont, QCursor
 import json
@@ -159,13 +159,17 @@ class EquipmentListWindow(QWidget):
         # Enable sorting
         self.table.setSortingEnabled(True)
         
-        # Set column widths
+        # Configure table to use all available space
+        self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)  # Make Equipment Name column stretch
+        
+        # Set column widths for fixed columns
         self.table.setColumnWidth(0, 60)   # ID
         self.table.setColumnWidth(1, 120)  # Part Number
-        self.table.setColumnWidth(2, 200)  # Equipment Name
+        # Column 2 (Equipment Name) will stretch
         self.table.setColumnWidth(3, 150)  # Location
         self.table.setColumnWidth(4, 120)  # Status
-        self.table.setColumnWidth(5, 150)  # Last Modified
+        # Column 5 (Last Modified) will stretch to fill remaining space
         
         # Double click handler
         self.table.doubleClicked.connect(self.show_equipment_details)

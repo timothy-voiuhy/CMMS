@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                               QSplitter, QTextEdit, QMenuBar, QMenu, QSizePolicy,
                               )
 from PySide6.QtCore import Qt, Signal, QRect
-from PySide6.QtGui import QPainter, QColor
+from PySide6.QtGui import QPainter, QColor, QIcon, QCursor
 from PySide6.QtPrintSupport import QPrinter
 from datetime import datetime, timedelta
 import random
@@ -630,6 +630,7 @@ class CraftsMenWindow(QMainWindow):
         
         # Create card table widget instead of regular table
         self.craftsmen_cards = CardTableWidget()
+        self.craftsmen_cards.itemContextMenuRequested.connect(self.handle_craftsman_click)
         
         # Define display fields
         display_fields = [
@@ -1961,10 +1962,484 @@ class CraftsMenWindow(QMainWindow):
         else:
             QMessageBox.warning(self, "Error", "Failed to update team!")
 
-    def handle_craftsman_click(self, data):
-        """Handle single click on craftsman card - just select the card"""
-        # The selection is handled internally by the CardTableWidget
-        pass
+    def handle_craftsman_click(self, data, point):
+        """Handle click on a craftsman card"""
+        # Show context menu with options
+        menu = QMenu(self)
+        
+        view_action = menu.addAction("View Details")
+        edit_action = menu.addAction("Edit Craftsman")
+        menu.addSeparator()
+        delete_action = menu.addAction("Remove Craftsman")
+        delete_action.setIcon(QIcon.fromTheme("edit-delete"))
+        
+        # Connect actions
+        view_action.triggered.connect(lambda: self.show_craftsman_details(data))
+        edit_action.triggered.connect(lambda: self.edit_craftsman(data))
+        delete_action.triggered.connect(lambda: self.remove_craftsman(data))
+        
+        # Show the menu at the specified point
+        menu.exec(point)
+
+    def remove_craftsman(self, data):
+        """Remove a craftsman from the system with proper cleanup"""
+        # Get craftsman ID and name
+        craftsman_id = data.get('craftsman_id')
+        employee_id = data.get('employee_id')
+        craftsman_name = data.get('full_name')
+        
+        if not craftsman_id or not craftsman_name:
+            QMessageBox.warning(self, "Error", "Could not identify craftsman to remove.")
+            return
+        
+        # First confirmation
+        initial_confirm = QMessageBox.question(
+            self,
+            "Confirm Removal",
+            f"Are you sure you want to remove {craftsman_name} from the system?\n\n"
+            "This will affect all associated data including work orders, skills, training records, and team memberships.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if initial_confirm != QMessageBox.Yes:
+            return
+        
+        # Check for associated work orders
+        associated_work_orders = self.check_craftsman_work_orders(craftsman_id)
+        
+        if associated_work_orders:
+            # Show work order resolution dialog
+            if not self.resolve_craftsman_work_orders(craftsman_id, craftsman_name, associated_work_orders):
+                return  # User canceled the operation
+        
+        # Check for team leadership positions
+        led_teams = self.check_craftsman_led_teams(craftsman_id)
+        
+        if led_teams:
+            # Show team leadership resolution dialog
+            if not self.resolve_team_leadership(craftsman_id, craftsman_name, led_teams):
+                return  # User canceled the operation
+        
+        # Final confirmation
+        final_confirm = QMessageBox.question(
+            self,
+            "Final Confirmation",
+            f"You are about to permanently remove {craftsman_name} from the system.\n\n"
+            "This action cannot be undone. Continue?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if final_confirm != QMessageBox.Yes:
+            return
+        
+        # Perform the actual deletion
+        success = self.db_manager.delete_craftsman(craftsman_id)
+        
+        if success:
+            QMessageBox.information(
+                self,
+                "Success",
+                f"{craftsman_name} has been successfully removed from the system."
+            )
+            # Refresh the craftsmen list
+            self.load_craftsmen()
+        else:
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to remove {craftsman_name} from the system. Please try again."
+            )
+
+    def check_craftsman_work_orders(self, craftsman_id):
+        """Check if craftsman has any associated work orders"""
+        try:
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            # Get work orders assigned to this craftsman
+            cursor.execute("""
+                SELECT work_order_id, title, status, due_date, priority
+                FROM work_orders
+                WHERE craftsman_id = %s AND status != 'Completed'
+            """, (craftsman_id,))
+            
+            return cursor.fetchall()
+        except Exception as e:
+            print(f"Error checking craftsman work orders: {e}")
+            return []
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
+
+    def resolve_craftsman_work_orders(self, craftsman_id, craftsman_name, work_orders):
+        """Show dialog to resolve work orders before craftsman removal"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Resolve Work Orders for {craftsman_name}")
+        dialog.setMinimumWidth(700)
+        dialog.setMinimumHeight(500)
+        
+        layout = QVBoxLayout(dialog)
+        
+        # Explanation label
+        layout.addWidget(QLabel(
+            f"<b>{craftsman_name}</b> has {len(work_orders)} incomplete work orders. "
+            "Please decide how to handle these work orders:"
+        ))
+        
+        # Work orders table
+        table = QTableWidget()
+        table.setColumnCount(6)
+        table.setHorizontalHeaderLabels([
+            "ID", "Title", "Status", "Due Date", "Priority", "Action"
+        ])
+        
+        # Set column widths
+        table.setColumnWidth(0, 60)   # ID
+        table.setColumnWidth(1, 200)  # Title
+        table.setColumnWidth(2, 100)  # Status
+        table.setColumnWidth(3, 100)  # Due Date
+        table.setColumnWidth(4, 80)   # Priority
+        table.setColumnWidth(5, 120)  # Action
+        
+        table.setRowCount(len(work_orders))
+        
+        # Action options
+        actions = ["Reassign", "Complete", "Delete"]
+        
+        # Fill table with work orders
+        for row, work_order in enumerate(work_orders):
+            table.setItem(row, 0, QTableWidgetItem(str(work_order['work_order_id'])))
+            table.setItem(row, 1, QTableWidgetItem(work_order['title']))
+            table.setItem(row, 2, QTableWidgetItem(work_order['status']))
+            table.setItem(row, 3, QTableWidgetItem(str(work_order['due_date'])))
+            table.setItem(row, 4, QTableWidgetItem(work_order['priority']))
+            
+            # Add action combobox
+            action_combo = QComboBox()
+            action_combo.addItems(actions)
+            table.setCellWidget(row, 5, action_combo)
+        
+        layout.addWidget(table)
+        
+        # Add buttons for bulk actions
+        bulk_widget = QWidget()
+        bulk_layout = QHBoxLayout(bulk_widget)
+        
+        bulk_layout.addWidget(QLabel("Set all to:"))
+        
+        bulk_reassign = QPushButton("Reassign")
+        bulk_complete = QPushButton("Complete")
+        bulk_delete = QPushButton("Delete")
+        
+        bulk_reassign.clicked.connect(lambda: self.set_all_actions(table, "Reassign"))
+        bulk_complete.clicked.connect(lambda: self.set_all_actions(table, "Complete"))
+        bulk_delete.clicked.connect(lambda: self.set_all_actions(table, "Delete"))
+        
+        bulk_layout.addWidget(bulk_reassign)
+        bulk_layout.addWidget(bulk_complete)
+        bulk_layout.addWidget(bulk_delete)
+        
+        layout.addWidget(bulk_widget)
+        
+        # Add buttons
+        buttons = QHBoxLayout()
+        process_btn = QPushButton("Process Work Orders")
+        cancel_btn = QPushButton("Cancel")
+        
+        buttons.addWidget(process_btn)
+        buttons.addWidget(cancel_btn)
+        
+        layout.addLayout(buttons)
+        
+        # Connect buttons
+        process_btn.clicked.connect(dialog.accept)
+        cancel_btn.clicked.connect(dialog.reject)
+        
+        # Execute dialog
+        if dialog.exec() != QDialog.Accepted:
+            return False
+        
+        # Process work orders based on selected actions
+        success = True
+        for row in range(table.rowCount()):
+            work_order_id = int(table.item(row, 0).text())
+            action = table.cellWidget(row, 5).currentText()
+            
+            if action == "Reassign":
+                # Show reassignment dialog
+                if not self.reassign_work_order(work_order_id, table.item(row, 1).text()):
+                    success = False
+            elif action == "Complete":
+                # Mark as completed
+                if not self.db_manager.update_work_order_status(work_order_id, "Completed"):
+                    success = False
+            elif action == "Delete":
+                # Delete the work order
+                if not self.db_manager.delete_work_order(work_order_id):
+                    success = False
+        
+        return success
+
+    def set_all_actions(self, table, action):
+        """Set all action comboboxes to the specified action"""
+        for row in range(table.rowCount()):
+            combo = table.cellWidget(row, 5)
+            index = combo.findText(action)
+            if index >= 0:
+                combo.setCurrentIndex(index)
+
+    def reassign_work_order(self, work_order_id, work_order_title):
+        """Show dialog to reassign a work order to another craftsman or team"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Reassign Work Order: {work_order_title}")
+        dialog.setMinimumWidth(400)
+        
+        layout = QVBoxLayout(dialog)
+        
+        # Assignment type selection
+        assignment_type = QComboBox()
+        assignment_type.addItems(["Individual", "Team"])
+        layout.addWidget(QLabel("Assign to:"))
+        layout.addWidget(assignment_type)
+        
+        # Craftsman selection
+        craftsman_widget = QWidget()
+        craftsman_layout = QFormLayout(craftsman_widget)
+        craftsman_combo = QComboBox()
+        
+        # Get all active craftsmen
+        craftsmen = self.db_manager.get_all_craftsmen()
+        for craftsman in craftsmen:
+            if craftsman['status'] == 'Active':
+                craftsman_combo.addItem(
+                    f"{craftsman['first_name']} {craftsman['last_name']}",
+                    craftsman['craftsman_id']
+                )
+        
+        craftsman_layout.addRow("Craftsman:", craftsman_combo)
+        
+        # Team selection
+        team_widget = QWidget()
+        team_layout = QFormLayout(team_widget)
+        team_combo = QComboBox()
+        
+        # Get all teams
+        teams = self.db_manager.get_all_teams()
+        for team in teams:
+            team_combo.addItem(team['team_name'], team['team_id'])
+        
+        team_layout.addRow("Team:", team_combo)
+        
+        # Initially hide team selection
+        team_widget.hide()
+        
+        layout.addWidget(craftsman_widget)
+        layout.addWidget(team_widget)
+        
+        # Connect assignment type change
+        def on_assignment_type_changed(text):
+            if text == "Individual":
+                craftsman_widget.show()
+                team_widget.hide()
+            else:
+                craftsman_widget.hide()
+                team_widget.show()
+        
+        assignment_type.currentTextChanged.connect(on_assignment_type_changed)
+        
+        # Add buttons
+        buttons = QHBoxLayout()
+        save_btn = QPushButton("Save")
+        cancel_btn = QPushButton("Cancel")
+        
+        buttons.addWidget(save_btn)
+        buttons.addWidget(cancel_btn)
+        
+        layout.addLayout(buttons)
+        
+        # Connect buttons
+        save_btn.clicked.connect(dialog.accept)
+        cancel_btn.clicked.connect(dialog.reject)
+        
+        # Execute dialog
+        if dialog.exec() != QDialog.Accepted:
+            return False
+        
+        # Update work order assignment
+        try:
+            connection = self.db_manager.connect()
+            cursor = connection.cursor()
+            
+            if assignment_type.currentText() == "Individual":
+                craftsman_id = craftsman_combo.currentData()
+                cursor.execute("""
+                    UPDATE work_orders
+                    SET craftsman_id = %s, team_id = NULL, assignment_type = 'Individual'
+                    WHERE work_order_id = %s
+                """, (craftsman_id, work_order_id))
+            else:
+                team_id = team_combo.currentData()
+                cursor.execute("""
+                    UPDATE work_orders
+                    SET team_id = %s, craftsman_id = NULL, assignment_type = 'Team'
+                    WHERE work_order_id = %s
+                """, (team_id, work_order_id))
+            
+            connection.commit()
+            return True
+        except Exception as e:
+            print(f"Error reassigning work order: {e}")
+            return False
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
+
+    def check_craftsman_led_teams(self, craftsman_id):
+        """Check if craftsman is a leader of any teams"""
+        try:
+            connection = self.db_manager.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            cursor.execute("""
+                SELECT team_id, team_name
+                FROM craftsmen_teams
+                WHERE team_leader_id = %s
+            """, (craftsman_id,))
+            
+            return cursor.fetchall()
+        except Exception as e:
+            print(f"Error checking craftsman led teams: {e}")
+            return []
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
+
+    def resolve_team_leadership(self, craftsman_id, craftsman_name, teams):
+        """Show dialog to resolve team leadership before craftsman removal"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Resolve Team Leadership for {craftsman_name}")
+        dialog.setMinimumWidth(500)
+        
+        layout = QVBoxLayout(dialog)
+        
+        # Explanation label
+        layout.addWidget(QLabel(
+            f"<b>{craftsman_name}</b> is the leader of {len(teams)} team(s). "
+            "Please select new leaders for these teams:"
+        ))
+        
+        # Create form for each team
+        form_layout = QFormLayout()
+        team_leaders = {}
+        
+        for team in teams:
+            # Create combobox for team leader selection
+            leader_combo = QComboBox()
+            leader_combo.addItem("No Leader", None)
+            
+            # Get team members
+            members = self.db_manager.get_team_members(team['team_id'])
+            for member in members:
+                # Skip the current leader
+                if member['craftsman_id'] != craftsman_id:
+                    leader_combo.addItem(
+                        f"{member['first_name']} {member['last_name']}",
+                        member['craftsman_id']
+                    )
+            
+            # Get all other craftsmen as potential leaders
+            if not members or len(members) <= 1:  # If team has no other members
+                other_craftsmen = self.db_manager.get_all_craftsmen()
+                for craftsman in other_craftsmen:
+                    # Skip the current leader
+                    if craftsman['craftsman_id'] != craftsman_id:
+                        # Check if this craftsman is already in the dropdown
+                        already_added = False
+                        for i in range(leader_combo.count()):
+                            if leader_combo.itemData(i) == craftsman['craftsman_id']:
+                                already_added = True
+                                break
+                        
+                        if not already_added:
+                            leader_combo.addItem(
+                                f"{craftsman['first_name']} {craftsman['last_name']} (Not in team)",
+                                craftsman['craftsman_id']
+                            )
+            
+            form_layout.addRow(f"Team: {team['team_name']}", leader_combo)
+            team_leaders[team['team_id']] = leader_combo
+        
+        layout.addLayout(form_layout)
+        
+        # Add warning about teams with no leader
+        warning_label = QLabel(
+            "<b>Note:</b> Teams without a leader will still exist, but may have limited functionality."
+        )
+        warning_label.setStyleSheet("color: #FFA500;")  # Orange warning color
+        layout.addWidget(warning_label)
+        
+        # Add buttons
+        buttons = QHBoxLayout()
+        save_btn = QPushButton("Save Changes")
+        cancel_btn = QPushButton("Cancel")
+        
+        buttons.addWidget(save_btn)
+        buttons.addWidget(cancel_btn)
+        
+        layout.addLayout(buttons)
+        
+        # Connect buttons
+        save_btn.clicked.connect(dialog.accept)
+        cancel_btn.clicked.connect(dialog.reject)
+        
+        # Execute dialog
+        if dialog.exec() != QDialog.Accepted:
+            return False
+        
+        # Update team leaders
+        try:
+            connection = self.db_manager.connect()
+            cursor = connection.cursor()
+            
+            for team_id, combo in team_leaders.items():
+                new_leader_id = combo.currentData()
+                
+                # If a new leader is selected who's not in the team, add them to the team
+                if new_leader_id is not None:
+                    # Check if the new leader is already in the team
+                    cursor.execute("""
+                        SELECT COUNT(*) FROM team_members
+                        WHERE team_id = %s AND craftsman_id = %s
+                    """, (team_id, new_leader_id))
+                    
+                    is_member = cursor.fetchone()[0] > 0
+                    
+                    if not is_member:
+                        # Add the new leader to the team
+                        cursor.execute("""
+                            INSERT INTO team_members (team_id, craftsman_id, role, joined_date)
+                            VALUES (%s, %s, %s, %s)
+                        """, (team_id, new_leader_id, "Team Leader", datetime.now().date()))
+                
+                # Update the team leader
+                cursor.execute("""
+                    UPDATE craftsmen_teams
+                    SET team_leader_id = %s
+                    WHERE team_id = %s
+                """, (new_leader_id, team_id))
+            
+            connection.commit()
+            return True
+        except Exception as e:
+            print(f"Error updating team leaders: {e}")
+            if 'connection' in locals() and connection:
+                connection.rollback()
+            return False
+        finally:
+            if 'connection' in locals() and connection:
+                self.db_manager.close(connection)
 
 
 class DemoDataGenerator:

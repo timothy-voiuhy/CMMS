@@ -613,9 +613,27 @@ class EquipmentDetailsWindow(QMainWindow):
             "Date", "Type", "Description", "Performed By", "Notes"
         ])
         
+        # Set table to expand to fill available space
+        self.history_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.history_table.horizontalHeader().setStretchLastSection(True)
+
+        # Set column widths - distribute space proportionally
+        header = self.history_table.horizontalHeader()
+        header.setSectionResizeMode(0, header.ResizeMode.ResizeToContents)  # Date
+        header.setSectionResizeMode(1, header.ResizeMode.ResizeToContents)  # Type
+        header.setSectionResizeMode(2, header.ResizeMode.Stretch)           # Description
+        header.setSectionResizeMode(3, header.ResizeMode.ResizeToContents)  # Performed By
+        header.setSectionResizeMode(4, header.ResizeMode.Stretch)           # Notes
+
+        # Set alternating row colors and selection behavior
+        self.history_table.setAlternatingRowColors(True)
+        self.history_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.history_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+
         self.history_table.setStyleSheet("""
             QTableWidget {
                 background-color: #1e1e1e;
+                alternate-background-color: #262626;
                 color: #e0e0e0;
                 gridline-color: #2a2a2a;
             }
@@ -745,7 +763,9 @@ class EquipmentDetailsWindow(QMainWindow):
                     'event_type': 'Maintenance',
                     'description': f"Completed maintenance task: {task['task_name']}",
                     'performed_by': '',  # This information isn't stored in maintenance_schedule
-                    'notes': f"Next due: {task['next_due']}. {task.get('maintenance_procedure', '')}"
+                    'notes': f"Next due: {task['next_due']}. {task.get('maintenance_procedure', '')}",
+                    'source_type': 'maintenance_task',
+                    'source_id': task.get('task_id')
                 })
         
         # Get completed work orders for this equipment
@@ -754,9 +774,9 @@ class EquipmentDetailsWindow(QMainWindow):
         # Convert completed work orders to history entries
         for work_order in completed_work_orders:
             # Get craftsman name if available
-            craftsman_name = ''
+            craftsman_name = 'Unknown'
             if work_order.get('craftsman_id'):
-                craftsman = self.db_manager.get_craftsman_by_employee_id(work_order['craftsman_id'])
+                craftsman = self.db_manager.get_craftsman_by_id(work_order['craftsman_id'])
                 if craftsman:
                     craftsman_name = f"{craftsman.get('first_name', '')} {craftsman.get('last_name', '')}"
             
@@ -767,17 +787,26 @@ class EquipmentDetailsWindow(QMainWindow):
                 if team:
                     team_name = team.get('team_name', '')
             
+            # Use team name if no craftsman assigned
+            if craftsman_name == 'Unknown' and team_name:
+                craftsman_name = f"Team: {team_name}"
+            
             # Create history entry from work order
             history.append({
                 'date': work_order.get('completed_date', work_order.get('last_modified')),
                 'event_type': 'Work Order',
                 'description': f"Completed work order: {work_order['title']} (ID: {work_order['work_order_id']})",
-                'performed_by': craftsman_name or team_name or 'Unknown',
-                'notes': work_order.get('description', '') + '\n' + work_order.get('notes', '')
+                'performed_by': craftsman_name,
+                'notes': work_order.get('description', '') + '\n' + work_order.get('notes', ''),
+                'source_type': 'work_order',
+                'source_id': work_order['work_order_id']
             })
         
         # Sort combined history by date (newest first)
         history.sort(key=lambda x: x['date'] if isinstance(x['date'], datetime) else datetime.strptime(str(x['date']), '%Y-%m-%d'), reverse=True)
+        
+        # Store the history data for use in double-click handler
+        self.history_data = history
         
         self.history_table.setRowCount(len(history))
         
@@ -787,6 +816,88 @@ class EquipmentDetailsWindow(QMainWindow):
             self.history_table.setItem(row, 2, QTableWidgetItem(entry['description']))
             self.history_table.setItem(row, 3, QTableWidgetItem(entry['performed_by']))
             self.history_table.setItem(row, 4, QTableWidgetItem(entry['notes']))
+        
+        # Connect double-click signal if not already connected
+        try:
+            self.history_table.cellDoubleClicked.disconnect()
+        except:
+            pass
+        self.history_table.cellDoubleClicked.connect(self.show_history_details)
+
+    def show_history_details(self, row, column):
+        """Show details for the selected history entry"""
+        if row < 0 or row >= len(self.history_data):
+            return
+        
+        entry = self.history_data[row]
+        source_type = entry.get('source_type', '')
+        source_id = entry.get('source_id', None)
+        
+        if source_type == 'work_order' and source_id:
+            # Get the full work order data
+            work_order = self.db_manager.get_work_order_by_id(source_id)
+            if work_order:
+                # Format the data for display
+                display_data = {
+                    'Work Order ID': work_order['work_order_id'],
+                    'Title': work_order['title'],
+                    'Description': work_order['description'],
+                    'Status': work_order['status'],
+                    'Priority': work_order['priority'],
+                    'Created Date': work_order['created_date'],
+                    'Due Date': work_order['due_date'],
+                    'Completed Date': work_order.get('completed_date', 'N/A'),
+                    'Notes': work_order.get('notes', ''),
+                }
+                
+                # Get craftsman name if available
+                if work_order.get('craftsman_id'):
+                    craftsman = self.db_manager.get_craftsman_by_id(work_order['craftsman_id'])
+                    if craftsman:
+                        display_data['Assigned To'] = f"{craftsman.get('first_name', '')} {craftsman.get('last_name', '')}"
+                
+                # Get team name if available
+                if work_order.get('team_id'):
+                    team = self.db_manager.get_team_by_id(work_order['team_id'])
+                    if team:
+                        display_data['Assigned Team'] = team.get('team_name', '')
+                
+                # Show the details dialog
+                dialog = ItemDetailDialog(display_data, f"Work Order Details - {work_order['work_order_id']}", self)
+                dialog.exec()
+                
+        elif source_type == 'maintenance_task' and source_id:
+            # Get the full maintenance task data
+            task = self.db_manager.get_maintenance_task_by_id(source_id)
+            if task:
+                # Format the data for display
+                display_data = {
+                    'Task ID': task['task_id'],
+                    'Task Name': task['task_name'],
+                    'Frequency': f"{task['frequency']} {task['frequency_unit']}",
+                    'Last Done': task['last_done'],
+                    'Next Due': task['next_due'],
+                    'Maintenance Procedure': task['maintenance_procedure'],
+                    'Required Parts': task['required_parts']
+                }
+                
+                # Show the details dialog
+                dialog = ItemDetailDialog(display_data, f"Maintenance Task Details - {task['task_name']}", self)
+                dialog.exec()
+                
+        else:
+            # Regular history entry
+            display_data = {
+                'Date': entry['date'],
+                'Event Type': entry['event_type'],
+                'Description': entry['description'],
+                'Performed By': entry['performed_by'],
+                'Notes': entry['notes']
+            }
+            
+            # Show the details dialog
+            dialog = ItemDetailDialog(display_data, "History Entry Details", self)
+            dialog.exec()
 
     def setup_maintenance_tab(self):
         """Preventive maintenance schedule"""
