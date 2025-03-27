@@ -21,6 +21,7 @@ from .models import (
     Supplier, InventoryItem, InventoryTransaction, 
     PurchaseOrder, PurchaseOrderItem, CraftsmanSkill, CraftsmanTraining, CraftsmanTeam
 )
+from .forms import InventoryItemForm  # You'll need to create this form
 
 # Helper functions to replace db_ops functionality
 def get_db_connection():
@@ -1229,40 +1230,21 @@ def item_details(request, item_id):
 
 @login_required
 def edit_inventory_item(request, item_id):
-    """Edit an inventory item"""
-    # Ensure user is inventory personnel
-    if request.user.role != 'inventory':
-        messages.error(request, 'Access denied')
-        return redirect('logout')
+    # Get the item or return 404 if not found
+    item = get_object_or_404(InventoryItem, item_id=item_id)
     
-    try:
-        # Get inventory personnel record
-        inventory_person = InventoryPersonnel.objects.get(employee_id=request.user.employee_id)
-        
-        # Check access level for edit permissions
-        if inventory_person.access_level not in ['Admin', 'Manager']:
-            messages.error(request, 'You do not have permission to edit items')
-            return redirect('item_details', item_id=item_id)
-        
-        try:
-            item = InventoryItem.objects.get(item_id=item_id)
-        except InventoryItem.DoesNotExist:
-            messages.error(request, 'Item not found')
-            return redirect('inventory_items')
-        
-        # Get categories and suppliers for dropdown
-        categories = InventoryCategory.objects.all().order_by('name')
-        suppliers = Supplier.objects.all().order_by('name')
-        
-        return render(request, 'inventory/item_form.html', {
-            'item': item,
-            'categories': categories,
-            'suppliers': suppliers
-        })
-        
-    except InventoryPersonnel.DoesNotExist:
-        messages.error(request, 'Inventory personnel profile not found')
-        return redirect('inventory_items')
+    if request.method == 'POST':
+        form = InventoryItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            return redirect('inventory_items')  # Redirect to the items list
+    else:
+        form = InventoryItemForm(instance=item)
+    
+    return render(request, 'inventory/edit_item.html', {
+        'form': form,
+        'item': item,
+    })  # This closing parenthesis was missing
 
 @login_required
 def add_inventory_item(request):
