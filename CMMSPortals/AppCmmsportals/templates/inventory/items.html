@@ -5,8 +5,7 @@
 {% block title %}Inventory Items{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">ENock</h1>
-
+<h1 class="mb-4">Inventory Items</h1>
 
 <!-- Filters -->
 <div class="card mb-4">
@@ -91,8 +90,6 @@
                         <td>
                             <div class="btn-group">
                                 <a href="{% url 'edit_inventory_item' item_id=item.item_id %}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <a href="#" class="btn btn-sm btn-outline-info">Details</a>
-                                <a href="{% url 'update_item_quantity' item_id=item.item_id %}" class="btn btn-sm btn-outline-success">Update Qty</a>
                             </div>
                         </td>
                     </tr>

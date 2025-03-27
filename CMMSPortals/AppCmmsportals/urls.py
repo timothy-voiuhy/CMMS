@@ -60,6 +60,8 @@ urlpatterns = [
     path('craftsmen/equipment/', views.craftsmen_equipment, name='craftsmen_equipment'),
     path('craftsmen/profile/', views.craftsmen_profile, name='craftsmen_profile'),
     path('inventory/edit_item/<int:item_id>/', views.edit_inventory_item, name='edit_inventory_item_alt'),
+    path('dashboard/', views.index, name='dashboard'),
+    path('inventory/purchase_order/update/<int:po_id>/', views.update_purchase_order, name='update_purchase_order'),
 ] 
 
 def redirect_to_login_or_404(request):

@@ -2066,3 +2066,62 @@ def export_items(request):
         ])
     
     return response
+
+@login_required
+def dashboard_redirect(request):
+    """Redirect to the appropriate dashboard based on user role"""
+    if request.user.role == 'inventory':
+        return redirect('inventory_dashboard')
+    else:
+        return redirect('craftsmen_dashboard')
+
+@login_required
+def update_purchase_order(request, po_id):
+    """Update a purchase order"""
+    # Ensure user is inventory personnel
+    if request.user.role != 'inventory':
+        messages.error(request, 'Access denied')
+        return redirect('logout')
+    
+    try:
+        po = PurchaseOrder.objects.get(po_id=po_id)
+        
+        # Check if PO can be updated
+        if po.status in ['Received', 'Cancelled']:
+            messages.error(request, 'This purchase order cannot be updated')
+            return redirect('view_purchase_order', po_id=po_id)
+        
+        # Get purchase order items
+        items = PurchaseOrderItem.objects.filter(po=po)
+        
+        # Get suppliers for dropdown
+        suppliers = Supplier.objects.all().order_by('name')
+        
+        if request.method == 'POST':
+            # Process form data
+            supplier_id = request.POST.get('supplier')
+            expected_delivery = request.POST.get('expected_delivery')
+            shipping_address = request.POST.get('shipping_address')
+            notes = request.POST.get('notes')
+            status = request.POST.get('status')
+            
+            # Update purchase order
+            po.supplier_id = supplier_id
+            po.expected_delivery = expected_delivery
+            po.shipping_address = shipping_address
+            po.notes = notes
+            po.status = status
+            po.save()
+            
+            messages.success(request, 'Purchase order updated successfully')
+            return redirect('view_purchase_order', po_id=po_id)
+        
+        return render(request, 'inventory/update_purchase_order.html', {
+            'po': po,
+            'items': items,
+            'suppliers': suppliers
+        })
+        
+    except PurchaseOrder.DoesNotExist:
+        messages.error(request, 'Purchase order not found')
+        return redirect('purchase_orders')
