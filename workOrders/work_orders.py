@@ -20,6 +20,9 @@ from ui.card_table_widget import CardTableWidget
 from config import WORK_ORDER_SETTINGS_FILE
 
 class WorkOrdersWindow(QMainWindow):
+
+    sig_work_order_created = Signal()
+
     def __init__(self, db_manager, parent=None):
         super().__init__(parent)
         self.db_manager = db_manager
@@ -1029,6 +1032,8 @@ class WorkOrdersWindow(QMainWindow):
             # Also refresh other related data
             self.load_dashboard_data()
             self.refresh_calendar_views()
+
+            self.sig_work_order_created.emit()
 
     def view_work_order_details(self, index):
         """View details of the selected work order"""

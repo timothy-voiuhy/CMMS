@@ -351,3 +351,456 @@
 2025-03-07 15:15:32,654 - INFO - Email sent successfully to byamugishafortune@gmail.com
 2025-03-07 15:15:32,655 - INFO - Notification check completed. Processed 0 upcoming, 1 due today, and 1 overdue work orders.
 2025-03-07 15:26:40,165 - INFO - Notification scheduler stopped.
+2025-03-27 14:53:12,557 - INFO - Starting notification scheduler...
+2025-03-27 14:53:12,557 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 14:53:12,569 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 14:53:12,585 - ERROR - Error getting work orders by due date: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 14:53:12,600 - ERROR - Error getting work orders by due date: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 14:53:12,616 - ERROR - Error getting overdue work orders: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 14:53:12,616 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=0, upcoming_sent=0, today_total=0, today_sent=0, overdue_total=0, overdue_sent=0
+2025-03-27 14:53:12,623 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 14:53:12,623 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 0 overdue work orders.
+2025-03-27 14:53:18,648 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 14:53:18,663 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 14:53:21,777 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 14:53:21,809 - INFO - EMAIL ACTIVITY [send_success]: notification_id=1, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 14:53:21,829 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 14:59:57,782 - INFO - Notification scheduler stopped.
+2025-03-27 15:00:12,523 - INFO - Starting notification scheduler...
+2025-03-27 15:00:12,523 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:00:12,545 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:00:12,563 - ERROR - Error getting work orders by due date: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 15:00:12,587 - ERROR - Error getting work orders by due date: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 15:00:12,601 - ERROR - Error getting overdue work orders: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 15:00:12,601 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=0, upcoming_sent=0, today_total=0, today_sent=0, overdue_total=0, overdue_sent=0
+2025-03-27 15:00:12,615 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:00:12,615 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 0 overdue work orders.
+2025-03-27 15:00:18,880 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:00:18,889 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:00:21,597 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:00:21,628 - INFO - EMAIL ACTIVITY [send_success]: notification_id=2, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:00:21,644 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:04:56,350 - INFO - Notification scheduler stopped.
+2025-03-27 15:05:11,942 - INFO - Starting notification scheduler...
+2025-03-27 15:05:11,942 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:05:11,956 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:05:11,976 - ERROR - Error getting work orders by due date: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 15:05:11,988 - ERROR - Error getting work orders by due date: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 15:05:12,002 - ERROR - Error getting overdue work orders: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 15:05:12,002 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=0, upcoming_sent=0, today_total=0, today_sent=0, overdue_total=0, overdue_sent=0
+2025-03-27 15:05:12,017 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:05:12,017 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 0 overdue work orders.
+2025-03-27 15:05:18,063 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:05:18,079 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:05:21,291 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:05:21,307 - INFO - EMAIL ACTIVITY [send_success]: notification_id=3, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:05:21,335 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:07:56,270 - INFO - Notification scheduler stopped.
+2025-03-27 15:08:12,475 - INFO - Starting notification scheduler...
+2025-03-27 15:08:12,475 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:08:12,485 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:08:12,509 - ERROR - Error getting work orders by due date: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 15:08:12,518 - ERROR - Error getting work orders by due date: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 15:08:12,539 - ERROR - Error getting overdue work orders: 1054 (42S22): Unknown column 'e.name' in 'field list'
+2025-03-27 15:08:12,539 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=0, upcoming_sent=0, today_total=0, today_sent=0, overdue_total=0, overdue_sent=0
+2025-03-27 15:08:12,548 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:08:12,548 - INFO - Notification check completed. Processed 0 upcoming, 0 due today, and 0 overdue work orders.
+2025-03-27 15:08:18,667 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:08:18,683 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:08:21,997 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:08:22,034 - INFO - EMAIL ACTIVITY [send_success]: notification_id=4, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:08:22,045 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:18:41,493 - INFO - Notification scheduler stopped.
+2025-03-27 15:18:57,432 - INFO - Starting notification scheduler...
+2025-03-27 15:18:57,434 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:18:57,456 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:18:57,504 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:18:57,504 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:18:57,527 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:19:03,716 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:19:03,732 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:19:06,592 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:19:06,624 - INFO - EMAIL ACTIVITY [send_success]: notification_id=5, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:19:06,624 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:23:04,602 - INFO - Notification scheduler stopped.
+2025-03-27 15:23:18,406 - INFO - Starting notification scheduler...
+2025-03-27 15:23:18,406 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:23:18,422 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:23:18,441 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:23:18,441 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:23:18,460 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:23:18,896 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:23:18,920 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:23:18,975 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:23:18,975 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:23:18,996 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:23:24,994 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:23:25,004 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:23:27,994 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:23:28,026 - INFO - EMAIL ACTIVITY [send_success]: notification_id=6, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:23:28,044 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:27:25,511 - INFO - Notification scheduler stopped.
+2025-03-27 15:27:39,523 - INFO - Starting notification scheduler...
+2025-03-27 15:27:39,523 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:27:39,538 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:27:39,561 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:27:39,561 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:27:39,577 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:27:40,061 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:27:40,093 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:27:40,140 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:27:40,140 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:27:40,148 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:27:46,168 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:27:46,181 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:27:50,904 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:27:50,939 - INFO - EMAIL ACTIVITY [send_success]: notification_id=7, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:27:50,960 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:28:49,001 - INFO - Notification scheduler stopped.
+2025-03-27 15:29:16,447 - INFO - Starting notification scheduler...
+2025-03-27 15:29:16,447 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:29:16,478 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:29:16,513 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:29:16,513 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:29:16,530 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:29:16,921 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:29:16,953 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:29:17,015 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:29:17,015 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:29:17,027 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:29:23,022 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:29:23,038 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:29:26,432 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:29:26,453 - INFO - EMAIL ACTIVITY [send_success]: notification_id=8, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:29:26,485 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:30:52,145 - INFO - Notification scheduler stopped.
+2025-03-27 15:31:11,168 - INFO - Starting notification scheduler...
+2025-03-27 15:31:11,168 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:31:11,172 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:31:11,205 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:31:11,205 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:31:11,221 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:31:11,599 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:31:11,616 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:31:11,685 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:31:11,685 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:31:11,716 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:31:17,776 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:31:17,789 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:31:20,557 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:31:20,605 - INFO - EMAIL ACTIVITY [send_success]: notification_id=9, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:31:20,621 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:32:47,742 - INFO - Notification scheduler stopped.
+2025-03-27 15:33:15,960 - INFO - Starting notification scheduler...
+2025-03-27 15:33:15,960 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:33:15,983 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:33:16,027 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:33:16,027 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:33:16,047 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:33:16,420 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:33:16,449 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:33:16,514 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:33:16,514 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:33:16,535 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:33:22,599 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:33:22,610 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:33:27,406 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:33:27,450 - INFO - EMAIL ACTIVITY [send_success]: notification_id=10, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:33:27,468 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:40:44,424 - INFO - Notification scheduler stopped.
+2025-03-27 15:40:58,800 - INFO - Starting notification scheduler...
+2025-03-27 15:40:58,800 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:40:58,826 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:40:58,865 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:40:58,865 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:40:58,879 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:40:59,316 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:40:59,337 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:40:59,401 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:40:59,403 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:40:59,421 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:41:05,521 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:41:05,539 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:41:09,575 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:41:09,606 - INFO - EMAIL ACTIVITY [send_success]: notification_id=11, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:41:09,622 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:42:35,540 - INFO - Notification scheduler stopped.
+2025-03-27 15:42:50,065 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:42:50,080 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:42:50,117 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:42:50,117 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:42:50,131 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:42:50,131 - INFO - Starting notification scheduler...
+2025-03-27 15:42:50,131 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:42:50,144 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:42:50,170 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:42:50,170 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:42:50,180 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:42:50,632 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-29
+2025-03-27 15:42:50,642 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:42:50,699 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:42:50,699 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:42:50,715 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:42:56,801 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:42:56,817 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:42:59,714 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:42:59,749 - INFO - EMAIL ACTIVITY [send_success]: notification_id=12, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:42:59,764 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:45:41,547 - INFO - Notification scheduler stopped.
+2025-03-27 15:45:55,968 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:45:55,984 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:45:56,006 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:45:56,006 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:45:56,024 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:45:56,024 - INFO - Starting notification scheduler...
+2025-03-27 15:45:56,024 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:45:56,038 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:45:56,062 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:45:56,062 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:45:56,078 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:45:56,555 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:45:56,586 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:45:56,651 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:45:56,651 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:45:56,667 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:46:02,658 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:46:02,674 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:46:05,871 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:46:05,887 - INFO - EMAIL ACTIVITY [send_success]: notification_id=13, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:46:05,903 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:48:31,194 - INFO - Notification scheduler stopped.
+2025-03-27 15:51:00,771 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:51:00,791 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:51:00,823 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:51:00,823 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:51:00,835 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:51:00,835 - INFO - Starting notification scheduler...
+2025-03-27 15:51:00,835 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:51:00,855 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:51:00,883 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:51:00,883 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:51:00,900 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:51:01,293 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:51:01,319 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:51:01,398 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:51:01,398 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:51:01,422 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:51:07,504 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:51:07,513 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:51:10,784 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:51:10,805 - INFO - EMAIL ACTIVITY [send_success]: notification_id=14, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:51:10,823 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:52:13,025 - INFO - Notification scheduler stopped.
+2025-03-27 15:52:32,528 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:52:32,544 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:52:32,576 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:52:32,576 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:52:32,587 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:52:32,589 - INFO - Starting notification scheduler...
+2025-03-27 15:52:32,591 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:52:32,603 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:52:32,623 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:52:32,623 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:52:32,646 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:52:33,069 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:52:33,091 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:52:33,150 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:52:33,150 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:52:33,164 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:52:39,249 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:52:39,265 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:52:43,450 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:52:43,481 - INFO - EMAIL ACTIVITY [send_success]: notification_id=15, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:52:43,503 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:57:02,969 - INFO - Notification scheduler stopped.
+2025-03-27 15:58:06,252 - INFO - Starting notification scheduler...
+2025-03-27 15:58:06,252 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:58:06,272 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:06,300 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:58:06,300 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:58:06,316 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:06,715 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:58:06,728 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:06,792 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:58:06,792 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:58:06,796 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:12,834 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:58:12,850 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:17,598 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:58:17,646 - INFO - EMAIL ACTIVITY [send_success]: notification_id=16, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:58:17,665 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:35,887 - INFO - Notification scheduler stopped.
+2025-03-27 15:58:50,319 - INFO - Starting notification scheduler...
+2025-03-27 15:58:50,319 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:58:50,335 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:50,366 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:58:50,366 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:58:50,372 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:50,779 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 15:58:50,807 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:50,867 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:58:50,869 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 15:58:50,881 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:56,930 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 15:58:56,946 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 15:58:59,991 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 15:59:00,016 - INFO - EMAIL ACTIVITY [send_success]: notification_id=17, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 15:59:00,026 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:00:07,638 - INFO - Notification scheduler stopped.
+2025-03-27 16:00:26,011 - INFO - Starting notification scheduler...
+2025-03-27 16:00:26,019 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:00:26,033 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:00:26,058 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:00:26,058 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:00:26,074 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:00:26,478 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:00:26,501 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:00:26,548 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:00:26,548 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:00:26,565 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:00:32,617 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 16:00:32,625 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:00:38,105 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 16:00:38,137 - INFO - EMAIL ACTIVITY [send_success]: notification_id=18, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 16:00:38,153 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:01:19,105 - INFO - Notification scheduler stopped.
+2025-03-27 16:01:34,375 - INFO - Starting notification scheduler...
+2025-03-27 16:01:34,375 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:01:34,384 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:01:34,411 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:01:34,411 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:01:34,428 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:01:34,845 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:01:34,867 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:01:34,938 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:01:34,938 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:01:34,955 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:01:41,034 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 16:01:41,046 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:01:46,825 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 16:01:46,857 - INFO - EMAIL ACTIVITY [send_success]: notification_id=19, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 16:01:46,882 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:05:00,681 - INFO - Notification scheduler stopped.
+2025-03-27 16:05:19,622 - INFO - Starting notification scheduler...
+2025-03-27 16:05:19,622 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:05:19,638 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:05:19,686 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Upcoming Work Order #3 Due in 2 Days, notification_type=work_order, reference_id=3, attachments_count=0
+2025-03-27 16:05:19,702 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:05:23,217 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:05:23,249 - INFO - EMAIL ACTIVITY [send_success]: notification_id=20, recipient=ezratimothy600@gmail.com, subject=Upcoming Work Order #3 Due in 2 Days, notification_type=work_order, reference_id=3, attachments=[]
+2025-03-27 16:05:23,280 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:05:23,319 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:05:23,328 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:05:23,337 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:05:23,756 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:05:23,785 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:05:23,867 - ERROR - Error checking and sending notifications: cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:05:23,867 - ERROR - EMAIL ACTIVITY [check_error]: error=cannot access local variable 'connection' where it is not associated with a value
+2025-03-27 16:05:23,878 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:05:29,926 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 16:05:29,938 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:05:33,376 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 16:05:33,405 - INFO - EMAIL ACTIVITY [send_success]: notification_id=21, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 16:05:33,421 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:09:25,620 - INFO - Notification scheduler stopped.
+2025-03-27 16:09:47,153 - INFO - Starting notification scheduler...
+2025-03-27 16:09:47,153 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:09:47,171 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:09:47,231 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 16:09:47,242 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:09:51,556 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:09:51,587 - INFO - EMAIL ACTIVITY [send_success]: notification_id=22, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 16:09:51,603 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:09:51,635 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=1, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 16:09:51,650 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:09:51,650 - INFO - Notification check completed. Processed 1 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 16:09:52,067 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:09:52,103 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:09:52,190 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 16:09:52,208 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:09:55,646 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:09:55,685 - INFO - EMAIL ACTIVITY [send_success]: notification_id=23, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 16:09:55,703 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:09:55,733 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=1, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 16:09:55,749 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:09:55,749 - INFO - Notification check completed. Processed 1 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 16:09:58,192 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 16:09:58,208 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:10:01,179 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 16:10:01,211 - INFO - EMAIL ACTIVITY [send_success]: notification_id=24, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 16:10:01,226 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:25:51,279 - INFO - Notification scheduler stopped.
+2025-03-27 16:26:06,501 - INFO - Starting notification scheduler...
+2025-03-27 16:26:06,501 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:26:06,513 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:06,544 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Upcoming Work Order #7 Due in 2 Days, notification_type=work_order, reference_id=7, attachments_count=0
+2025-03-27 16:26:06,560 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:09,906 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:26:09,952 - INFO - EMAIL ACTIVITY [send_success]: notification_id=25, recipient=ezratimothy600@gmail.com, subject=Upcoming Work Order #7 Due in 2 Days, notification_type=work_order, reference_id=7, attachments=[]
+2025-03-27 16:26:09,966 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:10,029 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 16:26:10,029 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:12,911 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:26:12,943 - INFO - EMAIL ACTIVITY [send_success]: notification_id=26, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 16:26:12,973 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:12,989 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=2, upcoming_sent=1, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 16:26:13,004 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:13,004 - INFO - Notification check completed. Processed 2 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 16:26:13,432 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:26:13,449 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:13,543 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 16:26:13,559 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:16,734 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:26:16,781 - INFO - EMAIL ACTIVITY [send_success]: notification_id=27, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 16:26:16,803 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:16,833 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=2, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 16:26:16,849 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:16,849 - INFO - Notification check completed. Processed 2 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 16:26:19,572 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 16:26:19,583 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:26:22,593 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 16:26:22,625 - INFO - EMAIL ACTIVITY [send_success]: notification_id=28, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 16:26:22,651 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:42:30,042 - INFO - Notification scheduler stopped.
+2025-03-27 16:42:48,420 - INFO - Starting notification scheduler...
+2025-03-27 16:42:48,420 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:42:48,434 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:42:48,489 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 16:42:48,497 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:42:53,283 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:42:53,331 - INFO - EMAIL ACTIVITY [send_success]: notification_id=29, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 16:42:53,349 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:42:53,379 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=2, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 16:42:53,411 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:42:53,411 - INFO - Notification check completed. Processed 2 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 16:42:53,823 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:42:53,851 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:42:53,934 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 16:42:53,953 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:42:57,200 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:42:57,232 - INFO - EMAIL ACTIVITY [send_success]: notification_id=30, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 16:42:57,248 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:42:57,264 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=2, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 16:42:57,280 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:42:57,280 - INFO - Notification check completed. Processed 2 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 16:43:00,005 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 16:43:00,016 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:43:03,120 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 16:43:03,164 - INFO - EMAIL ACTIVITY [send_success]: notification_id=31, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 16:43:03,168 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:44:41,474 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 16:44:41,485 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:44:41,532 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Upcoming Work Order #8 Due in 2 Days, notification_type=work_order, reference_id=8, attachments_count=0
+2025-03-27 16:44:41,548 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:44:44,861 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:44:44,909 - INFO - EMAIL ACTIVITY [send_success]: notification_id=32, recipient=ezratimothy600@gmail.com, subject=Upcoming Work Order #8 Due in 2 Days, notification_type=work_order, reference_id=8, attachments=[]
+2025-03-27 16:44:44,931 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:44:44,987 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 16:44:44,987 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:44:48,407 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 16:44:48,438 - INFO - EMAIL ACTIVITY [send_success]: notification_id=33, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 16:44:48,462 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:44:48,486 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=3, upcoming_sent=1, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 16:44:48,502 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 16:44:48,502 - INFO - Notification check completed. Processed 3 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 16:46:28,042 - INFO - Notification scheduler stopped.

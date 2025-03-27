@@ -22,7 +22,7 @@ class MaintenanceScheduler:
     - Background processing of scheduled tasks
     """
     
-    def __init__(self, db_manager=None):
+    def __init__(self, db_manager=None, notification_service=None):
         """
         Initialize the scheduler service.
         
@@ -30,6 +30,7 @@ class MaintenanceScheduler:
             db_manager: Optional DatabaseManager instance. If not provided, creates a new one.
         """
         self.db_manager = db_manager or DatabaseManager()
+        self.notification_service = notification_service
         self.running = False
         self.scheduler_thread = None
         self.logger = logging.getLogger('maintenance_scheduler')
@@ -134,13 +135,19 @@ class MaintenanceScheduler:
     def _process_notifications(self):
         """Process notifications for upcoming work orders."""
         try:
-            self.db_manager.check_upcoming_work_orders()
+            if not self.notification_service.is_enabled():
+                self.logger.info("Email notifications are disabled. Skipping notification check.")
+                return
+            self.notification_service.check_and_send_notifications()
         except Exception as e:
             self.logger.error(f"Error processing notifications: {e}")
     
     def _process_completed_work_orders(self):
         """Process completed work orders that need to be rescheduled."""
         try:
+            # First, check if the rescheduled column exists, if not add it
+            self._ensure_rescheduled_column_exists()
+            
             # Get completed work orders with schedules
             connection = self.db_manager.connect()
             cursor = connection.cursor(dictionary=True)
@@ -237,6 +244,31 @@ class MaintenanceScheduler:
                     
         except Exception as e:
             self.logger.error(f"Error processing completed work orders: {e}")
+    
+    def _ensure_rescheduled_column_exists(self):
+        """Ensure the rescheduled column exists in the work_orders table"""
+        try:
+            connection = self.db_manager.connect()
+            cursor = connection.cursor()
+            
+            # Check if column exists
+            cursor.execute("SHOW COLUMNS FROM work_orders LIKE 'rescheduled'")
+            column_exists = cursor.fetchone()
+            
+            if not column_exists:
+                self.logger.info("Adding 'rescheduled' column to work_orders table")
+                cursor.execute("""
+                    ALTER TABLE work_orders
+                    ADD COLUMN rescheduled BOOLEAN DEFAULT 0
+                """)
+                connection.commit()
+                self.logger.info("Successfully added 'rescheduled' column")
+            
+        except Exception as e:
+            self.logger.error(f"Error ensuring rescheduled column exists: {e}")
+        finally:
+            if connection:
+                self.db_manager.close(connection)
     
     def is_running(self):
         """

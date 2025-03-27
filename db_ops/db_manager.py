@@ -2676,6 +2676,7 @@ class DatabaseManager:
             return po_id
         except Error as e:
             print(f"Error creating purchase order: {e}")
+            connection.rollback()  # Add rollback on error
             return None
         finally:
             self.close(connection)
@@ -3086,3 +3087,101 @@ class DatabaseManager:
             return None
         finally:
             self.close(connection)
+
+    def get_inventory_personnel_for_po(self):
+        """Get inventory personnel who can receive purchase orders"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            
+            query = """
+            SELECT * FROM inventory_personnel 
+            WHERE status = 'Active' 
+            AND (role = 'Purchasing' OR role = 'Inventory Manager' OR role = 'Supervisor')
+            """
+            
+            cursor.execute(query)
+            return cursor.fetchall()
+        except Error as e:
+            print(f"Error getting inventory personnel for PO: {e}")
+            return []
+        finally:
+            self.close(connection)
+
+    def auto_create_purchase_order(self, low_stock_items):
+        """Automatically create a purchase order for low stock items"""
+        if not low_stock_items:
+            return None
+        
+        try:
+            # Group items by supplier
+            items_by_supplier = {}
+            for item in low_stock_items:
+                supplier_id = item.get('supplier_id')
+                if supplier_id:
+                    if supplier_id not in items_by_supplier:
+                        items_by_supplier[supplier_id] = []
+                    items_by_supplier[supplier_id].append(item)
+            
+            # Get purchasing personnel
+            personnel = self.get_inventory_personnel_for_po()
+            if not personnel:
+                print("No inventory personnel available to receive purchase orders")
+                return None
+            
+            # Use the first available personnel
+            created_by = personnel[0]['personnel_id']
+            
+            # Create POs for each supplier
+            created_pos = []
+            for supplier_id, items in items_by_supplier.items():
+                # Calculate quantities to order
+                po_items = []
+                total_amount = 0
+                
+                for item in items:
+                    # Calculate how many to order
+                    current_qty = item.get('quantity', 0)
+                    reorder_point = item.get('reorder_point', 0)
+                    min_qty = item.get('minimum_quantity', 0)
+                    
+                    # Order enough to get back above minimum quantity
+                    order_qty = max(min_qty - current_qty, 0)
+                    
+                    # Add a buffer (e.g., 20% more)
+                    order_qty = int(order_qty * 1.2) + 1
+                    
+                    # Ensure we order at least 1
+                    if current_qty <= reorder_point and order_qty < 1:
+                        order_qty = 1
+                    
+                    unit_price = item.get('unit_cost', 0)
+                    
+                    po_items.append({
+                        'item_id': item['item_id'],
+                        'quantity': order_qty,
+                        'unit_price': unit_price
+                    })
+                    
+                    total_amount += order_qty * unit_price
+                
+                # Create the PO
+                expected_delivery = datetime.now() + timedelta(days=7)  # Default to 7 days from now
+                
+                po_data = {
+                    'supplier_id': supplier_id,
+                    'total_amount': total_amount,
+                    'created_by': created_by,
+                    'expected_delivery': expected_delivery,
+                    'notes': 'Automatically generated for low stock items',
+                    'items': po_items
+                }
+                
+                po_id = self.create_purchase_order(po_data)
+                if po_id:
+                    created_pos.append(po_id)
+            
+            return created_pos
+        except Exception as e:
+            print(f"Error auto-creating purchase order: {e}")
+            return None

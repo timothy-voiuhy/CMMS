@@ -653,6 +653,23 @@ class DbInit:
                 )
             """)
 
+            # Create notifications tracking table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS email_notifications (
+                    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+                    subject VARCHAR(255) NOT NULL,
+                    recipient VARCHAR(255) NOT NULL,
+                    content TEXT NOT NULL,
+                    status VARCHAR(50) NOT NULL,  -- 'sent', 'failed', 'pending'
+                    error_message TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    sent_at TIMESTAMP NULL,
+                    notification_type VARCHAR(100),  -- 'work_order', 'purchase_order', etc.
+                    reference_id INT,  -- ID of related entity (work order ID, PO ID, etc.)
+                    attachments TEXT  -- JSON array of attachment paths
+                )
+            """)
+
             connection.commit()
             msg = "Database initialized successfully"
             self.console_logger.info(msg)

@@ -19,6 +19,7 @@ from scheduler import MaintenanceScheduler
 from schedules_window import SchedulesWindow
 from inventory_personnel_portal import InventoryPersonnelPortal
 from inventory_personnel_login import InventoryPersonnelLoginDialog
+from notification_center import NotificationCenter
 import logging
 
 class CMMSMainWindow(QMainWindow):
@@ -37,10 +38,17 @@ class CMMSMainWindow(QMainWindow):
         # Initialize database manager
         self.db_manager = DatabaseManager()
 
+        self.notification_service = EmailNotificationService(self.db_manager)
+        if self.notification_service.is_enabled():
+            self.notification_service.start_scheduler()
+            
+        # Initialize notification center but don't show it yet
+        self.notification_center = None
+
         # Start the maintenance scheduler
         self.scheduler_logger = logging.getLogger('maintenance_scheduler')
         self.scheduler_logger.info("Starting maintenance scheduler...")
-        self.scheduler = MaintenanceScheduler()
+        self.scheduler = MaintenanceScheduler(notification_service=self.notification_service)
         self.scheduler.db_manager = self.db_manager
         self.scheduler.start()
         
@@ -53,13 +61,14 @@ class CMMSMainWindow(QMainWindow):
         
         # Create stacked widget for different pages
         self.stacked_widget = QStackedWidget()
-        
+
         # Create windows
         self.welcome_page = self.create_welcome_page()
         self.equipments_window = EquipmentsWindow(self.db_manager)
         self.craftsmen_window = CraftsMenWindow(db_manager=self.db_manager, parent=self)
         self.work_orders_window = WorkOrdersWindow(db_manager=self.db_manager, parent=self)
-        self.inventory_window = InventoryWindow(db_manager=self.db_manager, parent=self)
+        self.work_orders_window.sig_work_order_created.connect(self.notification_service.check_and_send_notifications)
+        self.inventory_window = InventoryWindow(db_manager=self.db_manager, parent=self, notification_service=self.notification_service)
         self.schedules_window = SchedulesWindow(db_manager=self.db_manager, parent=self)
 
         # Add pages to stacked widget
@@ -74,11 +83,6 @@ class CMMSMainWindow(QMainWindow):
         
         self.setStyleSheet(DarkTheme.get_stylesheet())
         self.load_saved_theme()
-
-        # In the MainWindow.__init__ method, after initializing the db_manager:
-        self.notification_service = EmailNotificationService(self.db_manager)
-        if self.notification_service.is_enabled():
-            self.notification_service.start_scheduler()
 
     def create_welcome_page(self):
         welcome_widget = QWidget()
@@ -458,6 +462,11 @@ class CMMSMainWindow(QMainWindow):
         theme_action = view_menu.addAction("Theme Settings")
         theme_action.triggered.connect(self.show_theme_settings)
         
+        # Add Notifications Center action to View menu
+        notifications_action = view_menu.addAction("Notifications Center")
+        notifications_action.setShortcut("Ctrl+N")
+        notifications_action.triggered.connect(self.show_notification_center)
+        
         # Help menu
         help_menu = menu_bar.addMenu("Help")
         
@@ -612,3 +621,25 @@ class CMMSMainWindow(QMainWindow):
             if personnel_id:
                 portal = InventoryPersonnelPortal(self.db_manager, personnel_id, parent=self)
                 portal.show()
+
+    def show_notification_center(self):
+        """Show the notification center window"""
+        if not self.notification_center:
+            self.notification_center = NotificationCenter(self.notification_service, self)
+            # Connect the notification count signal to update UI if needed
+            self.notification_center.notification_count_changed.connect(self.update_notification_indicator)
+        
+        self.notification_center.refresh_notifications()
+        self.notification_center.show()
+        self.notification_center.raise_()
+        self.notification_center.activateWindow()
+    
+    def update_notification_indicator(self, count):
+        """Update UI to indicate notification count if needed"""
+        # This could be used to show a badge or indicator in the main UI
+        # For now, we'll just print to console
+        # print(f"Failed notifications: {count}")
+        
+        # In a future enhancement, this could update a status bar or icon
+        # to show the number of pending/failed notifications
+        pass

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                               QScrollArea, QSplitter, QTextEdit, QMenuBar, QMenu,
                               QStatusBar, QDateEdit, QCheckBox, QFrame, QInputDialog, QFileDialog,
                               QSizePolicy, QHeaderView)
-from PySide6.QtCore import Qt, Signal, QDate, QDateTime
+from PySide6.QtCore import Qt, Signal, QDate, QDateTime, QTimer
 from PySide6.QtGui import QAction, QIcon
 from datetime import datetime, timedelta
 import json
@@ -14,13 +14,30 @@ from reporting import (InventoryReport, InventoryValuationReport,
                       InventoryMovementReport, InventoryCustomReport)
 import os
 import subprocess
+from notifications import EmailNotificationService
 
 class InventoryWindow(QMainWindow):
-    def __init__(self, db_manager, parent=None):
+    def __init__(self, db_manager,
+                 notification_service,
+                 parent=None):
         super().__init__(parent)
         self.db_manager = db_manager
         self.setWindowTitle("Inventory Management")
         
+        self.notification_service = notification_service
+        
+        # Set up the UI
+        self.setup_ui()
+        
+        # Set up timer for periodic low stock check (every 4 hours)
+        self.low_stock_timer = QTimer(self)
+        self.low_stock_timer.timeout.connect(self.check_low_stock_and_create_po)
+        self.low_stock_timer.start(4 * 60 * 60 * 1000)  # 4 hours in milliseconds
+        
+        # Do an initial check
+        QTimer.singleShot(5000, self.check_low_stock_and_create_po)  # Check after 5 seconds
+
+    def setup_ui(self):
         # Create central widget and main layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -572,7 +589,7 @@ class InventoryWindow(QMainWindow):
         
         row = selected_rows[0].row()
         personnel_id = int(self.personnel_table.item(row, 0).text())
-        
+     
         dialog = AddPersonnelDialog(self.db_manager, self, personnel_id=personnel_id)
         if dialog.exec():
             self.refresh_personnel()
@@ -2143,63 +2160,70 @@ class InventoryWindow(QMainWindow):
 
     def setup_purchase_orders_tab(self):
         """Setup the purchase orders management tab"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
         
-        # Controls area
-        controls_layout = QHBoxLayout()
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setSpacing(10)
+        
+        # Filter section
+        filter_widget = QWidget()
+        filter_layout = QHBoxLayout(filter_widget)
+        filter_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.po_status_filter = QComboBox()
+        self.po_status_filter.addItems(["All Status", "Pending", "Approved", "Received", "Cancelled"])
+        self.po_status_filter.currentTextChanged.connect(self.filter_purchase_orders)
+        
+        filter_layout.addWidget(QLabel("Status:"))
+        filter_layout.addWidget(self.po_status_filter)
+        filter_layout.addStretch()
+        
+        layout.addWidget(filter_widget)
+        
+        # Purchase orders table
+        self.po_table = QTableWidget()
+        self.po_table.setColumnCount(7)
+        self.po_table.setHorizontalHeaderLabels([
+            "PO Number", "Supplier", "Status", "Total Amount", 
+            "Created By", "Created Date", "Expected Delivery"
+        ])
+        self.po_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.po_table.horizontalHeader().setStretchLastSection(True)
+        self.po_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.po_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.po_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.po_table.doubleClicked.connect(self.view_purchase_order)
+        layout.addWidget(self.po_table, 1)
+        
+        # Buttons
+        button_widget = QWidget()
+        button_layout = QHBoxLayout(button_widget)
+        button_layout.setContentsMargins(0, 0, 0, 0)
         
         create_po_btn = QPushButton("Create Purchase Order")
         create_po_btn.clicked.connect(self.show_create_po_dialog)
         
-        refresh_btn = QPushButton("Refresh")
-        refresh_btn.clicked.connect(self.refresh_purchase_orders)
+        view_po_btn = QPushButton("View Purchase Order")
+        view_po_btn.clicked.connect(self.view_purchase_order)
         
-        self.po_status_filter = QComboBox()
-        self.po_status_filter.addItems(["All", "Pending", "Approved", "Received", "Cancelled"])
-        self.po_status_filter.currentTextChanged.connect(self.filter_purchase_orders)
+        update_status_btn = QPushButton("Update Status")
+        update_status_btn.clicked.connect(self.update_po_status)
         
-        controls_layout.addWidget(create_po_btn)
-        controls_layout.addWidget(refresh_btn)
-        controls_layout.addWidget(QLabel("Status:"))
-        controls_layout.addWidget(self.po_status_filter)
-        controls_layout.addStretch()
+        refresh_po_btn = QPushButton("Refresh")
+        refresh_po_btn.clicked.connect(self.refresh_purchase_orders)
         
-        # Purchase Orders table
-        self.po_table = QTableWidget()
-        self.po_table.setColumnCount(8)
-        self.po_table.setHorizontalHeaderLabels([
-            "PO Number", "Supplier", "Status", "Total Amount",
-            "Created By", "Created Date", "Expected Delivery", "Notes"
-        ])
+        button_layout.addWidget(create_po_btn)
+        button_layout.addWidget(view_po_btn)
+        button_layout.addWidget(update_status_btn)
+        button_layout.addWidget(refresh_po_btn)
+        button_layout.addStretch()
         
-        layout.addLayout(controls_layout)
-        layout.addWidget(self.po_table)
+        layout.addWidget(button_widget)
         
-        self.tab_widget.addTab(tab, "Purchase Orders")
-        self.refresh_purchase_orders()
-
-    def show_create_po_dialog(self):
-        """Show dialog to create a new purchase order"""
-        # Get low stock items
-        items = self.db_manager.get_inventory_items()
-        low_stock_items = [
-            item for item in items 
-            if item['quantity'] <= item['minimum_quantity']
-        ]
-        
-        if not low_stock_items:
-            QMessageBox.information(
-                self,
-                "No Low Stock Items",
-                "There are no items that need to be reordered at this time."
-            )
-            return
-        
-        dialog = CreatePurchaseOrderDialog(self.db_manager, low_stock_items, self)
-        if dialog.exec():
-            self.refresh_purchase_orders()
-            self.refresh_inventory()
+        scroll.setWidget(content)
+        self.tab_widget.addTab(scroll, "Purchase Orders")
 
     def refresh_purchase_orders(self):
         """Refresh the purchase orders table"""
@@ -2208,76 +2232,981 @@ class InventoryWindow(QMainWindow):
             self.po_table.setRowCount(0)
             
             # Get purchase orders
-            purchase_orders = self.db_manager.get_purchase_orders()
+            status_filter = self.po_status_filter.currentText()
+            if status_filter == "All Status":
+                purchase_orders = self.db_manager.get_purchase_orders()
+            else:
+                purchase_orders = self.db_manager.get_purchase_orders(status=status_filter)
             
             # Populate the table
             for po in purchase_orders:
                 row_position = self.po_table.rowCount()
                 self.po_table.insertRow(row_position)
                 
-                # Format dates
-                created_date = po['created_at'].strftime('%Y-%m-%d') if po['created_at'] else ''
-                expected_delivery = po['expected_delivery'].strftime('%Y-%m-%d') if po['expected_delivery'] else ''
-                
-                # Set purchase order data
                 self.po_table.setItem(row_position, 0, QTableWidgetItem(po['po_number']))
                 self.po_table.setItem(row_position, 1, QTableWidgetItem(po['supplier_name']))
                 self.po_table.setItem(row_position, 2, QTableWidgetItem(po['status']))
                 self.po_table.setItem(row_position, 3, QTableWidgetItem(f"${po['total_amount']:.2f}"))
                 self.po_table.setItem(row_position, 4, QTableWidgetItem(po['created_by_name']))
+                
+                created_date = po['created_at'].strftime('%Y-%m-%d') if po['created_at'] else ""
                 self.po_table.setItem(row_position, 5, QTableWidgetItem(created_date))
+                
+                expected_delivery = po['expected_delivery'].strftime('%Y-%m-%d') if po['expected_delivery'] else ""
                 self.po_table.setItem(row_position, 6, QTableWidgetItem(expected_delivery))
-                self.po_table.setItem(row_position, 7, QTableWidgetItem(po.get('notes', '')))
+                
+                # Store the PO ID as item data
+                self.po_table.item(row_position, 0).setData(Qt.UserRole, po['po_id'])
             
             # Resize columns to content
             self.po_table.resizeColumnsToContents()
             
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Error",
-                f"An error occurred while refreshing purchase orders:\n{str(e)}"
-            )
+            QMessageBox.critical(self, "Error", f"Error refreshing purchase orders: {str(e)}")
 
     def filter_purchase_orders(self):
         """Filter purchase orders based on status"""
-        status_filter = self.po_status_filter.currentText()
-        
-        for row in range(self.po_table.rowCount()):
-            if status_filter == "All":
-                self.po_table.setRowHidden(row, False)
-            else:
-                status = self.po_table.item(row, 2).text()  # Status is in column 2
-                self.po_table.setRowHidden(row, status != status_filter)
+        self.refresh_purchase_orders()
 
-    def show_edit_item_dialog(self):
-        """Show dialog for editing an inventory item"""
-        # Get selected item
-        selected_rows = self.inventory_table.selectedItems()
-        if not selected_rows:
-            QMessageBox.warning(self, "No Selection", "Please select an item to edit.")
+    def show_create_po_dialog(self):
+        """Show dialog to create a new purchase order"""
+        # Get low stock items
+        low_stock_items = []
+        for item in self.db_manager.get_inventory_items():
+            if item['quantity'] <= item['reorder_point']:
+                low_stock_items.append(item)
+        
+        if not low_stock_items:
+            QMessageBox.information(self, "No Items to Reorder", 
+                                   "There are no items that need to be reordered at this time.")
             return
         
+        dialog = CreatePurchaseOrderDialog(self.db_manager, low_stock_items, self)
+        if dialog.exec():
+            self.refresh_purchase_orders()
+            self.refresh_inventory()
+
+    def view_purchase_order(self):
+        """View details of a selected purchase order"""
+        selected_rows = self.po_table.selectedItems()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Selection", "Please select a purchase order to view.")
+            return
+        
+        # Get the PO ID from the selected row
+        po_id = self.po_table.item(selected_rows[0].row(), 0).data(Qt.UserRole)
+        
+        # Show purchase order details dialog
+        dialog = ViewPurchaseOrderDialog(self.db_manager, po_id, self)
+        dialog.exec()
+
+    def update_po_status(self):
+        """Update the status of a selected purchase order"""
+        selected_rows = self.po_table.selectedItems()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Selection", "Please select a purchase order to update.")
+            return
+        
+        # Get the PO ID and current status from the selected row
         row = selected_rows[0].row()
-        item_code = self.inventory_table.item(row, 0).text()
+        po_id = self.po_table.item(row, 0).data(Qt.UserRole)
+        current_status = self.po_table.item(row, 2).text()
         
-        # Get item data from database
+        # Show status selection dialog
+        status, ok = QInputDialog.getItem(
+            self, "Update Status", "Select new status:",
+            ["Pending", "Approved", "Received", "Cancelled"], 
+            ["Pending", "Approved", "Received", "Cancelled"].index(current_status), False
+        )
+        
+        if ok and status != current_status:
+            if self.db_manager.update_purchase_order_status(po_id, status):
+                # If status is "Received", update inventory quantities
+                if status == "Received":
+                    self.receive_purchase_order(po_id)
+                
+                self.refresh_purchase_orders()
+                QMessageBox.information(self, "Success", f"Purchase order status updated to {status}.")
+            else:
+                QMessageBox.critical(self, "Error", "Failed to update purchase order status.")
+
+    def receive_purchase_order(self, po_id):
+        """Process received purchase order and update inventory"""
+        try:
+            # Get purchase order items
+            po_items = self.db_manager.get_purchase_order_items(po_id)
+            
+            # Update inventory for each item
+            for item in po_items:
+                # Add inventory transaction
+                transaction_data = {
+                    'item_id': item['item_id'],
+                    'transaction_type': 'Incoming',
+                    'quantity': item['quantity'],
+                    'unit_cost': item['unit_price'],
+                    'total_cost': item['quantity'] * item['unit_price'],
+                    'reference_number': f"PO-{po_id}",
+                    'notes': f"Received from purchase order #{po_id}",
+                    'performed_by': "System"  # Ideally, use the logged-in user
+                }
+                
+                self.db_manager.add_inventory_transaction(transaction_data)
+            
+            return True
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error processing received purchase order: {str(e)}")
+            return False
+
+    def show_add_item_dialog(self):
+        """Show dialog for adding a new inventory item"""
+        dialog = AddItemDialog(self.db_manager, self)
+        if dialog.exec() == QDialog.Accepted:
+            self.refresh_inventory()
+
+    def refresh_inventory(self):
+        """Refresh the inventory table with latest data"""
+        # Clear the table
+        self.inventory_table.setRowCount(0)
+        
+        # Get fresh data from database
         items = self.db_manager.get_inventory_items()
-        item_data = None
-        for item in items:
-            if str(item.get('item_code', '')) == item_code:
-                item_data = item
-                break
         
-        if not item_data:
-            QMessageBox.critical(self, "Error", "Could not find item data!")
+        # Populate the table
+        for item in items:
+            row_position = self.inventory_table.rowCount()
+            self.inventory_table.insertRow(row_position)
+            
+            # Calculate total value
+            total_value = float(item.get('quantity', 0)) * float(item.get('unit_cost', 0))
+            
+            # Set item data
+            self.inventory_table.setItem(row_position, 0, QTableWidgetItem(str(item.get('item_code', ''))))
+            self.inventory_table.setItem(row_position, 1, QTableWidgetItem(str(item.get('name', ''))))
+            self.inventory_table.setItem(row_position, 2, QTableWidgetItem(str(item.get('category', ''))))
+            self.inventory_table.setItem(row_position, 3, QTableWidgetItem(str(item.get('quantity', 0))))
+            self.inventory_table.setItem(row_position, 4, QTableWidgetItem(str(item.get('unit', ''))))
+            self.inventory_table.setItem(row_position, 5, QTableWidgetItem(str(item.get('location', ''))))
+            self.inventory_table.setItem(row_position, 6, QTableWidgetItem(str(item.get('minimum_quantity', 0))))
+            self.inventory_table.setItem(row_position, 7, QTableWidgetItem(str(item.get('reorder_point', 0))))
+            self.inventory_table.setItem(row_position, 8, QTableWidgetItem(f"${item.get('unit_cost', 0):.2f}"))
+            self.inventory_table.setItem(row_position, 9, QTableWidgetItem(f"${total_value:.2f}"))
+        
+        # Resize columns to content
+        self.inventory_table.resizeColumnsToContents()
+
+    def show_checkout_dialog(self):
+        """Show dialog for checking out a tool"""
+        # Get selected tool
+        current_row = self.tools_table.currentRow()
+        if current_row < 0:
+            QMessageBox.warning(self, "No Tool Selected", "Please select a tool to check out.")
+            return
+            
+        tool_id = int(self.tools_table.item(current_row, 0).text())
+        tool_name = self.tools_table.item(current_row, 1).text()
+        
+        # Create dialog
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Check Out Tool")
+        dialog.setModal(True)
+        
+        layout = QFormLayout(dialog)
+        
+        # Add form fields
+        craftsman_combo = QComboBox()
+        craftsmen = self.db_manager.get_all_craftsmen()
+        for craftsman in craftsmen:
+            craftsman_combo.addItem(
+                f"{craftsman['first_name']} {craftsman['last_name']}", 
+                craftsman['craftsman_id']
+            )
+            
+        work_order_combo = QComboBox()
+        work_order_combo.addItem("None", None)
+        work_orders = self.db_manager.get_open_work_orders()
+        for wo in work_orders:
+            work_order_combo.addItem(f"WO#{wo['work_order_id']} - {wo['title']}", wo['work_order_id'])
+            
+        expected_return = QDateEdit()
+        expected_return.setDate(QDate.currentDate().addDays(1))
+        expected_return.setCalendarPopup(True)
+        
+        notes = QTextEdit()
+        
+        layout.addRow("Tool:", QLabel(tool_name))
+        layout.addRow("Craftsman:", craftsman_combo)
+        layout.addRow("Work Order:", work_order_combo)
+        layout.addRow("Expected Return:", expected_return)
+        layout.addRow("Notes:", notes)
+        
+        # Add buttons
+        button_box = QHBoxLayout()
+        checkout_btn = QPushButton("Check Out")
+        cancel_btn = QPushButton("Cancel")
+        
+        button_box.addWidget(checkout_btn)
+        button_box.addWidget(cancel_btn)
+        layout.addRow(button_box)
+        
+        # Connect buttons
+        cancel_btn.clicked.connect(dialog.reject)
+        checkout_btn.clicked.connect(lambda: self.process_checkout(
+            dialog,
+            tool_id,
+            craftsman_combo.currentData(),
+            work_order_combo.currentData(),
+            expected_return.date().toPython(),
+            notes.toPlainText()
+        ))
+        
+        dialog.exec()
+
+    def process_checkout(self, dialog, tool_id, craftsman_id, work_order_id, expected_return, notes):
+        """Process the tool checkout"""
+        try:
+            checkout_data = {
+                'item_id': tool_id,
+                'craftsman_id': craftsman_id,
+                'work_order_id': work_order_id,
+                'expected_return_date': expected_return,
+                'notes': notes
+            }
+            
+            if self.db_manager.checkout_tool(checkout_data):
+                QMessageBox.information(self, "Success", "Tool checked out successfully!")
+                dialog.accept()
+                self.refresh_tools()
+            else:
+                QMessageBox.critical(self, "Error", "Failed to check out tool!")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error checking out tool: {str(e)}")
+
+    def show_checkin_dialog(self):
+        """Show dialog for checking in a tool"""
+        # Get selected tool
+        current_row = self.tools_table.currentRow()
+        if current_row < 0:
+            QMessageBox.warning(self, "No Tool Selected", "Please select a tool to check in.")
+            return
+            
+        tool_id = int(self.tools_table.item(current_row, 0).text())
+        tool_name = self.tools_table.item(current_row, 1).text()
+        
+        # Verify tool is checked out
+        if self.tools_table.item(current_row, 2).text() != "Checked Out":
+            QMessageBox.warning(self, "Invalid Action", "This tool is not checked out.")
             return
         
         # Create dialog
-        dialog = EditItemDialog(self.db_manager, self, item_data)
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Check In Tool")
+        dialog.setModal(True)
+        
+        layout = QFormLayout(dialog)
+        
+        # Add form fields
+        condition = QComboBox()
+        condition.addItems(["Good", "Needs Maintenance", "Damaged"])
+        
+        notes = QTextEdit()
+        
+        layout.addRow("Tool:", QLabel(tool_name))
+        layout.addRow("Condition:", condition)
+        layout.addRow("Notes:", notes)
+        
+        # Add buttons
+        button_box = QHBoxLayout()
+        checkin_btn = QPushButton("Check In")
+        cancel_btn = QPushButton("Cancel")
+        
+        button_box.addWidget(checkin_btn)
+        button_box.addWidget(cancel_btn)
+        layout.addRow(button_box)
+        
+        # Connect buttons
+        cancel_btn.clicked.connect(dialog.reject)
+        checkin_btn.clicked.connect(lambda: self.process_checkin(
+            dialog,
+            tool_id,
+            condition.currentText(),
+            notes.toPlainText()
+        ))
+        
+        dialog.exec()
+
+    def process_checkin(self, dialog, tool_id, condition, notes):
+        """Process the tool check-in"""
+        try:
+            checkin_data = {
+                'item_id': tool_id,
+                'condition': condition,
+                'notes': notes
+            }
+            
+            if self.db_manager.checkin_tool(checkin_data):
+                QMessageBox.information(self, "Success", "Tool checked in successfully!")
+                dialog.accept()
+                self.refresh_tools()
+            else:
+                QMessageBox.critical(self, "Error", "Failed to check in tool!")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error checking in tool: {str(e)}")
+
+    def show_add_tool_dialog(self):
+        """Show dialog for adding a new tool"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add New Tool")
+        dialog.setModal(True)
+        
+        layout = QFormLayout(dialog)
+        
+        # Add form fields
+        tool_id = QLineEdit()
+        name = QLineEdit()
+        description = QTextEdit()
+        location = QLineEdit()
+        quantity = QSpinBox()
+        quantity.setMinimum(1)
+        
+        layout.addRow("Tool ID:", tool_id)
+        layout.addRow("Name:", name)
+        layout.addRow("Description:", description)
+        layout.addRow("Location:", location)
+        layout.addRow("Quantity:", quantity)
+        
+        # Add buttons
+        button_box = QHBoxLayout()
+        save_btn = QPushButton("Save")
+        cancel_btn = QPushButton("Cancel")
+        
+        button_box.addWidget(save_btn)
+        button_box.addWidget(cancel_btn)
+        layout.addRow(button_box)
+        
+        # Connect buttons
+        cancel_btn.clicked.connect(dialog.reject)
+        save_btn.clicked.connect(lambda: self.save_tool(
+            dialog,
+            tool_id.text(),
+            name.text(),
+            description.toPlainText(),
+            location.text(),
+            quantity.value()
+        ))
+        
+        dialog.exec()
+
+    def save_tool(self, dialog, tool_id, name, description, location, quantity):
+        """Save a new tool to the database"""
+        if not tool_id or not name:
+            QMessageBox.warning(self, "Validation Error", "Tool ID and Name are required!")
+            return
+            
+        try:
+            tool_data = {
+                'item_code': tool_id,
+                'name': name,
+                'description': description,
+                'location': location,
+                'quantity': quantity,
+                'category': 'Tool',  # Fixed category for tools
+                'minimum_quantity': 1,
+                'reorder_point': 1,
+                'unit_cost': 0.00  # Default value, can be updated later
+            }
+            
+            if self.db_manager.add_inventory_item(tool_data):
+                QMessageBox.information(self, "Success", "Tool added successfully!")
+                dialog.accept()
+                self.refresh_tools()
+            else:
+                QMessageBox.critical(self, "Error", "Failed to add tool!")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error adding tool: {str(e)}")
+
+    def show_add_supplier_dialog(self):
+        """Show dialog for adding a new supplier"""
+        dialog = AddSupplierDialog(self.db_manager, self)
         if dialog.exec() == QDialog.Accepted:
-            self.refresh_inventory()
-            self.add_alert("info", "Item Updated", f"Item {item_data['name']} updated successfully", datetime.now())
+            self.refresh_suppliers()
+
+    def show_edit_supplier_dialog(self):
+        """Show dialog for editing a supplier"""
+        # Get selected supplier
+        current_row = self.suppliers_table.currentRow()
+        if current_row < 0:
+            QMessageBox.warning(self, "No Supplier Selected", "Please select a supplier to edit.")
+            return
+            
+        # Get supplier data
+        supplier_name = self.suppliers_table.item(current_row, 0).text()
+        supplier = self.db_manager.get_supplier_by_name(supplier_name)
+        
+        if not supplier:
+            QMessageBox.critical(self, "Error", "Could not find supplier data!")
+            return
+            
+        # Create and show edit dialog
+        dialog = AddSupplierDialog(self.db_manager, self)
+        
+        # Pre-fill the form with existing data
+        dialog.name.setText(supplier['name'])
+        dialog.contact_person.setText(supplier['contact_person'])
+        dialog.phone.setText(supplier['phone'])
+        dialog.email.setText(supplier['email'])
+        dialog.address.setText(supplier['address'])
+        dialog.notes.setText(supplier['notes'])
+        
+        # Change dialog title to indicate editing
+        dialog.setWindowTitle("Edit Supplier")
+        
+        if dialog.exec() == QDialog.Accepted:
+            self.refresh_suppliers()
+
+    def export_suppliers(self):
+        """Export suppliers to a CSV file"""
+        from PySide6.QtWidgets import QFileDialog
+        import csv
+        
+        # Show file dialog to select save location
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Suppliers",
+            "",
+            "CSV Files (*.csv);;All Files (*)"
+        )
+        
+        if not file_path:
+            return
+            
+        try:
+            # Get all suppliers
+            suppliers = self.db_manager.get_suppliers()
+            
+            # Define fields to export
+            fields = ['name', 'contact_person', 'phone', 'email', 'address', 'status', 'notes']
+            
+            with open(file_path, 'w', newline='') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fields)
+                writer.writeheader()
+                
+                # Write suppliers
+                for supplier in suppliers:
+                    # Filter only the fields we want to export
+                    row = {field: supplier.get(field, '') for field in fields}
+                    writer.writerow(row)
+            
+            QMessageBox.information(
+                self,
+                "Export Successful",
+                f"Successfully exported {len(suppliers)} suppliers to {file_path}"
+            )
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Export Error",
+                f"An error occurred while exporting suppliers:\n{str(e)}"
+            )
+
+    def import_data(self):
+        """Import data from a file"""
+        from PySide6.QtWidgets import QFileDialog, QInputDialog
+        
+        # Ask user what type of data to import
+        data_type, ok = QInputDialog.getItem(
+            self,
+            "Import Data",
+            "Select data type to import:",
+            ["Inventory Items", "Tools", "Suppliers"],
+            0,
+            False
+        )
+        
+        if not ok:
+            return
+            
+        # Show file dialog to select file
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            f"Import {data_type}",
+            "",
+            "CSV Files (*.csv);;All Files (*)"
+        )
+        
+        if not file_path:
+            return
+            
+        # Import based on data type
+        if data_type == "Inventory Items":
+            self.import_items()
+        elif data_type == "Tools":
+            self.import_tools()
+        elif data_type == "Suppliers":
+            self.import_suppliers()
+
+    def export_data(self):
+        """Export data to a file"""
+        from PySide6.QtWidgets import QFileDialog, QInputDialog
+        
+        # Ask user what type of data to export
+        data_type, ok = QInputDialog.getItem(
+            self,
+            "Export Data",
+            "Select data type to export:",
+            ["Inventory Items", "Tools", "Suppliers"],
+            0,
+            False
+        )
+        
+        if not ok:
+            return
+            
+        # Export based on data type
+        if data_type == "Inventory Items":
+            self.export_items()
+        elif data_type == "Tools":
+            self.export_tools()
+        elif data_type == "Suppliers":
+            self.export_suppliers()
+
+    def import_tools(self):
+        """Import tools from a CSV file"""
+        from PySide6.QtWidgets import QFileDialog
+        import csv
+        
+        # Show file dialog to select CSV file
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Import Tools",
+            "",
+            "CSV Files (*.csv);;All Files (*)"
+        )
+        
+        if not file_path:
+            return
+            
+        try:
+            with open(file_path, 'r', newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                
+                # Validate headers
+                required_fields = ['tool_id', 'name', 'description', 'location', 'quantity']
+                headers = reader.fieldnames
+                
+                missing_fields = [field for field in required_fields if field not in headers]
+                if missing_fields:
+                    QMessageBox.warning(
+                        self,
+                        "Invalid CSV Format",
+                        f"The following required fields are missing: {', '.join(missing_fields)}"
+                    )
+                    return
+                
+                # Import tools
+                success_count = 0
+                error_count = 0
+                
+                for row in reader:
+                    try:
+                        # Convert numeric fields
+                        row['quantity'] = int(row['quantity'])
+                        
+                        # Create tool data
+                        tool_data = {
+                            'item_code': row['tool_id'],
+                            'name': row['name'],
+                            'description': row['description'],
+                            'location': row['location'],
+                            'quantity': row['quantity'],
+                            'category': 'Tool',
+                            'minimum_quantity': 1,
+                            'reorder_point': 1,
+                            'unit_cost': 0.00
+                        }
+                        
+                        # Add tool to database
+                        if self.db_manager.add_inventory_item(tool_data):
+                            success_count += 1
+                        else:
+                            error_count += 1
+                    except ValueError as e:
+                        error_count += 1
+                        print(f"Error importing row: {e}")
+                
+                # Show results
+                QMessageBox.information(
+                    self,
+                    "Import Results",
+                    f"Successfully imported {success_count} tools.\n"
+                    f"Failed to import {error_count} tools."
+                )
+                
+                # Refresh the tools table
+                self.refresh_tools()
+                
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Import Error",
+                f"An error occurred while importing tools:\n{str(e)}"
+            )
+
+    def export_tools(self):
+        """Export tools to a CSV file"""
+        from PySide6.QtWidgets import QFileDialog
+        import csv
+        
+        # Show file dialog to select save location
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Tools",
+            "",
+            "CSV Files (*.csv);;All Files (*)"
+        )
+        
+        if not file_path:
+            return
+            
+        try:
+            # Get all tools
+            tools = self.db_manager.get_inventory_items_by_category('Tool')
+            
+            # Define fields to export
+            fields = ['tool_id', 'name', 'description', 'location', 'quantity', 'status', 'notes']
+            
+            with open(file_path, 'w', newline='') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fields)
+                writer.writeheader()
+                
+                # Write tools
+                for tool in tools:
+                    # Get checkout status
+                    checkout = self.db_manager.get_tool_checkout_status(tool['item_id'])
+                    status = "Checked Out" if checkout else "Available"
+                    
+                    # Create row data
+                    row = {
+                        'tool_id': tool['item_code'],
+                        'name': tool['name'],
+                        'description': tool.get('description', ''),
+                        'location': tool.get('location', ''),
+                        'quantity': tool.get('quantity', 1),
+                        'status': status,
+                        'notes': tool.get('notes', '')
+                    }
+                    writer.writerow(row)
+            
+            QMessageBox.information(
+                self,
+                "Export Successful",
+                f"Successfully exported {len(tools)} tools to {file_path}"
+            )
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Export Error",
+                f"An error occurred while exporting tools:\n{str(e)}"
+            )
+
+    def import_suppliers(self):
+        """Import suppliers from a CSV file"""
+        from PySide6.QtWidgets import QFileDialog
+        import csv
+        
+        # Show file dialog to select CSV file
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Import Suppliers",
+            "",
+            "CSV Files (*.csv);;All Files (*)"
+        )
+        
+        if not file_path:
+            return
+            
+        try:
+            with open(file_path, 'r', newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                
+                # Validate headers
+                required_fields = ['name', 'contact_person', 'phone', 'email', 'address']
+                headers = reader.fieldnames
+                
+                missing_fields = [field for field in required_fields if field not in headers]
+                if missing_fields:
+                    QMessageBox.warning(
+                        self,
+                        "Invalid CSV Format",
+                        f"The following required fields are missing: {', '.join(missing_fields)}"
+                    )
+                    return
+                
+                # Import suppliers
+                success_count = 0
+                error_count = 0
+                
+                for row in reader:
+                    try:
+                        if self.db_manager.add_supplier(row):
+                            success_count += 1
+                        else:
+                            error_count += 1
+                    except Exception as e:
+                        error_count += 1
+                        print(f"Error importing row: {e}")
+                
+                # Show results
+                QMessageBox.information(
+                    self,
+                    "Import Results",
+                    f"Successfully imported {success_count} suppliers.\n"
+                    f"Failed to import {error_count} suppliers."
+                )
+                
+                # Refresh the suppliers table
+                self.refresh_suppliers()
+                
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Import Error",
+                f"An error occurred while importing suppliers:\n{str(e)}"
+            )
+
+    def show_add_supplier_dialog(self):
+        """Show dialog for adding a new supplier"""
+        dialog = AddSupplierDialog(self.db_manager, self)
+        if dialog.exec() == QDialog.Accepted:
+            self.refresh_suppliers()
+
+    def show_edit_supplier_dialog(self):
+        """Show dialog for editing a supplier"""
+        # Get selected supplier
+        current_row = self.suppliers_table.currentRow()
+        if current_row < 0:
+            QMessageBox.warning(self, "No Supplier Selected", "Please select a supplier to edit.")
+            return
+            
+        # Get supplier data
+        supplier_name = self.suppliers_table.item(current_row, 0).text()
+        supplier = self.db_manager.get_supplier_by_name(supplier_name)
+        
+        if not supplier:
+            QMessageBox.critical(self, "Error", "Could not find supplier data!")
+            return
+            
+        # Create and show edit dialog
+        dialog = AddSupplierDialog(self.db_manager, self)
+        
+        # Pre-fill the form with existing data
+        dialog.name.setText(supplier['name'])
+        dialog.contact_person.setText(supplier['contact_person'])
+        dialog.phone.setText(supplier['phone'])
+        dialog.email.setText(supplier['email'])
+        dialog.address.setText(supplier['address'])
+        dialog.notes.setText(supplier['notes'])
+        
+        # Change dialog title to indicate editing
+        dialog.setWindowTitle("Edit Supplier")
+        
+        if dialog.exec() == QDialog.Accepted:
+            self.refresh_suppliers()
+
+    def export_suppliers(self):
+        """Export suppliers to a CSV file"""
+        from PySide6.QtWidgets import QFileDialog
+        import csv
+        
+        # Show file dialog to select save location
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Suppliers",
+            "",
+            "CSV Files (*.csv);;All Files (*)"
+        )
+        
+        if not file_path:
+            return
+            
+        try:
+            # Get all suppliers
+            suppliers = self.db_manager.get_suppliers()
+            
+            # Define fields to export
+            fields = ['name', 'contact_person', 'phone', 'email', 'address', 'status', 'notes']
+            
+            with open(file_path, 'w', newline='') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fields)
+                writer.writeheader()
+                
+                # Write suppliers
+                for supplier in suppliers:
+                    # Filter only the fields we want to export
+                    row = {field: supplier.get(field, '') for field in fields}
+                    writer.writerow(row)
+            
+            QMessageBox.information(
+                self,
+                "Export Successful",
+                f"Successfully exported {len(suppliers)} suppliers to {file_path}"
+            )
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Export Error",
+                f"An error occurred while exporting suppliers:\n{str(e)}"
+            )
+
+    def show_add_personnel_dialog(self):
+        """Show dialog to add new personnel"""
+        dialog = AddPersonnelDialog(self.db_manager, self)
+        if dialog.exec():
+            self.refresh_personnel()
+            # Pass datetime object instead of formatted string
+            self.add_alert("success", "Personnel Added", 
+                          f"Personnel {dialog.first_name.text()} {dialog.last_name.text()} added successfully", 
+                          datetime.now())
+
+    def show_edit_personnel_dialog(self):
+        """Show dialog to edit personnel"""
+        selected_rows = self.personnel_table.selectedItems()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Selection", "Please select a personnel to edit.")
+            return
+        
+        row = selected_rows[0].row()
+        personnel_id = int(self.personnel_table.item(row, 0).text())
+     
+        dialog = AddPersonnelDialog(self.db_manager, self, personnel_id=personnel_id)
+        if dialog.exec():
+            self.refresh_personnel()
+            self.add_alert("info", "Personnel Updated", f"Personnel {dialog.first_name.text()} {dialog.last_name.text()} updated successfully", datetime.now().strftime("%Y-%m-%d %H:%M"))
+
+    def refresh_personnel(self):
+        """Refresh the personnel table"""
+        self.personnel_table.setRowCount(0)
+        personnel_list = self.db_manager.get_inventory_personnel()
+        
+        for row, person in enumerate(personnel_list):
+            self.personnel_table.insertRow(row)
+            self.personnel_table.setItem(row, 0, QTableWidgetItem(str(person['personnel_id'])))
+            self.personnel_table.setItem(row, 1, QTableWidgetItem(person['employee_id']))
+            self.personnel_table.setItem(row, 2, QTableWidgetItem(f"{person['first_name']} {person['last_name']}"))
+            self.personnel_table.setItem(row, 3, QTableWidgetItem(person['phone'] or ""))
+            self.personnel_table.setItem(row, 4, QTableWidgetItem(person['email'] or ""))
+            self.personnel_table.setItem(row, 5, QTableWidgetItem(person['role'] or ""))
+            self.personnel_table.setItem(row, 6, QTableWidgetItem(person['access_level'] or ""))
+            
+            # Convert hire_date to string before creating QTableWidgetItem
+            if person['hire_date']:
+                if isinstance(person['hire_date'], datetime):
+                    hire_date_str = person['hire_date'].strftime("%Y-%m-%d")
+                else:
+                    hire_date_str = str(person['hire_date'])
+                self.personnel_table.setItem(row, 7, QTableWidgetItem(hire_date_str))
+            else:
+                self.personnel_table.setItem(row, 7, QTableWidgetItem(""))
+                
+            self.personnel_table.setItem(row, 8, QTableWidgetItem(person['status']))
+
+    def filter_personnel(self):
+        """Filter the personnel table based on search text and status"""
+        search_text = self.personnel_search.text().lower()
+        status_filter = self.personnel_status_filter.currentText()
+        
+        for row in range(self.personnel_table.rowCount()):
+            visible = True
+            
+            # Apply text search
+            if search_text:
+                text_match = False
+                for col in [1, 2, 3, 4, 5]:  # Check ID, Name, Phone, Email, Role
+                    if search_text in self.personnel_table.item(row, col).text().lower():
+                        text_match = True
+                        break
+                visible = text_match
+            
+            # Apply status filter
+            if visible and status_filter != "All":
+                status = self.personnel_table.item(row, 8).text()
+                visible = (status == status_filter)
+            
+            self.personnel_table.setRowHidden(row, not visible)
+
+    def export_personnel(self):
+        """Export personnel to CSV or Excel"""
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, "Export Personnel", "", "CSV Files (*.csv);;Excel Files (*.xlsx)"
+        )
+        
+        if not file_path:
+            return
+            
+        personnel_list = self.db_manager.get_inventory_personnel()
+        
+        if file_path.endswith('.csv'):
+            self.db_manager.export_to_csv(file_path, personnel_list)
+        elif file_path.endswith('.xlsx'):
+            self.db_manager.export_to_excel(file_path, personnel_list)
+            
+        self.show_report_success_message(file_path)
+
+    def import_personnel(self):
+        """Import personnel from CSV"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Import Personnel", "", "CSV Files (*.csv)"
+        )
+        
+        if not file_path:
+            return
+            
+        try:
+            import csv
+            with open(file_path, 'r', newline='', encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+                count = 0
+                
+                for row in reader:
+                    data = {
+                        'employee_id': row.get('employee_id', ''),
+                        'first_name': row.get('first_name', ''),
+                        'last_name': row.get('last_name', ''),
+                        'phone': row.get('phone', ''),
+                        'email': row.get('email', ''),
+                        'role': row.get('role', ''),
+                        'access_level': row.get('access_level', 'Standard'),
+                        'hire_date': row.get('hire_date', ''),
+                        'status': row.get('status', 'Active')
+                    }
+                    
+                    # Skip if required fields are missing
+                    if not data['employee_id'] or not data['first_name'] or not data['last_name']:
+                        continue
+                        
+                    # Check if employee_id exists and update instead
+                    existing_personnel = None
+                    all_personnel = self.db_manager.get_inventory_personnel()
+                    for person in all_personnel:
+                        if person['employee_id'] == data['employee_id']:
+                            existing_personnel = person
+                            break
+                    
+                    if existing_personnel:
+                        data['personnel_id'] = existing_personnel['personnel_id']
+                        self.db_manager.update_inventory_personnel(data)
+                    else:
+                        self.db_manager.add_inventory_personnel(data)
+                    
+                    count += 1
+                
+                self.refresh_personnel()
+                QMessageBox.information(self, "Import Successful", f"{count} personnel records imported/updated successfully.")
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Import Error", f"Error importing personnel: {str(e)}")
 
     def show_remove_item_dialog(self):
         """Show confirmation dialog for removing an inventory item"""
@@ -2314,6 +3243,145 @@ class InventoryWindow(QMainWindow):
                 self.add_alert("warning", "Item Removed", f"Item {item_name} has been removed from inventory", datetime.now())
             else:
                 QMessageBox.critical(self, "Error", "Failed to remove item from inventory!")
+
+    def show_edit_item_dialog(self):
+        """Show dialog for editing an existing inventory item"""
+        # Get selected item
+        selected_rows = self.inventory_table.selectedItems()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Selection", "Please select an item to edit.")
+            return
+        
+        # Get the item ID from the selected row
+        row = selected_rows[0].row()
+        item_code = self.inventory_table.item(row, 0).text()
+        
+        # Get the full item data
+        items = self.db_manager.get_inventory_items()
+        selected_item = next((item for item in items if str(item.get('item_code', '')) == item_code), None)
+        
+        if not selected_item:
+            QMessageBox.warning(self, "Item Not Found", "The selected item could not be found in the database.")
+            return
+        
+        # Show edit dialog with the item data
+        dialog = AddItemDialog(self.db_manager, self, item_data=selected_item)
+        if dialog.exec() == QDialog.Accepted:
+            self.refresh_inventory()
+
+    def check_low_stock_and_create_po(self):
+        """Check for items at or below reorder point and automatically create purchase orders"""
+        try:
+            # Get items at or below reorder point
+            items_to_reorder = []
+            for item in self.db_manager.get_inventory_items():
+                if item['quantity'] <= item['reorder_point']:
+                    items_to_reorder.append(item)
+            
+            if not items_to_reorder:
+                return
+            
+            # Create purchase orders
+            created_pos = self.db_manager.auto_create_purchase_order(items_to_reorder)
+            
+            if created_pos and len(created_pos) > 0:
+                # Get PO details for notification
+                po_details = []
+                for po_id in created_pos:
+                    pos = self.db_manager.get_purchase_orders()
+                    po = next((p for p in pos if p['po_id'] == po_id), None)
+                    if po:
+                        po_details.append(po)
+                
+                # Notify personnel
+                self.notify_personnel_of_purchase_orders(po_details)
+                
+                # Show notification in the UI
+                self.add_alert("Medium", "Purchase Orders Created", 
+                              f"{len(created_pos)} purchase orders were automatically created for items at reorder point.", 
+                              datetime.now())
+                
+                # Refresh the purchase orders tab
+                self.refresh_purchase_orders()
+                
+                # Update status bar
+                self.status_bar.showMessage(f"Created {len(created_pos)} purchase orders for items at reorder point", 5000)
+        
+        except Exception as e:
+            print(f"Error checking reorder points and creating PO: {e}")
+            self.status_bar.showMessage(f"Error creating purchase orders: {str(e)}", 5000)
+
+    def notify_personnel_of_purchase_orders(self, purchase_orders):
+        """Notify inventory personnel about new purchase orders"""
+        if not purchase_orders:
+            return
+        
+        # Get personnel who should receive notifications
+        personnel = self.db_manager.get_inventory_personnel_for_po()
+        
+        # If we have email notification capability, use it
+        if hasattr(self, 'notification_service') and self.notification_service.is_enabled():
+            for person in personnel:
+                if person.get('email'):
+                    self.send_po_email_notification(person, purchase_orders)
+        
+        # Always add to the alerts table
+        for po in purchase_orders:
+            self.add_alert(
+                "info", 
+                "Purchase Order Created", 
+                f"PO #{po['po_number']} created for {po['supplier_name']} - ${po['total_amount']:.2f}", 
+                datetime.now()
+            )
+
+    def send_po_email_notification(self, person, purchase_orders):
+        """Send email notification about purchase orders"""
+        try:
+            # Create HTML content
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background-color: #4CAF50; color: white; padding: 10px; text-align: center; }}
+                    .po-item {{ background-color: #f9f9f9; padding: 10px; margin-bottom: 10px; border-left: 4px solid #4CAF50; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h2>New Purchase Orders Created</h2>
+                    </div>
+                    <p>Hello {person['first_name']},</p>
+                    <p>The following purchase orders have been automatically created for low stock items:</p>
+            """
+            
+            for po in purchase_orders:
+                html_content += f"""
+                    <div class="po-item">
+                        <h3>PO #{po['po_number']}</h3>
+                        <p><strong>Supplier:</strong> {po['supplier_name']}</p>
+                        <p><strong>Total Amount:</strong> ${po['total_amount']:.2f}</p>
+                        <p><strong>Expected Delivery:</strong> {po['expected_delivery'].strftime('%Y-%m-%d') if po['expected_delivery'] else 'Not specified'}</p>
+                    </div>
+                """
+            
+            html_content += """
+                    <p>Please review these purchase orders and process them accordingly.</p>
+                    <p>Thank you,<br>Inventory Management System</p>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # Send the email
+            subject = f"New Purchase Orders Created - {len(purchase_orders)} POs"
+            self.notification_service.send_email(person['email'], subject, html_content)
+            
+        except Exception as e:
+            print(f"Error sending PO email notification: {e}")
 
 class AddItemDialog(QDialog):
     def __init__(self, db_manager, parent=None):
@@ -2723,22 +3791,29 @@ class CreatePurchaseOrderDialog(QDialog):
             QMessageBox.warning(self, "No Items", "Please specify quantities for at least one item.")
             return
         
+        # Get current user ID or use a default
+        current_user_id = 1  # Default to ID 1 if no user system is implemented
+        
         # Create purchase order data
         po_data = {
             'supplier_id': self.supplier_combo.currentData(),
             'total_amount': total_amount,
-            'created_by': 1,  # TODO: Get actual logged-in user ID
+            'created_by': current_user_id,
             'expected_delivery': self.delivery_date.date().toPython(),
             'notes': self.notes.toPlainText(),
             'items': items
         }
         
-        # Create purchase order
-        if self.db_manager.create_purchase_order(po_data):
-            QMessageBox.information(self, "Success", "Purchase order created successfully!")
-            self.accept()
-        else:
-            QMessageBox.critical(self, "Error", "Failed to create purchase order!")
+        try:
+            # Create purchase order
+            po_id = self.db_manager.create_purchase_order(po_data)
+            if po_id:
+                QMessageBox.information(self, "Success", f"Purchase order created successfully! PO ID: {po_id}")
+                self.accept()
+            else:
+                QMessageBox.critical(self, "Error", "Failed to create purchase order!")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error creating purchase order: {str(e)}")
 
 class EditItemDialog(QDialog):
     def __init__(self, db_manager, parent=None, item_data=None):
@@ -2879,3 +3954,107 @@ class EditItemDialog(QDialog):
             self.accept()
         else:
             QMessageBox.critical(self, "Error", "Failed to update inventory item!")
+
+class ViewPurchaseOrderDialog(QDialog):
+    def __init__(self, db_manager, po_id, parent=None):
+        super().__init__(parent)
+        self.db_manager = db_manager
+        self.po_id = po_id
+        
+        self.setWindowTitle("Purchase Order Details")
+        self.setMinimumWidth(600)
+        self.setMinimumHeight(400)
+        
+        layout = QVBoxLayout(self)
+        
+        # Get purchase order details
+        purchase_orders = self.db_manager.get_purchase_orders()
+        po_details = next((po for po in purchase_orders if po['po_id'] == po_id), None)
+        
+        if not po_details:
+            QMessageBox.critical(self, "Error", "Purchase order not found!")
+            self.reject()
+            return
+        
+        # PO header information
+        header_widget = QWidget()
+        header_layout = QFormLayout(header_widget)
+        
+        po_number_label = QLabel(po_details['po_number'])
+        po_number_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        header_layout.addRow("PO Number:", po_number_label)
+        
+        supplier_label = QLabel(po_details['supplier_name'])
+        header_layout.addRow("Supplier:", supplier_label)
+        
+        status_label = QLabel(po_details['status'])
+        header_layout.addRow("Status:", status_label)
+        
+        created_by_label = QLabel(po_details['created_by_name'])
+        header_layout.addRow("Created By:", created_by_label)
+        
+        created_date = po_details['created_at'].strftime('%Y-%m-%d') if po_details['created_at'] else "N/A"
+        created_date_label = QLabel(created_date)
+        header_layout.addRow("Created Date:", created_date_label)
+        
+        expected_delivery = po_details['expected_delivery'].strftime('%Y-%m-%d') if po_details['expected_delivery'] else "N/A"
+        expected_delivery_label = QLabel(expected_delivery)
+        header_layout.addRow("Expected Delivery:", expected_delivery_label)
+        
+        total_amount_label = QLabel(f"${po_details['total_amount']:.2f}")
+        total_amount_label.setStyleSheet("font-weight: bold;")
+        header_layout.addRow("Total Amount:", total_amount_label)
+        
+        layout.addWidget(header_widget)
+        
+        # Line separator
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        layout.addWidget(line)
+        
+        # PO items table
+        items_label = QLabel("Purchase Order Items")
+        items_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        layout.addWidget(items_label)
+        
+        self.items_table = QTableWidget()
+        self.items_table.setColumnCount(5)
+        self.items_table.setHorizontalHeaderLabels([
+            "Item Code", "Item Name", "Quantity", "Unit Price", "Total"
+        ])
+        self.items_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        
+        # Get PO items
+        po_items = self.db_manager.get_purchase_order_items(po_id)
+        
+        # Populate items table
+        self.items_table.setRowCount(len(po_items))
+        for row, item in enumerate(po_items):
+            self.items_table.setItem(row, 0, QTableWidgetItem(item['item_code']))
+            self.items_table.setItem(row, 1, QTableWidgetItem(item['item_name']))
+            self.items_table.setItem(row, 2, QTableWidgetItem(str(item['quantity'])))
+            self.items_table.setItem(row, 3, QTableWidgetItem(f"${item['unit_price']:.2f}"))
+            
+            total = item['quantity'] * item['unit_price']
+            self.items_table.setItem(row, 4, QTableWidgetItem(f"${total:.2f}"))
+        
+        self.items_table.resizeColumnsToContents()
+        layout.addWidget(self.items_table)
+        
+        # Notes section
+        if po_details.get('notes'):
+            notes_label = QLabel("Notes")
+            notes_label.setStyleSheet("font-weight: bold;")
+            layout.addWidget(notes_label)
+            
+            notes_text = QTextEdit()
+            notes_text.setPlainText(po_details['notes'])
+            notes_text.setReadOnly(True)
+            notes_text.setMaximumHeight(100)
+            layout.addWidget(notes_text)
+        
+        # Close button
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(self.accept)
+        layout.addWidget(close_btn, alignment=Qt.AlignRight)
