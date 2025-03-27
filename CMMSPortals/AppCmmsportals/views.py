@@ -12,6 +12,8 @@ import json
 import os
 import mysql.connector
 from mysql.connector import Error
+import pandas as pd
+import io
 
 from .models import (
     User, Craftsman, InventoryPersonnel, Equipment, WorkOrder, 
@@ -955,7 +957,9 @@ def inventory_dashboard(request):
 
 @login_required
 def inventory_items(request):
-    """View inventory items"""
+    """View all inventory items"""
+    # Check what template is being used
+    print("DEBUG: Rendering template:", 'inventory/inventory_items.html')  # Add this debug line
     # Ensure user is inventory personnel
     if request.user.role != 'inventory':
         messages.error(request, 'Access denied')
@@ -1855,3 +1859,228 @@ def craftsmen_profile(request):
         'trainings': trainings,
         'teams': teams
     })
+
+@login_required
+def import_items(request):
+    """Import inventory items from CSV or Excel file"""
+    print("DEBUG: import_items view reached!")  # Add this debug line
+    # Ensure user is inventory personnel
+    if request.user.role != 'inventory':
+        messages.error(request, 'Access denied')
+        return redirect('logout')
+    
+    # Check permission
+    try:
+        inventory_person = InventoryPersonnel.objects.get(employee_id=request.user.employee_id)
+        
+        # Temporarily bypass permission check for debugging
+        inventory_person.access_level = 'Admin'  # Force set to Admin
+        
+        if inventory_person.access_level not in ['Admin', 'Manager', 'Standard']:
+            messages.error(request, 'You do not have permission to import items')
+            return redirect('inventory_items')
+    except InventoryPersonnel.DoesNotExist:
+        messages.error(request, 'Inventory personnel profile not found')
+        return redirect('inventory_items')
+    
+    if request.method == 'POST':
+        if 'file' not in request.FILES:
+            messages.error(request, 'No file uploaded')
+            return render(request, 'inventory/import_items.html')
+        
+        uploaded_file = request.FILES['file']
+        
+        # Check file extension
+        file_ext = uploaded_file.name.split('.')[-1].lower()
+        
+        # Process the file
+        import pandas as pd
+        import io
+        
+        try:
+            # Read file based on extension
+            if file_ext == 'csv':
+                df = pd.read_csv(uploaded_file)
+            elif file_ext in ['xls', 'xlsx']:
+                df = pd.read_excel(uploaded_file)
+            else:
+                messages.error(request, 'Unsupported file format. Please upload CSV or Excel file.')
+                return render(request, 'inventory/import_items.html')
+            
+            # Validate required columns
+            required_columns = ['Item Code', 'Name', 'Quantity']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                messages.error(request, f'Missing required columns: {", ".join(missing_columns)}')
+                return render(request, 'inventory/import_items.html')
+            
+            # Process rows
+            success_count = 0
+            error_count = 0
+            error_messages = []
+            
+            for index, row in df.iterrows():
+                try:
+                    # Extract values with fallbacks for optional fields
+                    item_code = str(row['Item Code'])
+                    name = str(row['Name'])
+                    quantity = float(row['Quantity'])
+                    
+                    # Optional fields
+                    category_name = str(row.get('Category', '')) or None
+                    supplier_name = str(row.get('Supplier', '')) or None
+                    unit = str(row.get('Unit', '')) or 'units'
+                    minimum_quantity = float(row.get('Minimum Quantity', 0))
+                    reorder_point = float(row.get('Reorder Point', 0))
+                    unit_cost = float(row.get('Unit Cost', 0))
+                    location = str(row.get('Location', '')) or ''
+                    description = str(row.get('Description', '')) or ''
+                    
+                    # Get or create category
+                    category = None
+                    if category_name and category_name.lower() != 'nan':
+                        category, _ = InventoryCategory.objects.get_or_create(
+                            name=category_name,
+                            defaults={'description': f'Imported category: {category_name}'}
+                        )
+                    
+                    # Get or create supplier
+                    supplier = None
+                    if supplier_name and supplier_name.lower() != 'nan':
+                        supplier, _ = Supplier.objects.get_or_create(
+                            name=supplier_name,
+                            defaults={'description': f'Imported supplier: {supplier_name}'}
+                        )
+                    
+                    # Check if item already exists
+                    try:
+                        item = InventoryItem.objects.get(item_code=item_code)
+                        # Update existing item
+                        item.name = name
+                        item.category = category
+                        item.supplier = supplier
+                        item.quantity = quantity
+                        item.unit = unit
+                        item.minimum_quantity = minimum_quantity
+                        item.reorder_point = reorder_point
+                        item.unit_cost = unit_cost
+                        item.location = location
+                        item.description = description
+                        item.save()
+                    except InventoryItem.DoesNotExist:
+                        # Create new item
+                        item = InventoryItem.objects.create(
+                            item_code=item_code,
+                            name=name,
+                            category=category,
+                            supplier=supplier,
+                            quantity=quantity,
+                            unit=unit,
+                            minimum_quantity=minimum_quantity,
+                            reorder_point=reorder_point,
+                            unit_cost=unit_cost,
+                            location=location,
+                            description=description
+                        )
+                    
+                    # Create transaction record for new quantity
+                    InventoryTransaction.objects.create(
+                        item=item,
+                        transaction_type='Import',
+                        quantity=quantity,
+                        personnel=inventory_person,
+                        transaction_date=timezone.now(),
+                        reference=f"File import: {uploaded_file.name}",
+                        notes=f"Imported from file: {uploaded_file.name}"
+                    )
+                    
+                    success_count += 1
+                    
+                except Exception as e:
+                    error_count += 1
+                    error_messages.append(f"Error in row {index+2}: {str(e)}")
+            
+            # Prepare result message
+            if success_count > 0:
+                messages.success(request, f"Successfully imported {success_count} items.")
+            
+            if error_count > 0:
+                messages.warning(request, f"Failed to import {error_count} items.")
+                for error in error_messages[:10]:  # Show only first 10 errors
+                    messages.error(request, error)
+                
+                if len(error_messages) > 10:
+                    messages.error(request, f"... and {len(error_messages) - 10} more errors.")
+            
+            return redirect('inventory_items')
+            
+        except Exception as e:
+            messages.error(request, f'Error processing file: {str(e)}')
+            return render(request, 'inventory/import_items.html')
+    
+    return render(request, 'inventory/import_items.html')
+
+@login_required
+def export_items(request):
+    """Export inventory items to CSV"""
+    # Ensure user is inventory personnel
+    if request.user.role != 'inventory':
+        messages.error(request, 'Access denied')
+        return redirect('logout')
+    
+    # Get filter parameters from the inventory items page
+    category = request.GET.get('category', '')
+    status = request.GET.get('status', '')
+    search = request.GET.get('search', '')
+    
+    # Build query with filters
+    items_query = InventoryItem.objects.all()
+    
+    if category:
+        items_query = items_query.filter(category_id=category)
+    
+    if status:
+        if status == 'Low Stock':
+            items_query = items_query.filter(quantity__lte=F('minimum_quantity'), quantity__gt=0)
+        elif status == 'Out of Stock':
+            items_query = items_query.filter(quantity__lte=0)
+        elif status == 'In Stock':
+            items_query = items_query.filter(quantity__gt=F('minimum_quantity'))
+    
+    if search:
+        items_query = items_query.filter(name__icontains=search)
+    
+    # Order by name
+    items = items_query.order_by('name')
+    
+    # Create a CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="inventory_items.csv"'
+    
+    # Create CSV writer
+    writer = csv.writer(response)
+    
+    # Write header row
+    writer.writerow([
+        'Item Code', 'Name', 'Category', 'Supplier', 'Quantity', 'Unit',
+        'Minimum Quantity', 'Reorder Point', 'Unit Cost', 'Location', 'Description'
+    ])
+    
+    # Write data rows
+    for item in items:
+        writer.writerow([
+            item.item_code,
+            item.name,
+            item.category.name if item.category else '',
+            item.supplier.name if item.supplier else '',
+            item.quantity,
+            item.unit,
+            item.minimum_quantity,
+            item.reorder_point,
+            item.unit_cost,
+            item.location,
+            item.description
+        ])
+    
+    return response

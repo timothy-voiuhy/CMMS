@@ -47,6 +47,8 @@ urlpatterns = [
     path('receive-items/', views.receive_items, name='receive_items'),
     path('export-purchase-orders/', views.export_purchase_orders, name='export_purchase_orders'),
     path('generate_report/', views.generate_report, name='generate_report'),
+    path('inventory/import/', views.import_items, name='import_items'),
+    path('inventory/export/', views.export_items, name='export_items'),
     # API routes for mobile app integration
     path('api/login/', views.api_login, name='api_login'),
     path('api/work_orders/<int:craftsman_id>/', views.api_work_orders, name='api_work_orders'),
