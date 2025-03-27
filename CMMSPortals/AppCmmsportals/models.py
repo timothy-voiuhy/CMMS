@@ -158,7 +158,12 @@ class InventoryPersonnel(models.Model):
     phone = models.CharField(max_length=20, null=True, blank=True)
     email = models.EmailField(max_length=100, null=True, blank=True)
     role = models.CharField(max_length=50, null=True, blank=True)
-    access_level = models.CharField(max_length=20, default='Standard')
+    access_level = models.CharField(max_length=20, choices=[
+        ('Admin', 'Admin'),
+        ('Manager', 'Manager'),
+        ('Standard', 'Standard'),
+        ('ReadOnly', 'Read Only')
+    ], default='Admin')
     hire_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, default='Active')
     created_at = models.DateTimeField(auto_now_add=True)

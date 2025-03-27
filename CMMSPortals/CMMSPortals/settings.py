@@ -70,6 +70,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'AppCmmsportals.context_processors.resource_processor',
+                'AppCmmsportals.views.inventory_context_processor',
             ],
         },
     },
