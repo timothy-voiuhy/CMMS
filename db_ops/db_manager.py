@@ -1434,6 +1434,24 @@ class DatabaseManager:
     def get_overdue_work_orders(self):
         return self.work_orders.get_overdue_work_orders()
 
+    def get_completed_work_orders_by_equipment(self, equipment_id):
+        """Get all completed work orders for a specific equipment"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT * FROM work_orders 
+                WHERE equipment_id = %s 
+                AND status = 'Completed'
+                ORDER BY completed_date DESC
+            """, (equipment_id,))
+            return cursor.fetchall()
+        except Error as e:
+            print(f"Error fetching completed work orders: {e}")
+            return []
+        finally:
+            self.close(connection)
+
     def get_craftsman_by_employee_id(self, employee_id):
         """
         Get craftsman by employee ID.
@@ -2232,6 +2250,22 @@ class DatabaseManager:
         except Error as e:
             print(f"Error getting team name: {e}")
             return "Unknown Team"
+        finally:
+            self.close(connection)
+
+    def get_team_by_id(self, team_id):
+        """Get team details by ID"""
+        try:
+            connection = self.connect()
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT * FROM craftsmen_teams 
+                WHERE team_id = %s
+            """, (team_id,))
+            return cursor.fetchone()
+        except Error as e:
+            print(f"Error fetching team: {e}")
+            return None
         finally:
             self.close(connection)
 

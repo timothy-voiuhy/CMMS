@@ -831,3 +831,89 @@
 2025-03-27 16:50:54,298 - INFO - EMAIL ACTIVITY [send_success]: notification_id=36, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
 2025-03-27 16:50:54,329 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
 2025-03-27 17:14:12,849 - INFO - Notification scheduler stopped.
+2025-03-27 17:43:53,688 - INFO - Starting notification scheduler...
+2025-03-27 17:43:53,688 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 17:43:53,720 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 17:43:53,814 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 17:43:53,848 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 17:43:58,077 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 17:43:58,123 - INFO - EMAIL ACTIVITY [send_success]: notification_id=37, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 17:43:58,137 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 17:43:58,153 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=3, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 17:43:58,162 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 17:43:58,162 - INFO - Notification check completed. Processed 3 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 17:43:58,658 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 17:43:58,689 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 17:43:58,789 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 17:43:58,798 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 17:44:01,853 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 17:44:01,901 - INFO - EMAIL ACTIVITY [send_success]: notification_id=38, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 17:44:01,928 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 17:44:01,954 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=3, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 17:44:01,972 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 17:44:01,972 - INFO - Notification check completed. Processed 3 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 17:44:05,308 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 17:44:05,320 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 17:44:08,007 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 17:44:08,053 - INFO - EMAIL ACTIVITY [send_success]: notification_id=39, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 17:44:08,087 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 18:51:32,965 - INFO - Notification scheduler stopped.
+2025-03-27 18:52:33,485 - INFO - Starting notification scheduler...
+2025-03-27 18:52:33,485 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 18:52:33,501 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 18:52:33,567 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 18:52:33,581 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 18:52:37,969 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 18:52:38,005 - INFO - EMAIL ACTIVITY [send_success]: notification_id=40, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 18:52:38,009 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 18:52:38,027 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=3, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 18:52:38,055 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 18:52:38,056 - INFO - Notification check completed. Processed 3 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 18:52:38,469 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 18:52:38,501 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 18:52:38,601 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 18:52:38,617 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 18:52:41,674 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 18:52:41,705 - INFO - EMAIL ACTIVITY [send_success]: notification_id=41, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 18:52:41,736 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 18:52:41,752 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=3, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 18:52:41,778 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 18:52:41,778 - INFO - Notification check completed. Processed 3 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 18:52:44,669 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 18:52:44,679 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 18:52:47,571 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 18:52:47,618 - INFO - EMAIL ACTIVITY [send_success]: notification_id=42, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 18:52:47,638 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:05:46,056 - INFO - Notification scheduler stopped.
+2025-03-27 19:06:10,882 - INFO - Starting notification scheduler...
+2025-03-27 19:06:10,882 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 19:06:10,919 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:10,982 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Upcoming Work Order #9 Due in 2 Days, notification_type=work_order, reference_id=9, attachments_count=0
+2025-03-27 19:06:10,992 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:17,738 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 19:06:17,783 - INFO - EMAIL ACTIVITY [send_success]: notification_id=43, recipient=ezratimothy600@gmail.com, subject=Upcoming Work Order #9 Due in 2 Days, notification_type=work_order, reference_id=9, attachments=[]
+2025-03-27 19:06:17,803 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:17,868 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 19:06:17,882 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:20,562 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 19:06:20,593 - INFO - EMAIL ACTIVITY [send_success]: notification_id=44, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 19:06:20,624 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:20,640 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=4, upcoming_sent=1, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 19:06:20,656 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:20,656 - INFO - Notification check completed. Processed 4 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 19:06:21,052 - INFO - EMAIL ACTIVITY [check_started]: check_date=2025-03-27, upcoming_date=2025-03-28
+2025-03-27 19:06:21,084 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:21,171 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments_count=0
+2025-03-27 19:06:21,179 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:24,373 - INFO - Email sent successfully to ezratimothy600@gmail.com
+2025-03-27 19:06:24,413 - INFO - EMAIL ACTIVITY [send_success]: notification_id=45, recipient=ezratimothy600@gmail.com, subject=Work Order #6 Due Today, notification_type=work_order, reference_id=6, attachments=[]
+2025-03-27 19:06:24,432 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:24,449 - INFO - EMAIL ACTIVITY [check_completed]: upcoming_total=4, upcoming_sent=0, today_total=1, today_sent=1, overdue_total=0, overdue_sent=0
+2025-03-27 19:06:24,461 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:24,461 - INFO - Notification check completed. Processed 4 upcoming, 1 due today, and 0 overdue work orders.
+2025-03-27 19:06:27,270 - INFO - EMAIL ACTIVITY [attempt_send]: recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments_count=0
+2025-03-27 19:06:27,280 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:06:30,351 - INFO - Email sent successfully to michael.thompson@company.com
+2025-03-27 19:06:30,385 - INFO - EMAIL ACTIVITY [send_success]: notification_id=46, recipient=michael.thompson@company.com, subject=New Purchase Orders Created - 2 POs, attachments=[]
+2025-03-27 19:06:30,399 - ERROR - Error saving email activity to database: 1146 (42S02): Table 'cmms_db.email_activity_log' doesn't exist
+2025-03-27 19:08:27,052 - INFO - Notification scheduler stopped.

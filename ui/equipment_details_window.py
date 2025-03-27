@@ -731,7 +731,54 @@ class EquipmentDetailsWindow(QMainWindow):
 
     def load_history(self):
         """Load history entries into the table"""
+        # Get regular history entries
         history = self.db_manager.get_equipment_history(self.equipment_id)
+        
+        # Get maintenance schedule entries
+        maintenance_history = self.db_manager.get_maintenance_schedule(self.equipment_id)
+        
+        # Convert maintenance tasks to history entries
+        for task in maintenance_history:
+            if task.get('last_done'):  # Only include tasks that have been done
+                history.append({
+                    'date': task['last_done'],
+                    'event_type': 'Maintenance',
+                    'description': f"Completed maintenance task: {task['task_name']}",
+                    'performed_by': '',  # This information isn't stored in maintenance_schedule
+                    'notes': f"Next due: {task['next_due']}. {task.get('maintenance_procedure', '')}"
+                })
+        
+        # Get completed work orders for this equipment
+        completed_work_orders = self.db_manager.get_completed_work_orders_by_equipment(self.equipment_id)
+        
+        # Convert completed work orders to history entries
+        for work_order in completed_work_orders:
+            # Get craftsman name if available
+            craftsman_name = ''
+            if work_order.get('craftsman_id'):
+                craftsman = self.db_manager.get_craftsman_by_employee_id(work_order['craftsman_id'])
+                if craftsman:
+                    craftsman_name = f"{craftsman.get('first_name', '')} {craftsman.get('last_name', '')}"
+            
+            # Get team name if available
+            team_name = ''
+            if work_order.get('team_id'):
+                team = self.db_manager.get_team_by_id(work_order['team_id'])
+                if team:
+                    team_name = team.get('team_name', '')
+            
+            # Create history entry from work order
+            history.append({
+                'date': work_order.get('completed_date', work_order.get('last_modified')),
+                'event_type': 'Work Order',
+                'description': f"Completed work order: {work_order['title']} (ID: {work_order['work_order_id']})",
+                'performed_by': craftsman_name or team_name or 'Unknown',
+                'notes': work_order.get('description', '') + '\n' + work_order.get('notes', '')
+            })
+        
+        # Sort combined history by date (newest first)
+        history.sort(key=lambda x: x['date'] if isinstance(x['date'], datetime) else datetime.strptime(str(x['date']), '%Y-%m-%d'), reverse=True)
+        
         self.history_table.setRowCount(len(history))
         
         for row, entry in enumerate(history):
