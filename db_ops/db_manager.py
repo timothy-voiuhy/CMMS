@@ -3363,3 +3363,175 @@ class DatabaseManager:
             if 'connection' in locals() and connection:
                 self.close(connection)
 
+    def delete_inventory_personnel(self, personnel_id, force=False):
+        """Delete an inventory personnel record
+        
+        Args:
+            personnel_id: The ID of the personnel to delete
+            force: If True, delete even if there are associated records
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        connection = None
+        try:
+            connection = self.connect()
+            if connection is None:
+                return False
+            
+            cursor = connection.cursor()
+            
+            # Get employee_id for the personnel
+            cursor.execute("""
+                SELECT employee_id FROM inventory_personnel
+                WHERE personnel_id = %s
+            """, (personnel_id,))
+            result = cursor.fetchone()
+            
+            if not result:
+                return False
+                
+            employee_id = result[0]
+            
+            # Check if this personnel has associated records
+            if not force:
+                has_records = self.check_personnel_has_records(personnel_id)
+                if has_records:
+                    return False
+        
+            # Don't explicitly start a transaction - MySQL connector automatically starts one
+            # for us when we execute the first query
+            
+            try:
+                # Delete from inventory_transactions (if personnel_id references this personnel)
+                cursor.execute("""
+                    UPDATE inventory_transactions
+                    SET personnel_id = NULL
+                    WHERE personnel_id = %s
+                """, (personnel_id,))
+                
+                # Delete from purchase_orders (if created_by references this personnel)
+                cursor.execute("""
+                    DELETE FROM purchase_orders
+                    WHERE created_by = %s
+                """, (personnel_id,))
+                
+                # Delete from inventory_personnel
+                cursor.execute("""
+                    DELETE FROM inventory_personnel
+                    WHERE personnel_id = %s
+                """, (personnel_id,))
+                
+                # Delete from users table
+                cursor.execute("""
+                    DELETE FROM users
+                    WHERE employee_id = %s
+                """, (employee_id,))
+                
+                # Commit transaction
+                connection.commit()
+                return True
+                
+            except Error as e:
+                # Rollback in case of error
+                if connection.is_connected():
+                    connection.rollback()
+                print(f"Error in delete operation: {e}")
+                return False
+                
+        except Error as e:
+            print(f"Error deleting inventory personnel: {e}")
+            return False
+        finally:
+            if connection and connection.is_connected():
+                self.close(connection)
+
+    def check_personnel_has_records(self, personnel_id):
+        """Check if a personnel has associated records
+        
+        Args:
+            personnel_id: The ID of the personnel to check
+            
+        Returns:
+            bool: True if personnel has associated records, False otherwise
+        """
+        try:
+            connection = self.connect()
+            if connection is None:
+                return False
+            
+            cursor = connection.cursor()
+            
+            # Check purchase orders
+            cursor.execute("""
+                SELECT COUNT(*) FROM purchase_orders
+                WHERE created_by = %s
+            """, (personnel_id,))
+            po_count = cursor.fetchone()[0]
+            
+            # Check inventory transactions
+            cursor.execute("""
+                SELECT COUNT(*) FROM inventory_transactions
+                WHERE personnel_id = %s
+            """, (personnel_id,))
+            transaction_count = cursor.fetchone()[0]
+            
+            return po_count > 0 or transaction_count > 0
+            
+        except Error as e:
+            print(f"Error checking if personnel has records: {e}")
+            return True  # Assume has records on error to be safe
+        finally:
+            self.close(connection)
+
+    def set_personnel_inactive(self, personnel_id):
+        """Mark a personnel as inactive
+        
+        Args:
+            personnel_id: The ID of the personnel to mark as inactive
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            connection = self.connect()
+            if connection is None:
+                return False
+            
+            cursor = connection.cursor()
+            
+            # Get employee_id for the personnel
+            cursor.execute("""
+                SELECT employee_id FROM inventory_personnel
+                WHERE personnel_id = %s
+            """, (personnel_id,))
+            result = cursor.fetchone()
+            
+            if not result:
+                return False
+                
+            employee_id = result[0]
+            
+            # Update inventory_personnel
+            cursor.execute("""
+                UPDATE inventory_personnel
+                SET status = 'Inactive'
+                WHERE personnel_id = %s
+            """, (personnel_id,))
+            
+            # Update users table
+            cursor.execute("""
+                UPDATE users
+                SET is_active = 0
+                WHERE employee_id = %s
+            """, (employee_id,))
+            
+            connection.commit()
+            return True
+            
+        except Error as e:
+            print(f"Error setting personnel inactive: {e}")
+            return False
+        finally:
+            self.close(connection)
+

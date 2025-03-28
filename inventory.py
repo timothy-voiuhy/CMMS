@@ -528,6 +528,11 @@ class InventoryWindow(QMainWindow):
         edit_btn.clicked.connect(self.show_edit_personnel_dialog)
         controls_layout.addWidget(edit_btn)
         
+        # Delete button
+        delete_btn = QPushButton("Delete Personnel")
+        delete_btn.clicked.connect(self.show_delete_personnel_dialog)
+        controls_layout.addWidget(delete_btn)
+        
         # Export button
         export_btn = QPushButton("Export")
         export_btn.clicked.connect(self.export_personnel)
@@ -3916,6 +3921,68 @@ class InventoryWindow(QMainWindow):
         inventory_items.extend(production_items)
         
         return inventory_items
+
+    def show_delete_personnel_dialog(self):
+        """Show dialog to confirm deletion of personnel"""
+        selected_rows = self.personnel_table.selectedItems()
+        if not selected_rows:
+            QMessageBox.warning(self, "No Selection", "Please select a personnel to delete.")
+            return
+        
+        row = selected_rows[0].row()
+        personnel_id = int(self.personnel_table.item(row, 0).text())
+        employee_id = self.personnel_table.item(row, 1).text()
+        name = self.personnel_table.item(row, 2).text()
+        
+        # Confirm deletion
+        confirm = QMessageBox.question(
+            self,
+            "Confirm Deletion",
+            f"Are you sure you want to delete {name} (Employee ID: {employee_id})?\n\n"
+            "This action cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if confirm == QMessageBox.Yes:
+            # Check if personnel has associated records
+            has_records = self.db_manager.check_personnel_has_records(personnel_id)
+            
+            if has_records:
+                # If personnel has records, offer to mark as inactive instead
+                inactive_confirm = QMessageBox.question(
+                    self,
+                    "Personnel Has Records",
+                    f"{name} has associated records in the system.\n\n"
+                    "Would you like to mark them as 'Inactive' instead of deleting?",
+                    QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                    QMessageBox.Yes
+                )
+                
+                if inactive_confirm == QMessageBox.Yes:
+                    # Mark as inactive
+                    if self.db_manager.set_personnel_inactive(personnel_id):
+                        QMessageBox.information(self, "Success", f"{name} has been marked as inactive.")
+                        self.refresh_personnel()
+                        self.add_alert("info", "Personnel Updated", f"{name} marked as inactive", datetime.now())
+                    else:
+                        QMessageBox.critical(self, "Error", "Failed to update personnel status.")
+                elif inactive_confirm == QMessageBox.No:
+                    # Force delete
+                    if self.db_manager.delete_inventory_personnel(personnel_id, force=True):
+                        QMessageBox.information(self, "Success", f"{name} has been deleted.")
+                        self.refresh_personnel()
+                        self.add_alert("warning", "Personnel Deleted", f"{name} was deleted from the system", datetime.now())
+                    else:
+                        QMessageBox.critical(self, "Error", "Failed to delete personnel.")
+            else:
+                # No records, proceed with deletion
+                if self.db_manager.delete_inventory_personnel(personnel_id):
+                    QMessageBox.information(self, "Success", f"{name} has been deleted.")
+                    self.refresh_personnel()
+                    self.add_alert("warning", "Personnel Deleted", f"{name} was deleted from the system", datetime.now())
+                else:
+                    QMessageBox.critical(self, "Error", "Failed to delete personnel.")
 
 class AddItemDialog(QDialog):
     def __init__(self, db_manager, parent=None):
