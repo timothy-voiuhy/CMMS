@@ -24,7 +24,7 @@ from reportlab.graphics.charts.linecharts import HorizontalLineChart
 
 # Define constants
 REPORTS_DIR = os.path.join(os.path.expanduser("~"), "CMMS_Reports")
-DEFAULT_PAGESIZE = A4
+DEFAULT_PAGESIZE = A4  # We'll keep A4 as the default but make it configurable
 DEFAULT_MARGIN = 0.5 * inch
 CMMS_BLUE = colors.Color(33/255, 150/255, 243/255)
 CMMS_DARK = colors.Color(42/255, 42/255, 42/255)
@@ -111,8 +111,9 @@ class ReportHeader(Flowable):
 class Report:
     """Base class for all reports in the CMMS system."""
     
-    def __init__(self, title, filename=None, pagesize=DEFAULT_PAGESIZE, 
-                 margins=(DEFAULT_MARGIN, DEFAULT_MARGIN, DEFAULT_MARGIN, DEFAULT_MARGIN)):
+    def __init__(self, title, filename=None, pagesize=None, 
+                 margins=(DEFAULT_MARGIN, DEFAULT_MARGIN, DEFAULT_MARGIN, DEFAULT_MARGIN),
+                 auto_adjust_size=True):
         """
         Initialize a new report.
         
@@ -121,9 +122,11 @@ class Report:
             filename: Optional filename, will be generated if not provided
             pagesize: Page size (default: A4)
             margins: Tuple of margins (left, right, top, bottom)
+            auto_adjust_size: Whether to automatically adjust page size for content
         """
         self.title = title
         self.creation_date = datetime.now()
+        self.auto_adjust_size = auto_adjust_size
         
         # Generate filename if not provided
         if filename is None:
@@ -134,10 +137,20 @@ class Report:
         self.filename = filename
         self.filepath = os.path.join(REPORTS_DIR, filename)
         
+        # Set page size - use larger size if auto_adjust_size is True
+        if pagesize is None:
+            if auto_adjust_size:
+                # Use a larger page size to accommodate more content
+                self.pagesize = (8.5*inch, 14*inch)  # Legal size
+            else:
+                self.pagesize = DEFAULT_PAGESIZE
+        else:
+            self.pagesize = pagesize
+        
         # Initialize document
         self.doc = SimpleDocTemplate(
             self.filepath,
-            pagesize=pagesize,
+            pagesize=self.pagesize,
             leftMargin=margins[0],
             rightMargin=margins[1],
             topMargin=margins[2],
@@ -206,6 +219,16 @@ class Report:
                 fontName='Helvetica-Bold'
             ))
         
+        # Table cell style
+        if 'TableCell' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='TableCell',
+                parent=self.styles['Normal'],
+                fontSize=9,
+                leading=11,
+                wordWrap=True
+            ))
+        
         # Footer style
         if 'Footer' not in self.styles:
             self.styles.add(ParagraphStyle(
@@ -258,7 +281,7 @@ class Report:
         """Add a page break to the story."""
         self.story.append(PageBreak())
     
-    def add_table(self, data, colWidths=None, style=None, header_row=True):
+    def add_table(self, data, colWidths=None, style=None, header_row=True, max_width=None):
         """
         Add a table to the story.
         
@@ -267,13 +290,109 @@ class Report:
             colWidths: Optional list of column widths
             style: Optional TableStyle
             header_row: Whether the first row is a header row
+            max_width: Maximum width for the table (defaults to document width)
         """
         if not data:
             self.add_paragraph("No data available.")
             return
         
-        # Create table
-        table = Table(data, colWidths=colWidths)
+        # Determine available width
+        available_width = max_width or self.doc.width
+        
+        # Calculate column widths if not provided
+        if colWidths is None:
+            # Count columns
+            num_cols = max(len(row) for row in data)
+            
+            # Analyze content to determine appropriate column widths
+            col_content_lengths = [[] for _ in range(num_cols)]
+            
+            # Collect content lengths for each column
+            for row in data:
+                for col_idx, cell in enumerate(row):
+                    if col_idx < num_cols:
+                        col_content_lengths[col_idx].append(len(str(cell)))
+            
+            # Calculate average and max content length for each column
+            col_avg_lengths = []
+            col_max_lengths = []
+            for lengths in col_content_lengths:
+                if lengths:
+                    col_avg_lengths.append(sum(lengths) / len(lengths))
+                    col_max_lengths.append(max(lengths))
+                else:
+                    col_avg_lengths.append(0)
+                    col_max_lengths.append(0)
+            
+            # Determine column types based on content analysis
+            col_types = []
+            for avg_len, max_len in zip(col_avg_lengths, col_max_lengths):
+                if max_len <= 10:  # Short content (IDs, numbers, etc.)
+                    col_types.append('short')
+                elif avg_len <= 15:  # Medium content
+                    col_types.append('medium')
+                else:  # Long content
+                    col_types.append('long')
+            
+            # Assign initial widths based on column types
+            col_widths = []
+            for col_type in col_types:
+                if col_type == 'short':
+                    col_widths.append(0.7 * inch)
+                elif col_type == 'medium':
+                    col_widths.append(1.2 * inch)
+                else:  # long
+                    col_widths.append(2.0 * inch)
+            
+            # Adjust if total width exceeds available width
+            total_width = sum(col_widths)
+            if total_width > available_width:
+                # Scale all columns proportionally
+                scale_factor = available_width / total_width
+                col_widths = [width * scale_factor for width in col_widths]
+                
+                # Ensure minimum width for readability
+                min_width = 0.4 * inch
+                for i, width in enumerate(col_widths):
+                    if width < min_width:
+                        col_widths[i] = min_width
+                
+                # If we're still over budget, reduce the widest columns
+                total_width = sum(col_widths)
+                if total_width > available_width:
+                    excess = total_width - available_width
+                    # Sort column indices by width (descending)
+                    sorted_indices = sorted(range(len(col_widths)), key=lambda i: col_widths[i], reverse=True)
+                    
+                    # Reduce widest columns first
+                    for idx in sorted_indices:
+                        if col_widths[idx] > min_width:
+                            reduction = min(excess, col_widths[idx] - min_width)
+                            col_widths[idx] -= reduction
+                            excess -= reduction
+                            if excess <= 0:
+                                break
+            
+            colWidths = col_widths
+        
+        # Process data to ensure proper text wrapping
+        processed_data = []
+        for row in data:
+            processed_row = []
+            for cell in row:
+                # Convert all cells to strings and wrap in Paragraph for better text handling
+                if not isinstance(cell, Paragraph):
+                    cell_str = str(cell)
+                    # Use different styles for header and body
+                    if len(processed_data) == 0 and header_row:
+                        cell = Paragraph(cell_str, self.styles['TableHeader'])
+                    else:
+                        cell = Paragraph(cell_str, self.styles['BodyText'])
+                processed_row.append(cell)
+            processed_data.append(processed_row)
+        
+        # Create table with processed data
+        table = Table(processed_data, colWidths=colWidths, repeatRows=1 if header_row else 0)
         
         # Apply default style if none provided
         if style is None:
@@ -287,15 +406,23 @@ class Report:
                 ('BACKGROUND', (0, 1), (-1, -1), colors.white),
                 ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
                 ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+                # Align numeric columns to the right
+                ('ALIGN', (1, 1), (1, -1), 'RIGHT'),  # Quantity column
+                ('ALIGN', (4, 1), (5, -1), 'RIGHT'),  # Cost and Value columns
                 ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
                 ('FONTSIZE', (0, 1), (-1, -1), 9),
                 ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),  # Add top padding to all cells
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                # Ensure word wrapping
+                ('WORDWRAP', (0, 0), (-1, -1), True),
             ])
         
         table.setStyle(style)
-        self.story.append(table)
+        
+        # Wrap table in KeepTogether to avoid splitting across pages when possible
+        self.story.append(KeepTogether(table))
     
     def add_info_box(self, title, content_dict):
         """
@@ -331,7 +458,7 @@ class Report:
         self.story.append(table)
         self.story.append(Spacer(1, 0.1*inch))
     
-    def add_chart(self, chart_type, data, title=None, width=6*inch, height=3*inch):
+    def add_chart(self, chart_type, data, title=None, width=None, height=3*inch):
         """
         Add a chart to the story.
         
@@ -339,9 +466,13 @@ class Report:
             chart_type: Type of chart ('bar', 'pie', 'line')
             data: Data for the chart
             title: Optional title for the chart
-            width: Width of the chart
+            width: Width of the chart (defaults to document width)
             height: Height of the chart
         """
+        # Use document width if not specified
+        if width is None:
+            width = self.doc.width * 0.9  # 90% of document width
+        
         drawing = Drawing(width, height)
         
         if chart_type == 'bar':
@@ -414,6 +545,19 @@ class Report:
     
     def build(self):
         """Build the report and save it to file."""
+        # If auto-adjusting size is enabled, check if we need a larger page size
+        if self.auto_adjust_size and len(self.story) > 50:  # Arbitrary threshold
+            # Recreate the document with a larger page size
+            larger_pagesize = (self.pagesize[0], self.pagesize[1] * 1.2)  # 20% taller
+            self.doc = SimpleDocTemplate(
+                self.filepath,
+                pagesize=larger_pagesize,
+                leftMargin=self.doc.leftMargin,
+                rightMargin=self.doc.rightMargin,
+                topMargin=self.doc.topMargin,
+                bottomMargin=self.doc.bottomMargin
+            )
+        
         self.doc.build(self.story)
         return self.filepath
 

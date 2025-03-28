@@ -64,23 +64,16 @@ class CMMSMainWindow(QMainWindow):
         # Create stacked widget for different pages
         self.stacked_widget = QStackedWidget()
 
-        # Create windows
+        # Create welcome page only at startup
         self.welcome_page = self.create_welcome_page()
-        self.equipments_window = EquipmentsWindow(self.db_manager)
-        self.craftsmen_window = CraftsMenWindow(db_manager=self.db_manager, parent=self)
-        self.work_orders_window = WorkOrdersWindow(db_manager=self.db_manager, parent=self)
-        self.work_orders_window.sig_work_order_created.connect(self.notification_service.check_and_send_notifications)
-        self.inventory_window = InventoryWindow(db_manager=self.db_manager, parent=self, notification_service=self.notification_service)
-        self.inventory_window.sig_inventory_updated.connect(self.notification_service.check_and_send_notifications)
-        self.schedules_window = SchedulesWindow(db_manager=self.db_manager, parent=self)
-
-        # Add pages to stacked widget
         self.stacked_widget.addWidget(self.welcome_page)
-        self.stacked_widget.addWidget(self.equipments_window)
-        self.stacked_widget.addWidget(self.craftsmen_window)
-        self.stacked_widget.addWidget(self.work_orders_window)
-        self.stacked_widget.addWidget(self.inventory_window)
-        self.stacked_widget.addWidget(self.schedules_window)
+        
+        # Initialize window references to None for lazy loading
+        self.equipments_window = None
+        self.craftsmen_window = None
+        self.work_orders_window = None
+        self.inventory_window = None
+        self.schedules_window = None
         
         self.main_layout.addWidget(self.stacked_widget)
         
@@ -329,23 +322,33 @@ class CMMSMainWindow(QMainWindow):
         page_index = box.property("page_index")
         
         # Check if the page exists
-        if 0 <= page_index < self.stacked_widget.count():
-            self.stacked_widget.setCurrentIndex(page_index)
+        if page_index == 1:  # Equipment
+            window = self.get_equipments_window()
+            self.stacked_widget.setCurrentWidget(window)
+        elif page_index == 2:  # Craftsmen
+            window = self.get_craftsmen_window()
+            self.stacked_widget.setCurrentWidget(window)
+        elif page_index == 3:  # Work Orders
+            window = self.get_work_orders_window()
+            self.stacked_widget.setCurrentWidget(window)
+        elif page_index == 4:  # Inventory
+            window = self.get_inventory_window()
+            self.stacked_widget.setCurrentWidget(window)
+        elif page_index == 5:  # Schedules
+            window = self.get_schedules_window()
+            self.stacked_widget.setCurrentWidget(window)
         elif page_index == 7:  # Craftsman Portal
             self.open_craftsman_portal()
+        elif page_index == 0:  # Welcome page
+            self.stacked_widget.setCurrentIndex(0)
         else:
             # For future features, show a "coming soon" message
             title = box.findChild(QLabel).text()
-            if title == "Work Orders":
-                self.stacked_widget.setCurrentIndex(3)  # Work Orders index
-            elif title == "Inventory Management":
-                self.stacked_widget.setCurrentIndex(4)  # Inventory Management index
-            else:
-                QMessageBox.information(
-                    self,
-                    "Coming Soon",
-                    f"The {title} feature is coming soon!"
-                )
+            QMessageBox.information(
+                self,
+                "Coming Soon",
+                f"The {title} feature is coming soon!"
+            )
 
     def closeEvent(self, event):
         # Stop the Django server if it's running
@@ -439,23 +442,23 @@ class CMMSMainWindow(QMainWindow):
         
         equipment_action = menu_bar.addAction("Equipment")
         equipment_action.setShortcut("Ctrl+2")
-        equipment_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(1))
+        equipment_action.triggered.connect(lambda: self.stacked_widget.setCurrentWidget(self.get_equipments_window()))
         
         craftsmen_action = menu_bar.addAction("Craftsmen")
         craftsmen_action.setShortcut("Ctrl+3")
-        craftsmen_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(2))
+        craftsmen_action.triggered.connect(lambda: self.stacked_widget.setCurrentWidget(self.get_craftsmen_window()))
         
         work_orders_action = menu_bar.addAction("Work Orders")
         work_orders_action.setShortcut("Ctrl+4")
-        work_orders_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(3))
+        work_orders_action.triggered.connect(lambda: self.stacked_widget.setCurrentWidget(self.get_work_orders_window()))
         
         inventory_action = menu_bar.addAction("Inventory")
         inventory_action.setShortcut("Ctrl+5")
-        inventory_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(4))
+        inventory_action.triggered.connect(lambda: self.stacked_widget.setCurrentWidget(self.get_inventory_window()))
         
         schedules_action = menu_bar.addAction("Schedules")
         schedules_action.setShortcut("Ctrl+6")
-        schedules_action.triggered.connect(lambda: self.stacked_widget.setCurrentIndex(5))
+        schedules_action.triggered.connect(lambda: self.stacked_widget.setCurrentWidget(self.get_schedules_window()))
         
         # Create Portals menu
         portals_menu = menu_bar.addMenu("Portals")
@@ -668,3 +671,36 @@ class CMMSMainWindow(QMainWindow):
         # In a future enhancement, this could update a status bar or icon
         # to show the number of pending/failed notifications
         pass
+
+    # Lazy loading methods for each window
+    def get_equipments_window(self):
+        if self.equipments_window is None:
+            self.equipments_window = EquipmentsWindow(self.db_manager)
+            self.stacked_widget.addWidget(self.equipments_window)
+        return self.equipments_window
+    
+    def get_craftsmen_window(self):
+        if self.craftsmen_window is None:
+            self.craftsmen_window = CraftsMenWindow(db_manager=self.db_manager, parent=self)
+            self.stacked_widget.addWidget(self.craftsmen_window)
+        return self.craftsmen_window
+    
+    def get_work_orders_window(self):
+        if self.work_orders_window is None:
+            self.work_orders_window = WorkOrdersWindow(db_manager=self.db_manager, parent=self)
+            self.work_orders_window.sig_work_order_created.connect(self.notification_service.check_and_send_notifications)
+            self.stacked_widget.addWidget(self.work_orders_window)
+        return self.work_orders_window
+    
+    def get_inventory_window(self):
+        if self.inventory_window is None:
+            self.inventory_window = InventoryWindow(db_manager=self.db_manager, parent=self, notification_service=self.notification_service)
+            self.inventory_window.sig_inventory_updated.connect(self.notification_service.check_and_send_notifications)
+            self.stacked_widget.addWidget(self.inventory_window)
+        return self.inventory_window
+    
+    def get_schedules_window(self):
+        if self.schedules_window is None:
+            self.schedules_window = SchedulesWindow(db_manager=self.db_manager, parent=self)
+            self.stacked_widget.addWidget(self.schedules_window)
+        return self.schedules_window
