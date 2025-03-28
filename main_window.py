@@ -69,6 +69,7 @@ class CMMSMainWindow(QMainWindow):
         self.work_orders_window = WorkOrdersWindow(db_manager=self.db_manager, parent=self)
         self.work_orders_window.sig_work_order_created.connect(self.notification_service.check_and_send_notifications)
         self.inventory_window = InventoryWindow(db_manager=self.db_manager, parent=self, notification_service=self.notification_service)
+        self.inventory_window.sig_inventory_updated.connect(self.notification_service.check_and_send_notifications)
         self.schedules_window = SchedulesWindow(db_manager=self.db_manager, parent=self)
 
         # Add pages to stacked widget
