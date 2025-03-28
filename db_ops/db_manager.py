@@ -3535,3 +3535,76 @@ class DatabaseManager:
         finally:
             self.close(connection)
 
+    def validate_user(self, username, password, user_type):
+        """Validate user credentials against the database"""
+        try:
+            # Connect to database
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            
+            # Check if we have a users table, if not create it with default admin
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL UNIQUE,
+                    password TEXT NOT NULL,
+                    user_type TEXT NOT NULL,
+                    full_name TEXT,
+                    email TEXT,
+                    active INTEGER DEFAULT 1
+                )
+            ''')
+            
+            # Add default admin user if no users exist
+            cursor.execute("SELECT COUNT(*) FROM users")
+            if cursor.fetchone()[0] == 0:
+                cursor.execute('''
+                    INSERT INTO users (username, password, user_type, full_name, email, active)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', ('admin', 'admin', 'Administrator', 'System Administrator', 'admin@example.com', 1))
+                conn.commit()
+            
+            # Query for user with matching credentials
+            cursor.execute('''
+                SELECT id, username, user_type, full_name, email
+                FROM users
+                WHERE username = ? AND password = ? AND user_type = ? AND active = 1
+            ''', (username, password, user_type))
+            
+            user = cursor.fetchone()
+            conn.close()
+            
+            if user:
+                return {
+                    "id": user[0],
+                    "username": user[1],
+                    "user_type": user[2],
+                    "full_name": user[3],
+                    "email": user[4]
+                }
+            else:
+                return None
+                
+        except Exception as e:
+            print(f"Error validating user: {str(e)}")
+            return None
+
+    def verify_admin_password(self, password):
+        """Verify if the provided password matches an admin account"""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT COUNT(*) FROM users
+                WHERE password = ? AND user_type = 'Administrator' AND active = 1
+            ''', (password,))
+            
+            count = cursor.fetchone()[0]
+            conn.close()
+            
+            return count > 0
+        except Exception as e:
+            print(f"Error verifying admin password: {str(e)}")
+            return False
+

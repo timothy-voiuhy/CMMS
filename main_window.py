@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                                 QPushButton, QLabel, QStackedWidget, QFrame, QGridLayout, QMessageBox, QScrollArea, QSizePolicy, QInputDialog, QLineEdit, QApplication)
+                                 QPushButton, QLabel, QStackedWidget, QFrame, QGridLayout, QMessageBox, QScrollArea, QSizePolicy, QInputDialog, QLineEdit, QApplication, QDialog)
 from PySide6.QtCore import Qt, Slot, QSize, QTimer, QEvent, QPoint, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QFont, QIcon, QPixmap, QEnterEvent
 from ui.equipment_registration import EquipmentRegistrationWindow
@@ -22,11 +22,21 @@ from inventory_personnel_login import InventoryPersonnelLoginDialog
 from notification_center import NotificationCenter
 import logging
 from font_size_dialog import GlobalFontSizeDialog
+from login_window import LoginWindow
 
 class CMMSMainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
+        # Initialize database manager first for login validation
+        self.db_manager = DatabaseManager()
+        
+        # Show login window before initializing the rest of the UI
+        if not self.authenticate_user():
+            # If authentication fails, exit the application
+            import sys
+            sys.exit(0)
+            
         self.setWindowTitle("CMMS - Maintenance Management System")
         # Remove or comment out the setMinimumSize line as it might interfere
         # self.setMinimumSize(1200, 800)
@@ -37,9 +47,6 @@ class CMMSMainWindow(QMainWindow):
         # Create menu bar
         self.create_menu_bar()
         
-        # Initialize database manager
-        self.db_manager = DatabaseManager()
-
         self.notification_service = EmailNotificationService(self.db_manager)
         if self.notification_service.is_enabled():
             self.notification_service.start_scheduler()
@@ -704,3 +711,15 @@ class CMMSMainWindow(QMainWindow):
             self.schedules_window = SchedulesWindow(db_manager=self.db_manager, parent=self)
             self.stacked_widget.addWidget(self.schedules_window)
         return self.schedules_window
+
+    def authenticate_user(self):
+        """Show login window and authenticate user before allowing access to the system"""
+        login_window = LoginWindow(self.db_manager)
+        result = login_window.exec()
+        
+        if result == QDialog.DialogCode.Accepted:
+            # Store the authenticated user information for later use
+            self.current_user = login_window.get_user_info()
+            return True
+        else:
+            return False
