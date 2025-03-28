@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMMS System Flow Diagram</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .diagram-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .diagram-title {
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 600;
+        }
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .legend {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+        .download-btn {
+            margin-top: 15px;
+            background-color: #4e73df;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .download-btn:hover {
+            background-color: #2e59d9;
+        }
+        .workflow-section {
+            margin-bottom: 40px;
+        }
+        .workflow-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center my-4">CMMS System Architecture & Flow Diagram</h1>
+        
+        <!-- System Architecture Flow Diagram -->
+        <div class="diagram-container">
+            <h2 class="diagram-title text-center">System Architecture & Data Flow</h2>
+            <div class="text-center">
+                <svg id="systemFlowDiagram" width="1200" height="900" class="border rounded"></svg>
+            </div>
+            
+            <div class="text-center">
+                <button id="downloadSystemDiagram" class="download-btn">
+                    <i class="fas fa-download"></i> Download as PNG
+                </button>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="legend">
+                        <h5>Component Legend</h5>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #4e73df;"></div>
+                            <span>User Interfaces (Qt Desktop)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #1cc88a;"></div>
+                            <span>Web Portals (Django)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #f6c23e;"></div>
+                            <span>Core Services</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #e74a3b;"></div>
+                            <span>Database Layer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="legend">
+                        <h5>Flow Legend</h5>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #333; height: 2px;"></div>
+                            <span>Direct Data Flow</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #36b9cc; height: 2px;"></div>
+                            <span>User Interaction</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #6f42c1; height: 2px;"></div>
+                            <span>Notification Flow</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #fd7e14; height: 2px;"></div>
+                            <span>Scheduled Operations</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- User Workflow Processes Section -->
+        <div class="container-fluid mt-5">
+            <h2 class="text-center mb-4">Detailed Module Workflows</h2>
+            
+            <!-- Equipment Management Workflow -->
+            <div class="diagram-container">
+                <h3 class="diagram-title text-center">Equipment Management Workflow</h3>
+                <div class="text-center">
+                    <svg id="equipmentWorkflowDiagram" width="1200" height="600" class="border rounded"></svg>
+                </div>
+                <div class="text-center mt-3">
+                    <button id="downloadEquipmentDiagram" class="download-btn">
+                        <i class="fas fa-download"></i> Download as PNG
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Work Orders Workflow -->
+            <div class="diagram-container">
+                <h3 class="diagram-title text-center">Work Orders Workflow</h3>
+                <div class="text-center">
+                    <svg id="workOrdersWorkflowDiagram" width="1200" height="500" class="border rounded"></svg>
+                </div>
+                <div class="text-center mt-3">
+                    <button id="downloadWorkOrdersDiagram" class="download-btn">
+                        <i class="fas fa-download"></i> Download as PNG
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Inventory Management Workflow -->
+            <div class="diagram-container">
+                <h3 class="diagram-title text-center">Inventory Management Workflow</h3>
+                <div class="text-center">
+                    <svg id="inventoryWorkflowDiagram" width="1200" height="500" class="border rounded"></svg>
+                </div>
+                <div class="text-center mt-3">
+                    <button id="downloadInventoryDiagram" class="download-btn">
+                        <i class="fas fa-download"></i> Download as PNG
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Craftsmen Management Workflow -->
+            <div class="diagram-container">
+                <h3 class="diagram-title text-center">Craftsmen Management Workflow</h3>
+                <div class="text-center">
+                    <svg id="craftsmenWorkflowDiagram" width="1200" height="500" class="border rounded"></svg>
+                </div>
+                <div class="text-center mt-3">
+                    <button id="downloadCraftsmenDiagram" class="download-btn">
+                        <i class="fas fa-download"></i> Download as PNG
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Maintenance Scheduler Workflow -->
+            <div class="diagram-container">
+                <h3 class="diagram-title text-center">Maintenance Scheduler Workflow</h3>
+                <div class="text-center">
+                    <svg id="schedulerWorkflowDiagram" width="1200" height="500" class="border rounded"></svg>
+                </div>
+                <div class="text-center mt-3">
+                    <button id="downloadSchedulerDiagram" class="download-btn">
+                        <i class="fas fa-download"></i> Download as PNG
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Django Web Portals Workflow Diagram -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Django Web Portals Workflow</h6>
+        </div>
+        <div class="card-body">
+            <svg id="djangoWebPortalsWorkflowDiagram" width="100%" height="700"></svg>
+            <button id="downloadDjangoWebPortalsDiagram" class="btn btn-primary mt-3">Download Diagram</button>
+        </div>
+    </div>
+
+    <!-- Qt Portals Workflow Diagram -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Qt Portals Workflow</h6>
+        </div>
+        <div class="card-body">
+            <svg id="qtPortalsWorkflowDiagram" width="100%" height="700"></svg>
+            <button id="downloadQtPortalsDiagram" class="btn btn-primary mt-3">Download Diagram</button>
+        </div>
+    </div>
+
+    <!-- D3.js for interactive diagrams -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // System Architecture Flow Diagram
+            const systemSvg = d3.select("#systemFlowDiagram");
+            const sWidth = systemSvg.node().getBoundingClientRect().width;
+            const sHeight = 900;
+            
+            // Define the main components
+            const components = [
+                // User Interfaces (Qt Desktop)
+                { id: "main_window", name: "Main Window (Qt)", type: "ui", x: sWidth * 0.5, y: 80, width: 180, height: 60 },
+                { id: "equipment_ui", name: "Equipment Management", type: "ui", x: sWidth * 0.25, y: 180, width: 160, height: 50 },
+                { id: "craftsmen_ui", name: "Craftsmen Management", type: "ui", x: sWidth * 0.5, y: 180, width: 160, height: 50 },
+                { id: "workorders_ui", name: "Work Orders", type: "ui", x: sWidth * 0.75, y: 180, width: 160, height: 50 },
+                { id: "inventory_ui", name: "Inventory Management", type: "ui", x: sWidth * 0.25, y: 250, width: 160, height: 50 },
+                { id: "scheduler_ui", name: "Maintenance Scheduler", type: "ui", x: sWidth * 0.5, y: 250, width: 160, height: 50 },
+                { id: "admin_ui", name: "Admin Interface", type: "ui", x: sWidth * 0.75, y: 250, width: 160, height: 50 },
+                { id: "notification_center", name: "Notification Center", type: "ui", x: sWidth * 0.9, y: 120, width: 140, height: 50 },
+                
+                // Web Portals (Django)
+                { id: "web_portal", name: "Web Portal (Django)", type: "web", x: sWidth * 0.15, y: 120, width: 160, height: 50 },
+                { id: "craftsman_portal", name: "Craftsman Portal", type: "web", x: sWidth * 0.15, y: 350, width: 160, height: 50 },
+                { id: "inventory_portal", name: "Inventory Personnel Portal", type: "web", x: sWidth * 0.35, y: 350, width: 160, height: 50 },
+                
+                // Core Services
+                { id: "db_manager", name: "Database Manager", type: "service", x: sWidth * 0.5, y: 450, width: 180, height: 60 },
+                { id: "notification_service", name: "Email Notification Service", type: "service", x: sWidth * 0.75, y: 350, width: 160, height: 50 },
+                { id: "scheduler_service", name: "Maintenance Scheduler Service", type: "service", x: sWidth * 0.55, y: 350, width: 160, height: 50 },
+                
+                // Database Layer
+                { id: "database", name: "SQLite Database", type: "database", x: sWidth * 0.5, y: 550, width: 200, height: 70 }
+            ];
+            
+            // Define connections between components
+            const connections = [
+                // Main window to UI components
+                { source: "main_window", target: "equipment_ui", type: "user" },
+                { source: "main_window", target: "craftsmen_ui", type: "user" },
+                { source: "main_window", target: "workorders_ui", type: "user" },
+                { source: "main_window", target: "inventory_ui", type: "user" },
+                { source: "main_window", target: "scheduler_ui", type: "user" },
+                { source: "main_window", target: "admin_ui", type: "user" },
+                { source: "main_window", target: "notification_center", type: "user" },
+                
+                // UI components to services
+                { source: "equipment_ui", target: "db_manager", type: "data" },
+                { source: "craftsmen_ui", target: "db_manager", type: "data" },
+                { source: "workorders_ui", target: "db_manager", type: "data" },
+                { source: "inventory_ui", target: "db_manager", type: "data" },
+                { source: "scheduler_ui", target: "db_manager", type: "data" },
+                { source: "admin_ui", target: "db_manager", type: "data" },
+                
+                // Web portal connections
+                { source: "web_portal", target: "db_manager", type: "data" },
+                { source: "craftsman_portal", target: "db_manager", type: "data" },
+                { source: "inventory_portal", target: "db_manager", type: "data" },
+                
+                // Service connections
+                { source: "db_manager", target: "database", type: "data" },
+                { source: "notification_service", target: "db_manager", type: "data" },
+                { source: "scheduler_service", target: "db_manager", type: "data" },
+                
+                // Notification flows
+                { source: "workorders_ui", target: "notification_service", type: "notification" },
+                { source: "inventory_ui", target: "notification_service", type: "notification" },
+                { source: "notification_service", target: "notification_center", type: "notification" },
+                
+                // Scheduler connections
+                { source: "scheduler_service", target: "workorders_ui", type: "scheduled" },
+                { source: "scheduler_service", target: "notification_service", type: "scheduled" }
+            ];
+            
+            // Draw connections
+            connections.forEach(conn => {
+                const source = components.find(c => c.id === conn.source);
+                const target = components.find(c => c.id === conn.target);
+                
+                // Determine line style based on connection type
+                let strokeColor, strokeWidth, dashArray;
+                switch(conn.type) {
+                    case "user":
+                        strokeColor = "#36b9cc";
+                        strokeWidth = 2;
+                        dashArray = "none";
+                        break;
+                    case "notification":
+                        strokeColor = "#6f42c1";
+                        strokeWidth = 2;
+                        dashArray = "5,5";
+                        break;
+                    case "scheduled":
+                        strokeColor = "#fd7e14";
+                        strokeWidth = 2;
+                        dashArray = "10,5";
+                        break;
+                    default: // data
+                        strokeColor = "#333";
+                        strokeWidth = 2;
+                        dashArray = "none";
+                }
+                
+                // Calculate connection points
+                let x1, y1, x2, y2;
+                
+                // Adjust connection points based on component positions
+                if (source.y < target.y) {
+                    // Source is above target
+                    x1 = source.x;
+                    y1 = source.y + source.height/2;
+                    x2 = target.x;
+                    y2 = target.y - target.height/2;
+                } else if (source.y > target.y) {
+                    // Source is below target
+                    x1 = source.x;
+                    y1 = source.y - source.height/2;
+                    x2 = target.x;
+                    y2 = target.y + target.height/2;
+                } else {
+                    // Same level
+                    if (source.x < target.x) {
+                        x1 = source.x + source.width/2;
+                        y1 = source.y;
+                        x2 = target.x - target.width/2;
+                        y2 = target.y;
+                    } else {
+                        x1 = source.x - source.width/2;
+                        y1 = source.y;
+                        x2 = target.x + target.width/2;
+                        y2 = target.y;
+                    }
+                }
+                
+                // Draw the path with a curve
+                const path = systemSvg.append("path")
+                    .attr("d", `M${x1},${y1} C${x1},${(y1+y2)/2} ${x2},${(y1+y2)/2} ${x2},${y2}`)
+                    .attr("stroke", strokeColor)
+                    .attr("stroke-width", strokeWidth)
+                    .attr("stroke-dasharray", dashArray)
+                    .attr("fill", "none")
+                    .attr("marker-end", "url(#arrow-" + conn.type + ")");
+            });
+            
+            // Add arrow markers for different connection types
+            const markerTypes = [
+                { id: "arrow-user", color: "#36b9cc" },
+                { id: "arrow-notification", color: "#6f42c1" },
+                { id: "arrow-scheduled", color: "#fd7e14" },
+                { id: "arrow-data", color: "#333" }
+            ];
+            
+            const defs = systemSvg.append("defs");
+            
+            markerTypes.forEach(marker => {
+                defs.append("marker")
+                    .attr("id", marker.id)
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 8)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 6)
+                    .attr("markerHeight", 6)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", marker.color);
+            });
+            
+            // Draw components
+            const componentGroups = systemSvg.selectAll(".component")
+                .data(components)
+                .enter()
+                .append("g")
+                .attr("class", "component")
+                .attr("transform", d => `translate(${d.x - d.width/2}, ${d.y - d.height/2})`);
+            
+            // Determine fill color based on component type
+            function getFillColor(type) {
+                switch(type) {
+                    case "ui": return "#4e73df";
+                    case "web": return "#1cc88a";
+                    case "service": return "#f6c23e";
+                    case "database": return "#e74a3b";
+                    default: return "#5a5c69";
+                }
+            }
+            
+            componentGroups.append("rect")
+                .attr("width", d => d.width)
+                .attr("height", d => d.height)
+                .attr("rx", 10)
+                .attr("ry", 10)
+                .attr("fill", d => getFillColor(d.type))
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 2);
+            
+            componentGroups.append("text")
+                .attr("x", d => d.width / 2)
+                .attr("y", d => d.height / 2)
+                .attr("text-anchor", "middle")
+                .attr("dominant-baseline", "middle")
+                .attr("fill", "white")
+                .attr("font-weight", "bold")
+                .attr("font-size", "12px")
+                .text(d => d.name);
+            
+            // Add download functionality for system diagram
+            document.getElementById('downloadSystemDiagram').addEventListener('click', function() {
+                downloadSvgAsPng('systemFlowDiagram', 'CMMS_System_Architecture');
+            });
+            
+            // Set a larger height for all diagrams to prevent cropping
+            const diagramHeight = 700; // Increased from 600
+
+            // Add this at the beginning of each workflow creation function
+            function resizeSvgContainer(svgId) {
+                // Ensure the SVG container has enough height
+                d3.select(`#${svgId}`)
+                    .attr("height", diagramHeight)
+                    .attr("preserveAspectRatio", "xMidYMid meet");
+            }
+
+            // Equipment Management Workflow
+            function createEquipmentWorkflow() {
+                const svg = d3.select("#equipmentWorkflowDiagram");
+                resizeSvgContainer("equipmentWorkflowDiagram");
+                const width = svg.node().getBoundingClientRect().width;
+                const height = diagramHeight;
+                
+                // Add arrow marker definition
+                const defs = svg.append("defs");
+                defs.append("marker")
+                    .attr("id", "equipment-arrow")
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 8)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 6)
+                    .attr("markerHeight", 6)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", "#4e73df");
+                
+                // Define workflow steps with better vertical spacing
+                const steps = [
+                    { id: "eq1", name: "Equipment Registration Form", description: "User fills out equipment details", x: width * 0.2, y: height * 0.25, icon: "📝" },
+                    { id: "eq2", name: "Data Validation", description: "System validates input data", x: width * 0.5, y: height * 0.25, icon: "✓" },
+                    { id: "eq3", name: "Confirmation Dialog", description: "User confirms equipment details", x: width * 0.8, y: height * 0.25, icon: "👁️" },
+                    { id: "eq4", name: "Database Storage", description: "Equipment data saved to database", x: width * 0.2, y: height * 0.65, icon: "💾" },
+                    { id: "eq5", name: "Equipment List Update", description: "Equipment appears in equipment list", x: width * 0.5, y: height * 0.65, icon: "📋" },
+                    { id: "eq6", name: "Maintenance History", description: "System creates maintenance record", x: width * 0.8, y: height * 0.65, icon: "📊" }
+                ];
+                
+                // Draw connecting arrows with proper paths
+                // First row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[0].x + 95},${steps[0].y} L${steps[1].x - 95},${steps[1].y}`)
+                    .attr("stroke", "#4e73df")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#equipment-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[1].x + 95},${steps[1].y} L${steps[2].x - 95},${steps[2].y}`)
+                    .attr("stroke", "#4e73df")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#equipment-arrow)")
+                    .attr("fill", "none");
+                
+                // Connect last step of first row to first step of second row
+                svg.append("path")
+                    .attr("d", `M${steps[2].x},${steps[2].y + 80} C${steps[2].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${steps[3].y - 80}`)
+                    .attr("stroke", "#4e73df")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#equipment-arrow)")
+                    .attr("fill", "none");
+                
+                // Second row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[3].x + 95},${steps[3].y} L${steps[4].x - 95},${steps[4].y}`)
+                    .attr("stroke", "#4e73df")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#equipment-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[4].x + 95},${steps[4].y} L${steps[5].x - 95},${steps[5].y}`)
+                    .attr("stroke", "#4e73df")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#equipment-arrow)")
+                    .attr("fill", "none");
+                
+                // Draw workflow steps
+                const stepGroups = svg.selectAll(".step")
+                    .data(steps)
+                    .enter()
+                    .append("g")
+                    .attr("class", "step")
+                    .attr("transform", d => `translate(${d.x - 90}, ${d.y - 80})`);
+                
+                // Add boxes with increased height
+                stepGroups.append("rect")
+                    .attr("width", 180)
+                    .attr("height", 160)
+                    .attr("rx", 10)
+                    .attr("ry", 10)
+                    .attr("fill", "#4e73df")
+                    .attr("stroke", "#2e59d9")
+                    .attr("stroke-width", 2);
+                
+                // Add step numbers - moved down to be fully visible
+                stepGroups.append("circle")
+                    .attr("cx", 30)
+                    .attr("cy", 30)
+                    .attr("r", 18)
+                    .attr("fill", "white");
+                
+                stepGroups.append("text")
+                    .attr("x", 30)
+                    .attr("y", 35)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "#4e73df")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "18px")
+                    .text((d, i) => i + 1);
+                
+                // Add icons - moved down to be fully visible
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 50)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "32px")
+                    .text(d => d.icon);
+                
+                // Add titles with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 80)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "16px")
+                    .each(function(d) {
+                        // Split title into words
+                        const words = d.name.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 20;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 20) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add descriptions with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 110) // Adjusted position
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "14px")
+                    .each(function(d) {
+                        // Split description into words
+                        const words = d.description.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 18;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 25) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add download button functionality
+                document.getElementById('downloadEquipmentDiagram').addEventListener('click', function() {
+                    downloadSvgAsPng('equipmentWorkflowDiagram', 'Equipment_Management_Workflow');
+                });
+            }
+            
+            // Work Orders Workflow
+            function createWorkOrdersWorkflow() {
+                const svg = d3.select("#workOrdersWorkflowDiagram");
+                resizeSvgContainer("workOrdersWorkflowDiagram");
+                const width = svg.node().getBoundingClientRect().width;
+                const height = diagramHeight;
+                
+                // Add arrow marker definition
+                const defs = svg.append("defs");
+                defs.append("marker")
+                    .attr("id", "workorder-arrow")
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 8)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 6)
+                    .attr("markerHeight", 6)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", "#f6c23e");
+                
+                // Define workflow steps with better vertical spacing
+                const steps = [
+                    { id: "wo1", name: "Work Order Request", description: "User creates maintenance request", x: width * 0.2, y: height * 0.25, icon: "🔧" },
+                    { id: "wo2", name: "Priority Assignment", description: "Manager assigns priority level", x: width * 0.5, y: height * 0.25, icon: "⚠️" },
+                    { id: "wo3", name: "Craftsman Assignment", description: "Assign to qualified craftsman", x: width * 0.8, y: height * 0.25, icon: "👷" },
+                    { id: "wo4", name: "Parts Requisition", description: "Request parts from inventory", x: width * 0.2, y: height * 0.65, icon: "🔩" },
+                    { id: "wo5", name: "Work Execution", description: "Craftsman performs maintenance", x: width * 0.5, y: height * 0.65, icon: "🛠️" },
+                    { id: "wo6", name: "Completion & Review", description: "Sign-off and quality check", x: width * 0.8, y: height * 0.65, icon: "✅" }
+                ];
+                
+                // Draw connecting arrows with proper paths
+                // First row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[0].x + 95},${steps[0].y} L${steps[1].x - 95},${steps[1].y}`)
+                    .attr("stroke", "#f6c23e")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#workorder-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[1].x + 95},${steps[1].y} L${steps[2].x - 95},${steps[2].y}`)
+                    .attr("stroke", "#f6c23e")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#workorder-arrow)")
+                    .attr("fill", "none");
+                
+                // Connect last step of first row to first step of second row
+                svg.append("path")
+                    .attr("d", `M${steps[2].x},${steps[2].y + 80} C${steps[2].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${steps[3].y - 80}`)
+                    .attr("stroke", "#f6c23e")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#workorder-arrow)")
+                    .attr("fill", "none");
+                
+                // Second row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[3].x + 95},${steps[3].y} L${steps[4].x - 95},${steps[4].y}`)
+                    .attr("stroke", "#f6c23e")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#workorder-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[4].x + 95},${steps[4].y} L${steps[5].x - 95},${steps[5].y}`)
+                    .attr("stroke", "#f6c23e")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#workorder-arrow)")
+                    .attr("fill", "none");
+                
+                // Draw workflow steps
+                const stepGroups = svg.selectAll(".step")
+                    .data(steps)
+                    .enter()
+                    .append("g")
+                    .attr("class", "step")
+                    .attr("transform", d => `translate(${d.x - 90}, ${d.y - 80})`);
+                
+                // Add boxes with increased height
+                stepGroups.append("rect")
+                    .attr("width", 180)
+                    .attr("height", 160)
+                    .attr("rx", 10)
+                    .attr("ry", 10)
+                    .attr("fill", "#f6c23e")
+                    .attr("stroke", "#d4a41c")
+                    .attr("stroke-width", 2);
+                
+                // Add step numbers - moved down to be fully visible
+                stepGroups.append("circle")
+                    .attr("cx", 30)
+                    .attr("cy", 30)
+                    .attr("r", 18)
+                    .attr("fill", "white");
+                
+                stepGroups.append("text")
+                    .attr("x", 30)
+                    .attr("y", 35)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "#f6c23e")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "18px")
+                    .text((d, i) => i + 1);
+                
+                // Add icons - moved down to be fully visible
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 50)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "32px")
+                    .text(d => d.icon);
+                
+                // Add titles with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 80)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "16px")
+                    .each(function(d) {
+                        // Split title into words
+                        const words = d.name.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 20;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 20) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add descriptions with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 110) // Adjusted position
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "14px")
+                    .each(function(d) {
+                        // Split description into words
+                        const words = d.description.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 18;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 25) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add download button functionality
+                document.getElementById('downloadWorkOrdersDiagram').addEventListener('click', function() {
+                    downloadSvgAsPng('workOrdersWorkflowDiagram', 'Work_Orders_Workflow');
+                });
+            }
+            
+            // Inventory Management Workflow
+            function createInventoryWorkflow() {
+                const svg = d3.select("#inventoryWorkflowDiagram");
+                resizeSvgContainer("inventoryWorkflowDiagram");
+                const width = svg.node().getBoundingClientRect().width;
+                const height = diagramHeight;
+                
+                // Add arrow marker definition
+                const defs = svg.append("defs");
+                defs.append("marker")
+                    .attr("id", "inventory-arrow")
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 8)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 6)
+                    .attr("markerHeight", 6)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", "#e74a3b");
+                
+                // Define workflow steps with better vertical spacing
+                const steps = [
+                    { id: "inv1", name: "Inventory Monitoring", description: "System tracks stock levels", x: width * 0.2, y: height * 0.25, icon: "📦" },
+                    { id: "inv2", name: "Low Stock Alert", description: "Notification when below threshold", x: width * 0.5, y: height * 0.25, icon: "🔔" },
+                    { id: "inv3", name: "Purchase Order Creation", description: "Generate order to supplier", x: width * 0.8, y: height * 0.25, icon: "📝" },
+                    { id: "inv4", name: "Supplier Fulfillment", description: "Supplier ships ordered items", x: width * 0.2, y: height * 0.65, icon: "🚚" },
+                    { id: "inv5", name: "Goods Receipt", description: "Receive and inspect items", x: width * 0.5, y: height * 0.65, icon: "✓" },
+                    { id: "inv6", name: "Inventory Update", description: "Update stock levels in system", x: width * 0.8, y: height * 0.65, icon: "🔄" }
+                ];
+                
+                // Draw connecting arrows with proper paths
+                // First row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[0].x + 95},${steps[0].y} L${steps[1].x - 95},${steps[1].y}`)
+                    .attr("stroke", "#e74a3b")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#inventory-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[1].x + 95},${steps[1].y} L${steps[2].x - 95},${steps[2].y}`)
+                    .attr("stroke", "#e74a3b")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#inventory-arrow)")
+                    .attr("fill", "none");
+                
+                // Connect last step of first row to first step of second row
+                svg.append("path")
+                    .attr("d", `M${steps[2].x},${steps[2].y + 80} C${steps[2].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${steps[3].y - 80}`)
+                    .attr("stroke", "#e74a3b")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#inventory-arrow)")
+                    .attr("fill", "none");
+                
+                // Second row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[3].x + 95},${steps[3].y} L${steps[4].x - 95},${steps[4].y}`)
+                    .attr("stroke", "#e74a3b")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#inventory-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[4].x + 95},${steps[4].y} L${steps[5].x - 95},${steps[5].y}`)
+                    .attr("stroke", "#e74a3b")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#inventory-arrow)")
+                    .attr("fill", "none");
+                
+                // Draw workflow steps
+                const stepGroups = svg.selectAll(".step")
+                    .data(steps)
+                    .enter()
+                    .append("g")
+                    .attr("class", "step")
+                    .attr("transform", d => `translate(${d.x - 90}, ${d.y - 80})`);
+                
+                // Add boxes with increased height
+                stepGroups.append("rect")
+                    .attr("width", 180)
+                    .attr("height", 160)
+                    .attr("rx", 10)
+                    .attr("ry", 10)
+                    .attr("fill", "#e74a3b")
+                    .attr("stroke", "#be3e31")
+                    .attr("stroke-width", 2);
+                
+                // Add step numbers - moved down to be fully visible
+                stepGroups.append("circle")
+                    .attr("cx", 30)
+                    .attr("cy", 30)
+                    .attr("r", 18)
+                    .attr("fill", "white");
+                
+                stepGroups.append("text")
+                    .attr("x", 30)
+                    .attr("y", 35)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "#e74a3b")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "18px")
+                    .text((d, i) => i + 1);
+                
+                // Add icons - moved down to be fully visible
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 50)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "32px")
+                    .text(d => d.icon);
+                
+                // Add titles with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 80)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "16px")
+                    .each(function(d) {
+                        // Split title into words
+                        const words = d.name.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 20;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 20) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add descriptions with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 110) // Adjusted position
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "14px")
+                    .each(function(d) {
+                        // Split description into words
+                        const words = d.description.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 18;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 25) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add download button functionality
+                document.getElementById('downloadInventoryDiagram').addEventListener('click', function() {
+                    downloadSvgAsPng('inventoryWorkflowDiagram', 'Inventory_Management_Workflow');
+                });
+            }
+            
+            // Craftsmen Management Workflow
+            function createCraftsmenWorkflow() {
+                const svg = d3.select("#craftsmenWorkflowDiagram");
+                resizeSvgContainer("craftsmenWorkflowDiagram");
+                const width = svg.node().getBoundingClientRect().width;
+                const height = diagramHeight;
+                
+                // Add arrow marker definition
+                const defs = svg.append("defs");
+                defs.append("marker")
+                    .attr("id", "craftsmen-arrow")
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 8)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 6)
+                    .attr("markerHeight", 6)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", "#1cc88a");
+                
+                // Define workflow steps with better vertical spacing
+                const steps = [
+                    { id: "cm1", name: "Craftsman Registration", description: "Add new craftsman to system", x: width * 0.2, y: height * 0.25, icon: "👷" },
+                    { id: "cm2", name: "Skills & Certifications", description: "Record qualifications", x: width * 0.5, y: height * 0.25, icon: "🏆" },
+                    { id: "cm3", name: "Team Assignment", description: "Assign to maintenance teams", x: width * 0.8, y: height * 0.25, icon: "👥" },
+                    { id: "cm4", name: "Work Order Assignment", description: "Assign maintenance tasks", x: width * 0.2, y: height * 0.65, icon: "📋" },
+                    { id: "cm5", name: "Performance Tracking", description: "Monitor completion metrics", x: width * 0.5, y: height * 0.65, icon: "📊" },
+                    { id: "cm6", name: "Training Management", description: "Schedule & track training", x: width * 0.8, y: height * 0.65, icon: "🎓" }
+                ];
+                
+                // Draw connecting arrows with proper paths
+                // First row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[0].x + 95},${steps[0].y} L${steps[1].x - 95},${steps[1].y}`)
+                    .attr("stroke", "#1cc88a")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#craftsmen-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[1].x + 95},${steps[1].y} L${steps[2].x - 95},${steps[2].y}`)
+                    .attr("stroke", "#1cc88a")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#craftsmen-arrow)")
+                    .attr("fill", "none");
+                
+                // Connect last step of first row to first step of second row
+                svg.append("path")
+                    .attr("d", `M${steps[2].x},${steps[2].y + 80} C${steps[2].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${steps[3].y - 80}`)
+                    .attr("stroke", "#1cc88a")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#craftsmen-arrow)")
+                    .attr("fill", "none");
+                
+                // Second row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[3].x + 95},${steps[3].y} L${steps[4].x - 95},${steps[4].y}`)
+                    .attr("stroke", "#1cc88a")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#craftsmen-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[4].x + 95},${steps[4].y} L${steps[5].x - 95},${steps[5].y}`)
+                    .attr("stroke", "#1cc88a")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#craftsmen-arrow)")
+                    .attr("fill", "none");
+                
+                // Draw workflow steps
+                const stepGroups = svg.selectAll(".step")
+                    .data(steps)
+                    .enter()
+                    .append("g")
+                    .attr("class", "step")
+                    .attr("transform", d => `translate(${d.x - 90}, ${d.y - 80})`);
+                
+                // Add boxes with increased height
+                stepGroups.append("rect")
+                    .attr("width", 180)
+                    .attr("height", 160)
+                    .attr("rx", 10)
+                    .attr("ry", 10)
+                    .attr("fill", "#1cc88a")
+                    .attr("stroke", "#17a673")
+                    .attr("stroke-width", 2);
+                
+                // Add step numbers - moved down to be fully visible
+                stepGroups.append("circle")
+                    .attr("cx", 30)
+                    .attr("cy", 30)
+                    .attr("r", 18)
+                    .attr("fill", "white");
+                
+                stepGroups.append("text")
+                    .attr("x", 30)
+                    .attr("y", 35)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "#1cc88a")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "18px")
+                    .text((d, i) => i + 1);
+                
+                // Add icons - moved down to be fully visible
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 50)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "32px")
+                    .text(d => d.icon);
+                
+                // Add titles with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 80)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "16px")
+                    .each(function(d) {
+                        // Split title into words
+                        const words = d.name.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 20;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 20) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add descriptions with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 110) // Adjusted position
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "14px")
+                    .each(function(d) {
+                        // Split description into words
+                        const words = d.description.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 18;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 25) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add download button functionality
+                document.getElementById('downloadCraftsmenDiagram').addEventListener('click', function() {
+                    downloadSvgAsPng('craftsmenWorkflowDiagram', 'Craftsmen_Management_Workflow');
+                });
+            }
+            
+            // Maintenance Scheduler Workflow
+            function createSchedulerWorkflow() {
+                const svg = d3.select("#schedulerWorkflowDiagram");
+                resizeSvgContainer("schedulerWorkflowDiagram");
+                const width = svg.node().getBoundingClientRect().width;
+                const height = diagramHeight;
+                
+                // Add arrow marker definition
+                const defs = svg.append("defs");
+                defs.append("marker")
+                    .attr("id", "scheduler-arrow")
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 8)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 6)
+                    .attr("markerHeight", 6)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", "#36b9cc");
+                
+                // Define workflow steps with better vertical spacing
+                const steps = [
+                    { id: "ms1", name: "Schedule Definition", description: "Define maintenance frequency", x: width * 0.2, y: height * 0.25, icon: "📅" },
+                    { id: "ms2", name: "Equipment Assignment", description: "Link schedule to equipment", x: width * 0.5, y: height * 0.25, icon: "🔗" },
+                    { id: "ms3", name: "Automatic Triggering", description: "System checks due dates", x: width * 0.8, y: height * 0.25, icon: "⏰" },
+                    { id: "ms4", name: "Work Order Generation", description: "Auto-create work orders", x: width * 0.2, y: height * 0.65, icon: "📝" },
+                    { id: "ms5", name: "Notification", description: "Alert relevant personnel", x: width * 0.5, y: height * 0.65, icon: "🔔" },
+                    { id: "ms6", name: "Schedule Update", description: "Reset after completion", x: width * 0.8, y: height * 0.65, icon: "🔄" }
+                ];
+                
+                // Draw connecting arrows with proper paths
+                // First row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[0].x + 95},${steps[0].y} L${steps[1].x - 95},${steps[1].y}`)
+                    .attr("stroke", "#36b9cc")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#scheduler-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[1].x + 95},${steps[1].y} L${steps[2].x - 95},${steps[2].y}`)
+                    .attr("stroke", "#36b9cc")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#scheduler-arrow)")
+                    .attr("fill", "none");
+                
+                // Connect last step of first row to first step of second row
+                svg.append("path")
+                    .attr("d", `M${steps[2].x},${steps[2].y + 80} C${steps[2].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${steps[3].y - 80}`)
+                    .attr("stroke", "#36b9cc")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#scheduler-arrow)")
+                    .attr("fill", "none");
+                
+                // Second row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[3].x + 95},${steps[3].y} L${steps[4].x - 95},${steps[4].y}`)
+                    .attr("stroke", "#36b9cc")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#scheduler-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[4].x + 95},${steps[4].y} L${steps[5].x - 95},${steps[5].y}`)
+                    .attr("stroke", "#36b9cc")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#scheduler-arrow)")
+                    .attr("fill", "none");
+                
+                // Draw workflow steps
+                const stepGroups = svg.selectAll(".step")
+                    .data(steps)
+                    .enter()
+                    .append("g")
+                    .attr("class", "step")
+                    .attr("transform", d => `translate(${d.x - 90}, ${d.y - 80})`);
+                
+                // Add boxes with increased height
+                stepGroups.append("rect")
+                    .attr("width", 180)
+                    .attr("height", 160)
+                    .attr("rx", 10)
+                    .attr("ry", 10)
+                    .attr("fill", "#36b9cc")
+                    .attr("stroke", "#2c9faf")
+                    .attr("stroke-width", 2);
+                
+                // Add step numbers - moved down to be fully visible
+                stepGroups.append("circle")
+                    .attr("cx", 30)
+                    .attr("cy", 30)
+                    .attr("r", 18)
+                    .attr("fill", "white");
+                
+                stepGroups.append("text")
+                    .attr("x", 30)
+                    .attr("y", 35)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "#36b9cc")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "18px")
+                    .text((d, i) => i + 1);
+                
+                // Add icons - moved down to be fully visible
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 50)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "32px")
+                    .text(d => d.icon);
+                
+                // Add titles with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 80)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "16px")
+                    .each(function(d) {
+                        // Split title into words
+                        const words = d.name.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 20;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 20) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add descriptions with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 110) // Adjusted position
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "14px")
+                    .each(function(d) {
+                        // Split description into words
+                        const words = d.description.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 18;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 25) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add download button functionality
+                document.getElementById('downloadSchedulerDiagram').addEventListener('click', function() {
+                    downloadSvgAsPng('schedulerWorkflowDiagram', 'Maintenance_Scheduler_Workflow');
+                });
+            }
+            
+            // Django Web Portals Workflow
+            function createDjangoWebPortalsWorkflow() {
+                const svg = d3.select("#djangoWebPortalsWorkflowDiagram");
+                resizeSvgContainer("djangoWebPortalsWorkflowDiagram");
+                const width = svg.node().getBoundingClientRect().width;
+                const height = diagramHeight;
+                
+                // Add arrow marker definition
+                const defs = svg.append("defs");
+                defs.append("marker")
+                    .attr("id", "django-arrow")
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 8)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 6)
+                    .attr("markerHeight", 6)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", "#4B8BBE"); // Django blue color
+                
+                // Define workflow steps with better vertical spacing
+                const steps = [
+                    { id: "dj1", name: "User Authentication", description: "Login and permission control", x: width * 0.2, y: height * 0.25, icon: "🔐" },
+                    { id: "dj2", name: "Dashboard View", description: "Main system overview", x: width * 0.5, y: height * 0.25, icon: "📊" },
+                    { id: "dj3", name: "Data Entry Forms", description: "Web forms for data input", x: width * 0.8, y: height * 0.25, icon: "📝" },
+                    { id: "dj4", name: "Database Operations", description: "CRUD operations via ORM", x: width * 0.2, y: height * 0.65, icon: "💾" },
+                    { id: "dj5", name: "Report Generation", description: "Create PDF/Excel reports", x: width * 0.5, y: height * 0.65, icon: "📄" },
+                    { id: "dj6", name: "API Integration", description: "Connect with other systems", x: width * 0.8, y: height * 0.65, icon: "🔄" }
+                ];
+                
+                // Draw connecting arrows with proper paths
+                // First row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[0].x + 95},${steps[0].y} L${steps[1].x - 95},${steps[1].y}`)
+                    .attr("stroke", "#4B8BBE")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#django-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[1].x + 95},${steps[1].y} L${steps[2].x - 95},${steps[2].y}`)
+                    .attr("stroke", "#4B8BBE")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#django-arrow)")
+                    .attr("fill", "none");
+                
+                // Connect last step of first row to first step of second row
+                svg.append("path")
+                    .attr("d", `M${steps[2].x},${steps[2].y + 80} C${steps[2].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${steps[3].y - 80}`)
+                    .attr("stroke", "#4B8BBE")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#django-arrow)")
+                    .attr("fill", "none");
+                
+                // Second row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[3].x + 95},${steps[3].y} L${steps[4].x - 95},${steps[4].y}`)
+                    .attr("stroke", "#4B8BBE")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#django-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[4].x + 95},${steps[4].y} L${steps[5].x - 95},${steps[5].y}`)
+                    .attr("stroke", "#4B8BBE")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#django-arrow)")
+                    .attr("fill", "none");
+                
+                // Draw workflow steps
+                const stepGroups = svg.selectAll(".step")
+                    .data(steps)
+                    .enter()
+                    .append("g")
+                    .attr("class", "step")
+                    .attr("transform", d => `translate(${d.x - 90}, ${d.y - 80})`);
+                
+                // Add boxes with increased height
+                stepGroups.append("rect")
+                    .attr("width", 180)
+                    .attr("height", 160)
+                    .attr("rx", 10)
+                    .attr("ry", 10)
+                    .attr("fill", "#4B8BBE")
+                    .attr("stroke", "#3A6E9E")
+                    .attr("stroke-width", 2);
+                
+                // Add step numbers - moved down to be fully visible
+                stepGroups.append("circle")
+                    .attr("cx", 30)
+                    .attr("cy", 30)
+                    .attr("r", 18)
+                    .attr("fill", "white");
+                
+                stepGroups.append("text")
+                    .attr("x", 30)
+                    .attr("y", 35)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "#4B8BBE")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "18px")
+                    .text((d, i) => i + 1);
+                
+                // Add icons - moved down to be fully visible
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 50)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "32px")
+                    .text(d => d.icon);
+                
+                // Add titles with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 80)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "16px")
+                    .each(function(d) {
+                        // Split title into words
+                        const words = d.name.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 20;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 20) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add descriptions with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 110) // Adjusted position
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "14px")
+                    .each(function(d) {
+                        // Split description into words
+                        const words = d.description.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 18;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 25) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add download button functionality
+                document.getElementById('downloadDjangoWebPortalsDiagram').addEventListener('click', function() {
+                    downloadSvgAsPng('djangoWebPortalsWorkflowDiagram', 'Django_Web_Portals_Workflow');
+                });
+            }
+            
+            // Qt Portals Workflow
+            function createQtPortalsWorkflow() {
+                const svg = d3.select("#qtPortalsWorkflowDiagram");
+                resizeSvgContainer("qtPortalsWorkflowDiagram");
+                const width = svg.node().getBoundingClientRect().width;
+                const height = diagramHeight;
+                
+                // Add arrow marker definition
+                const defs = svg.append("defs");
+                defs.append("marker")
+                    .attr("id", "qt-arrow")
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 8)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 6)
+                    .attr("markerHeight", 6)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", "#41CD52"); // Qt green color
+                
+                // Define workflow steps with better vertical spacing
+                const steps = [
+                    { id: "qt1", name: "Native Application", description: "Cross-platform desktop app", x: width * 0.2, y: height * 0.25, icon: "💻" },
+                    { id: "qt2", name: "User Interface", description: "Qt Widgets/QML interface", x: width * 0.5, y: height * 0.25, icon: "🖥️" },
+                    { id: "qt3", name: "Local Database", description: "SQLite data storage", x: width * 0.8, y: height * 0.25, icon: "🗄️" },
+                    { id: "qt4", name: "Offline Operation", description: "Work without internet", x: width * 0.2, y: height * 0.65, icon: "📴" },
+                    { id: "qt5", name: "Data Synchronization", description: "Sync with central server", x: width * 0.5, y: height * 0.65, icon: "🔄" },
+                    { id: "qt6", name: "Hardware Integration", description: "Connect to local devices", x: width * 0.8, y: height * 0.65, icon: "🔌" }
+                ];
+                
+                // Draw connecting arrows with proper paths
+                // First row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[0].x + 95},${steps[0].y} L${steps[1].x - 95},${steps[1].y}`)
+                    .attr("stroke", "#41CD52")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#qt-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[1].x + 95},${steps[1].y} L${steps[2].x - 95},${steps[2].y}`)
+                    .attr("stroke", "#41CD52")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#qt-arrow)")
+                    .attr("fill", "none");
+                
+                // Connect last step of first row to first step of second row
+                svg.append("path")
+                    .attr("d", `M${steps[2].x},${steps[2].y + 80} C${steps[2].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${(steps[2].y + steps[3].y)/2} ${steps[3].x},${steps[3].y - 80}`)
+                    .attr("stroke", "#41CD52")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#qt-arrow)")
+                    .attr("fill", "none");
+                
+                // Second row: left to right
+                svg.append("path")
+                    .attr("d", `M${steps[3].x + 95},${steps[3].y} L${steps[4].x - 95},${steps[4].y}`)
+                    .attr("stroke", "#41CD52")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#qt-arrow)")
+                    .attr("fill", "none");
+                
+                svg.append("path")
+                    .attr("d", `M${steps[4].x + 95},${steps[4].y} L${steps[5].x - 95},${steps[5].y}`)
+                    .attr("stroke", "#41CD52")
+                    .attr("stroke-width", 3)
+                    .attr("marker-end", "url(#qt-arrow)")
+                    .attr("fill", "none");
+                
+                // Draw workflow steps
+                const stepGroups = svg.selectAll(".step")
+                    .data(steps)
+                    .enter()
+                    .append("g")
+                    .attr("class", "step")
+                    .attr("transform", d => `translate(${d.x - 90}, ${d.y - 80})`);
+                
+                // Add boxes with increased height
+                stepGroups.append("rect")
+                    .attr("width", 180)
+                    .attr("height", 160)
+                    .attr("rx", 10)
+                    .attr("ry", 10)
+                    .attr("fill", "#41CD52")
+                    .attr("stroke", "#35A544")
+                    .attr("stroke-width", 2);
+                
+                // Add step numbers - moved down to be fully visible
+                stepGroups.append("circle")
+                    .attr("cx", 30)
+                    .attr("cy", 30)
+                    .attr("r", 18)
+                    .attr("fill", "white");
+                
+                stepGroups.append("text")
+                    .attr("x", 30)
+                    .attr("y", 35)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "#41CD52")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "18px")
+                    .text((d, i) => i + 1);
+                
+                // Add icons - moved down to be fully visible
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 50)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "32px")
+                    .text(d => d.icon);
+                
+                // Add titles with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 80)
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-weight", "bold")
+                    .attr("font-size", "16px")
+                    .each(function(d) {
+                        // Split title into words
+                        const words = d.name.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 20;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 20) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add descriptions with word wrapping - moved down
+                stepGroups.append("text")
+                    .attr("x", 90)
+                    .attr("y", 110) // Adjusted position
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "white")
+                    .attr("font-size", "14px")
+                    .each(function(d) {
+                        // Split description into words
+                        const words = d.description.split(/\s+/);
+                        let line = "";
+                        let lineNumber = 0;
+                        const lineHeight = 18;
+                        
+                        // Create tspan for each line
+                        const text = d3.select(this);
+                        
+                        for (let i = 0; i < words.length; i++) {
+                            let testLine = line + words[i] + " ";
+                            // If adding another word makes the line too long, create a new line
+                            if (testLine.length > 25) {
+                                text.append("tspan")
+                                    .attr("x", 90)
+                                    .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                                    .text(line.trim());
+                                line = words[i] + " ";
+                                lineNumber++;
+                            } else {
+                                line = testLine;
+                            }
+                        }
+                        // Add the last line
+                        text.append("tspan")
+                            .attr("x", 90)
+                            .attr("dy", lineNumber === 0 ? 0 : lineHeight)
+                            .text(line.trim());
+                    });
+                
+                // Add download button functionality
+                document.getElementById('downloadQtPortalsDiagram').addEventListener('click', function() {
+                    downloadSvgAsPng('qtPortalsWorkflowDiagram', 'Qt_Portals_Workflow');
+                });
+            }
+            
+            // Initialize all diagrams when the page loads
+            createEquipmentWorkflow();
+            createWorkOrdersWorkflow();
+            createInventoryWorkflow();
+            createCraftsmenWorkflow();
+            createSchedulerWorkflow();
+            createDjangoWebPortalsWorkflow();
+            createQtPortalsWorkflow();
+        });
+        
+        // Function to download SVG as PNG
+        function downloadSvgAsPng(svgId, fileName) {
+            const svg = document.getElementById(svgId);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const data = (new XMLSerializer()).serializeToString(svg);
+            const DOMURL = window.URL || window.webkitURL || window;
+            
+            const img = new Image();
+            const svgBlob = new Blob([data], {type: 'image/svg+xml;charset=utf-8'});
+            const url = DOMURL.createObjectURL(svgBlob);
+            
+            img.onload = function() {
+                canvas.width = svg.getBoundingClientRect().width;
+                canvas.height = svg.getBoundingClientRect().height;
+                ctx.drawImage(img, 0, 0);
+                DOMURL.revokeObjectURL(url);
+                
+                const imgURI = canvas.toDataURL('image/png')
+                    .replace('image/png', 'image/octet-stream');
+                
+                const link = document.createElement('a');
+                link.download = fileName + '.png';
+                link.href = imgURI;
+                link.click();
+            };
+            
+            img.src = url;
+        }
+    </script>
+    
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

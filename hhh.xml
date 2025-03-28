@@ -1,0 +1,162 @@
+<CMMS_System name="Maintenance Management System">
+  <Core_Components>
+    <Component name="Equipment Management">
+      <Functionality>Register and track equipment with detailed information</Functionality>
+      <Features>
+        <Feature>Equipment registration</Feature>
+        <Feature>Equipment listing and search</Feature>
+        <Feature>Maintenance history tracking</Feature>
+        <Feature>Equipment status monitoring</Feature>
+      </Features>
+    </Component>
+    
+    <Component name="Craftsmen Management">
+      <Functionality>Manage technicians and their skills, certifications, and assignments</Functionality>
+      <Features>
+        <Feature>Craftsmen registration and profiles</Feature>
+        <Feature>Skills and certifications tracking</Feature>
+        <Feature>Team assignments</Feature>
+        <Feature>Availability management</Feature>
+      </Features>
+    </Component>
+    
+    <Component name="Work Orders">
+      <Functionality>Create and track maintenance work orders from request to completion</Functionality>
+      <Features>
+        <Feature>Work order creation and assignment</Feature>
+        <Feature>Priority and status tracking</Feature>
+        <Feature>Parts and labor tracking</Feature>
+        <Feature>Completion documentation</Feature>
+        <Feature>Notification integration</Feature>
+      </Features>
+    </Component>
+    
+    <Component name="Inventory Management">
+      <Functionality>Track spare parts, tools, and supplies for maintenance operations</Functionality>
+      <Features>
+        <Feature>Parts inventory tracking</Feature>
+        <Feature>Low stock notifications</Feature>
+        <Feature>Usage tracking</Feature>
+        <Feature>Reorder management</Feature>
+      </Features>
+    </Component>
+    
+    <Component name="Maintenance Scheduler">
+      <Functionality>Schedule and manage recurring maintenance tasks</Functionality>
+      <Features>
+        <Feature>Preventive maintenance scheduling</Feature>
+        <Feature>Recurring task management</Feature>
+        <Feature>Calendar integration</Feature>
+        <Feature>Automated work order generation</Feature>
+      </Features>
+    </Component>
+    
+    <Component name="Notification System">
+      <Functionality>Alert relevant personnel about maintenance events</Functionality>
+      <Features>
+        <Feature>Email notifications</Feature>
+        <Feature>Low inventory alerts</Feature>
+        <Feature>Work order status updates</Feature>
+        <Feature>Maintenance due reminders</Feature>
+        <Feature>Notification center</Feature>
+      </Features>
+    </Component>
+  </Core_Components>
+  
+  <User_Portals>
+    <Portal name="Main Administrative Interface">
+      <Access>System administrators and managers</Access>
+      <Capabilities>
+        <Capability>Full system access</Capability>
+        <Capability>Configuration management</Capability>
+        <Capability>Reporting and analytics</Capability>
+        <Capability>User management</Capability>
+      </Capabilities>
+    </Portal>
+    
+    <Portal name="Craftsman Portal">
+      <Access>Maintenance technicians</Access>
+      <Capabilities>
+        <Capability>View assigned work orders</Capability>
+        <Capability>Update work order status</Capability>
+        <Capability>Document completed maintenance</Capability>
+        <Capability>Request parts and materials</Capability>
+      </Capabilities>
+    </Portal>
+    
+    <Portal name="Inventory Personnel Portal">
+      <Access>Inventory staff</Access>
+      <Capabilities>
+        <Capability>Manage parts inventory</Capability>
+        <Capability>Process part requests</Capability>
+        <Capability>Update stock levels</Capability>
+        <Capability>Generate inventory reports</Capability>
+      </Capabilities>
+    </Portal>
+    
+    <Portal name="Web Portal">
+      <Access>Remote users and stakeholders</Access>
+      <Capabilities>
+        <Capability>Submit maintenance requests</Capability>
+        <Capability>Check work order status</Capability>
+        <Capability>View equipment information</Capability>
+        <Capability>Generate basic reports</Capability>
+      </Capabilities>
+    </Portal>
+  </User_Portals>
+  
+  <Technical_Architecture>
+    <Frontend>
+      <Technology>PySide6 (Qt for Python)</Technology>
+      <Features>
+        <Feature>Responsive desktop application</Feature>
+        <Feature>Theme customization</Feature>
+        <Feature>Modular interface with stacked widgets</Feature>
+      </Features>
+    </Frontend>
+    
+    <Backend>
+      <Database>
+        <Manager>DatabaseManager</Manager>
+        <Operations>
+          <Operation>Equipment data storage</Operation>
+          <Operation>Work order tracking</Operation>
+          <Operation>Inventory management</Operation>
+          <Operation>User authentication</Operation>
+        </Operations>
+      </Database>
+      
+      <Services>
+        <Service name="EmailNotificationService">
+          <Purpose>Send automated notifications</Purpose>
+        </Service>
+        <Service name="MaintenanceScheduler">
+          <Purpose>Schedule and trigger maintenance tasks</Purpose>
+        </Service>
+      </Services>
+    </Backend>
+    
+    <Web_Component>
+      <Technology>Django</Technology>
+      <Purpose>Provide web-based access to the system</Purpose>
+    </Web_Component>
+  </Technical_Architecture>
+  
+  <System_Features>
+    <Feature name="Theme Customization">
+      <Description>Personalize the application appearance with dark mode and custom colors</Description>
+    </Feature>
+    
+    <Feature name="Font Size Adjustment">
+      <Description>Modify application font size for accessibility</Description>
+    </Feature>
+    
+    <Feature name="Notification Center">
+      <Description>Central hub for viewing system notifications and alerts</Description>
+    </Feature>
+    
+    <Feature name="Multi-Portal Access">
+      <Description>Role-specific interfaces for different user types</Description>
+    </Feature>
+  </System_Features>
+</CMMS_System>

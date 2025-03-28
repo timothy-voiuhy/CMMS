@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                                 QPushButton, QLabel, QStackedWidget, QFrame, QGridLayout, QMessageBox, QScrollArea, QSizePolicy, QInputDialog, QLineEdit)
+                                 QPushButton, QLabel, QStackedWidget, QFrame, QGridLayout, QMessageBox, QScrollArea, QSizePolicy, QInputDialog, QLineEdit, QApplication)
 from PySide6.QtCore import Qt, Slot, QSize, QTimer, QEvent, QPoint, QPropertyAnimation, QEasingCurve
 from PySide6.QtGui import QFont, QIcon, QPixmap, QEnterEvent
 from ui.equipment_registration import EquipmentRegistrationWindow
@@ -21,10 +21,12 @@ from inventory_personnel_portal import InventoryPersonnelPortal
 from inventory_personnel_login import InventoryPersonnelLoginDialog
 from notification_center import NotificationCenter
 import logging
+from font_size_dialog import GlobalFontSizeDialog
 
 class CMMSMainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
+
         self.setWindowTitle("CMMS - Maintenance Management System")
         # Remove or comment out the setMinimumSize line as it might interfere
         # self.setMinimumSize(1200, 800)
@@ -376,6 +378,7 @@ class CMMSMainWindow(QMainWindow):
         """Apply updated theme settings"""
         colors = settings['colors']
         border_radius = settings['border_radius']
+        font_size = settings.get('font_size', 10)  # Default to 10 if not set
         
         # Update DarkTheme colors
         DarkTheme.COLORS.update(colors)
@@ -386,10 +389,15 @@ class CMMSMainWindow(QMainWindow):
         # Apply to all child windows
         for window in self.findChildren(QWidget):
             window.setStyleSheet(DarkTheme.get_stylesheet())
+        
+        # Apply font size
+        app = QApplication.instance()
+        font = app.font()
+        font.setPointSize(font_size)
+        app.setFont(font)
 
     def load_saved_theme(self):
         """Load saved theme configuration"""
-        
         theme_config = ThemeConfig()
         current_theme = theme_config.get_current_theme()
         
@@ -399,6 +407,19 @@ class CMMSMainWindow(QMainWindow):
             
             # Apply theme
             self.setStyleSheet(DarkTheme.get_stylesheet())
+            
+            # Apply font size if available
+            if 'font_size' in current_theme:
+                app = QApplication.instance()
+                font = app.font()
+                font.setPointSize(current_theme['font_size'])
+                app.setFont(font)
+
+    def show_edit_font_dialog(self):
+        dialog = GlobalFontSizeDialog(parent=self)
+        if dialog.exec():
+            font_size = dialog.font_slider.value()
+            GlobalFontSizeDialog.change_application_font_size(font_size)
 
     def create_menu_bar(self):
         """Create the main menu bar with navigation options"""
@@ -463,6 +484,9 @@ class CMMSMainWindow(QMainWindow):
         theme_action = view_menu.addAction("Theme Settings")
         theme_action.triggered.connect(self.show_theme_settings)
         
+        font_action = view_menu.addAction("Edit Font")
+        font_action.triggered.connect(self.show_edit_font_dialog)
+
         # Add Notifications Center action to View menu
         notifications_action = view_menu.addAction("Notifications Center")
         notifications_action.setShortcut("Ctrl+N")

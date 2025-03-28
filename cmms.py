@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QFont
 import sys
 import os
 import time
@@ -53,6 +54,10 @@ def main():
     try:
         app = QApplication(sys.argv)
         
+        # quick set font
+        font = QFont("Segoe UI", 14)
+        app.setFont(font)
+
         # Create and show main window
         main_window = CMMSMainWindow()
         main_window.setWindowState(Qt.WindowState.WindowMaximized)

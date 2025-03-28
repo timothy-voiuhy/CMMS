@@ -5,8 +5,8 @@ from qtpy.QtWidgets import (
     QMessageBox
 )
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtGui import QColor
-import colorsys
+from qtpy.QtGui import QColor, QFont
+from qtpy.QtWidgets import QApplication
 from .theme_config import ThemeConfig
 
 class ColorPicker(QWidget):
@@ -79,6 +79,37 @@ class ThemeSettingsWidget(QWidget):
         scroll.setWidgetResizable(True)
         scroll_widget = QWidget()
         scroll_layout = QVBoxLayout(scroll_widget)
+        
+        # Font Settings Group
+        font_group = QGroupBox("Font Settings")
+        font_layout = QFormLayout()
+        
+        # Font size control
+        self.font_size_slider = QSlider(Qt.Horizontal)
+        self.font_size_slider.setRange(8, 24)
+        self.font_size_slider.setInvertedAppearance(True)
+        current_font_size = QApplication.font().pointSize()
+        self.font_size_slider.setValue(current_font_size)
+        self.font_size_slider.valueChanged.connect(self.update_font_preview)
+        
+        # Font size preview and label
+        self.font_preview = QLabel("Preview Text")
+        self.font_size_label = QLabel(f"Font Size: {current_font_size}pt")
+        
+        font_preview_layout = QVBoxLayout()
+        font_preview_layout.addWidget(self.font_preview)
+        font_preview_layout.addWidget(self.font_size_label)
+        
+        # Add Apply Font button
+        self.apply_font_btn = QPushButton("Apply Font Size")
+        self.apply_font_btn.clicked.connect(self.apply_font_size)
+        font_preview_layout.addWidget(self.apply_font_btn)
+        
+        font_layout.addRow("Font Size:", self.font_size_slider)
+        font_layout.addRow("Preview:", font_preview_layout)
+        
+        font_group.setLayout(font_layout)
+        scroll_layout.addWidget(font_group)
         
         # Brightness and Contrast Controls
         appearance_group = QGroupBox("Global Appearance")
@@ -276,11 +307,42 @@ class ThemeSettingsWidget(QWidget):
         self.colors[color_key] = new_color
         self.update_theme()
     
+    def update_font_preview(self, value):
+        """Update font preview and label only"""
+        self.font_size_label.setText(f"Font Size: {value}pt")
+        preview_font = QFont()
+        preview_font.setPointSize(value)
+        self.font_preview.setFont(preview_font)
+    
+    def apply_font_size(self):
+        """Apply font size changes only"""
+        app = QApplication.instance()
+        font = app.font()
+        font.setPointSize(self.font_size_slider.value())
+        app.setFont(font)
+        
+        # Save the font size to config
+        self.theme_config.save_global_font_size(self.font_size_slider.value())
+        
+        # Apply font to all widgets to ensure immediate visibility
+        for widget in app.allWidgets():
+            widget_font = widget.font()
+            widget_font.setPointSize(self.font_size_slider.value())
+            widget.setFont(widget_font)
+        
+        # Show confirmation message
+        QMessageBox.information(
+            self, 
+            "Font Size Applied",
+            f"Font size has been changed to {self.font_size_slider.value()}pt."
+        )
+    
     def update_theme(self):
-        """Emit updated theme settings"""
+        """Emit updated theme settings (without font changes)"""
         theme_settings = {
             'colors': self.colors,
             'border_radius': self.border_radius.value()
+            # Removed font_size from theme settings
         }
         self.theme_updated.emit(theme_settings)
     
@@ -291,6 +353,7 @@ class ThemeSettingsWidget(QWidget):
         self.contrast_slider.setValue(0)
         self.saturation_slider.setValue(0)
         self.border_radius.setValue(3)
+        self.font_size_slider.setValue(10)  # Reset to default font size
         self.update_theme()
         
         # Update all color pickers
@@ -304,114 +367,12 @@ class ThemeSettingsWidget(QWidget):
         if preset_name == "Custom":
             return
             
-        # Define preset colors
-        presets = {
-            "Dark": self.dark_theme.COLORS,  # Our current dark theme
-            
-            "Darker": {
-                'bg_primary': '#1a1a1a',
-                'bg_secondary': '#141414',
-                'bg_tertiary': '#252525',
-                'bg_hover': '#303030',
-                'bg_pressed': '#0a0a0a',
-                'bg_disabled': '#1c1c1c',
-                'border': '#0a0a0a',
-                'text_primary': '#ffffff',
-                'text_secondary': '#aaaaaa',
-                'text_disabled': '#666666',
-                'accent_blue': '#528bff',
-                'accent_select': '#3d6099',
-                'accent_green': '#98c379',
-                'accent_red': '#e06c75',
-                'accent_yellow': '#e5c07b',
-                'accent_orange': '#d19a66',
-                'accent_purple': '#c678dd',
-            },
-            
-            "Ocean": {
-                'bg_primary': '#1b2b34',
-                'bg_secondary': '#14232a',
-                'bg_tertiary': '#263b44',
-                'bg_hover': '#2d4048',
-                'bg_pressed': '#0f1c22',
-                'bg_disabled': '#1c2830',
-                'border': '#0f1c22',
-                'text_primary': '#d8dee9',
-                'text_secondary': '#a7adba',
-                'text_disabled': '#65737e',
-                'accent_blue': '#6699cc',
-                'accent_select': '#5fb3b3',
-                'accent_green': '#99c794',
-                'accent_red': '#ec5f67',
-                'accent_yellow': '#fac863',
-                'accent_orange': '#f99157',
-                'accent_purple': '#c594c5',
-            },
-            
-            "Forest": {
-                'bg_primary': '#2d2f2d',
-                'bg_secondary': '#1e211e',
-                'bg_tertiary': '#373937',
-                'bg_hover': '#424642',
-                'bg_pressed': '#1a1d1a',
-                'bg_disabled': '#2a2c2a',
-                'border': '#1a1d1a',
-                'text_primary': '#d3d9d3',
-                'text_secondary': '#a5aca5',
-                'text_disabled': '#6c736c',
-                'accent_blue': '#83b97d',
-                'accent_select': '#6a9b64',
-                'accent_green': '#a8d193',
-                'accent_red': '#e67e80',
-                'accent_yellow': '#dbbc7f',
-                'accent_orange': '#e69875',
-                'accent_purple': '#b279a7',
-            },
-            
-            "Purple": {
-                'bg_primary': '#2d2b3b',
-                'bg_secondary': '#1e1c2c',
-                'bg_tertiary': '#373545',
-                'bg_hover': '#423f50',
-                'bg_pressed': '#1a1828',
-                'bg_disabled': '#2a2838',
-                'border': '#1a1828',
-                'text_primary': '#d3d1e3',
-                'text_secondary': '#a5a3b5',
-                'text_disabled': '#6c6a7c',
-                'accent_blue': '#a39fe5',
-                'accent_select': '#8683c9',
-                'accent_green': '#b1e3ad',
-                'accent_red': '#e5a3a1',
-                'accent_yellow': '#e3d1a3',
-                'accent_orange': '#e5b3a1',
-                'accent_purple': '#c9a3e5',
-            },
-            
-            "Nord": {
-                'bg_primary': '#2e3440',
-                'bg_secondary': '#242933',
-                'bg_tertiary': '#3b4252',
-                'bg_hover': '#434c5e',
-                'bg_pressed': '#1c2027',
-                'bg_disabled': '#2b303b',
-                'border': '#1c2027',
-                'text_primary': '#eceff4',
-                'text_secondary': '#d8dee9',
-                'text_disabled': '#4c566a',
-                'accent_blue': '#88c0d0',
-                'accent_select': '#5e81ac',
-                'accent_green': '#a3be8c',
-                'accent_red': '#bf616a',
-                'accent_yellow': '#ebcb8b',
-                'accent_orange': '#d08770',
-                'accent_purple': '#b48ead',
-            }
-        }
-        
-        if preset_name in presets:
-            self.colors = presets[preset_name].copy()
-            self.update_theme()
+        config = self.theme_config.load_all_themes()
+        if preset_name in config['themes']:
+            theme_data = config['themes'][preset_name]
+            self.colors = theme_data['colors'].copy()
+            self.border_radius.setValue(theme_data.get('border_radius', 3))
+            self.font_size_slider.setValue(theme_data.get('font_size', 10))
             
             # Update all color pickers
             for key, picker in {**self.bg_pickers, **self.accent_pickers, 
@@ -419,10 +380,7 @@ class ThemeSettingsWidget(QWidget):
                 picker.current_color = QColor(self.colors[key])
                 picker.update_preview()
             
-            # Reset sliders
-            self.brightness_slider.setValue(0)
-            self.contrast_slider.setValue(0)
-            self.saturation_slider.setValue(0)
+            self.update_theme()
     
     def load_saved_themes(self):
         """Load saved themes into combo box"""
@@ -455,7 +413,8 @@ class ThemeSettingsWidget(QWidget):
             self.theme_config.save_theme(
                 name=name,
                 colors=self.colors,
-                border_radius=self.border_radius.value()
+                border_radius=self.border_radius.value(),
+                font_size=self.font_size_slider.value()  # Include font size
             )
             
             # Add to combo if new
