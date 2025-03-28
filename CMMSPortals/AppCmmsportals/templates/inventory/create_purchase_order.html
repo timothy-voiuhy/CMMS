@@ -2,14 +2,31 @@
 
 {% block title %}Create Purchase Order{% endblock %}
 
-{% block content %}
-<div class="container">
+{% block inventory_content %}
+<div class="container-fluid">
     <h1 class="mb-4">Create New Purchase Order</h1>
     
     <div class="card">
         <div class="card-body">
             <form method="post" id="purchase-order-form">
                 {% csrf_token %}
+                
+                <!-- Header Information -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <label for="po_number" class="form-label">PO Number</label>
+                        <input type="text" class="form-control" id="po_number" name="po_number" value="{{ po_number }}" readonly>
+                        <small class="text-muted">Auto-generated</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="date_created" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date_created" name="date_created" value="{{ today }}" readonly>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="requested_by" class="form-label">Requested By</label>
+                        <input type="text" class="form-control" id="requested_by" name="requested_by" value="{{ request.user.get_full_name }}" readonly>
+                    </div>
+                </div>
                 
                 <!-- Supplier Information -->
                 <div class="mb-4">
@@ -30,8 +47,12 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="shipping_address" class="form-label">Shipping Address</label>
-                        <textarea class="form-control" id="shipping_address" name="shipping_address" rows="2"></textarea>
+                        <label for="department" class="form-label">Department</label>
+                        <input type="text" class="form-control" id="department" name="department" value="Inventory">
+                    </div>
+                    <div class="mb-3">
+                        <label for="delivery_location" class="form-label">Delivery Location</label>
+                        <textarea class="form-control" id="delivery_location" name="delivery_location" rows="2" required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="notes" class="form-label">Notes</label>
@@ -46,10 +67,11 @@
                         <table class="table table-bordered" id="items-table">
                             <thead>
                                 <tr>
-                                    <th>Item</th>
+                                    <th>Item Description</th>
                                     <th>Quantity</th>
                                     <th>Unit Price</th>
                                     <th>Total</th>
+                                    <th>Asset/Work Order Ref</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -75,6 +97,9 @@
                                         <span class="item-total">$0.00</span>
                                     </td>
                                     <td>
+                                        <input type="text" class="form-control" name="reference[]" placeholder="Optional">
+                                    </td>
+                                    <td>
                                         <button type="button" class="btn btn-sm btn-danger remove-item">Remove</button>
                                     </td>
                                 </tr>
@@ -97,8 +122,21 @@
                                 <div class="d-flex justify-content-between">
                                     <span>Total Amount:</span>
                                     <span id="total-amount">$0.00</span>
+                                    <input type="hidden" name="total_amount" id="total_amount_input" value="0.00">
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Approval Section -->
+                <div class="mb-4">
+                    <h5>Approval</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="approved_by" class="form-label">Approved By</label>
+                            <input type="text" class="form-control" id="approved_by" name="approved_by" value="{{ request.user.get_full_name }}">
+                            <small class="text-muted">Will be recorded when the PO is submitted</small>
                         </div>
                     </div>
                 </div>
@@ -153,6 +191,9 @@
                 </td>
                 <td>
                     <span class="item-total">$0.00</span>
+                </td>
+                <td>
+                    <input type="text" class="form-control" name="reference[]" placeholder="Optional">
                 </td>
                 <td>
                     <button type="button" class="btn btn-sm btn-danger remove-item">Remove</button>
@@ -229,6 +270,7 @@
             
             document.getElementById('total-items').textContent = totalItems;
             document.getElementById('total-amount').textContent = '$' + totalAmount.toFixed(2);
+            document.getElementById('total_amount_input').value = totalAmount.toFixed(2);
         }
         
         // Form submission
@@ -248,7 +290,27 @@
             if (hasDuplicates) {
                 e.preventDefault();
                 alert('You have duplicate items in your order. Please combine quantities instead of adding the same item multiple times.');
+                return;
             }
+            
+            // Store additional fields in notes
+            const deliveryLocation = document.getElementById('delivery_location').value;
+            const department = document.getElementById('department').value;
+            const approvedBy = document.getElementById('approved_by').value;
+            const notesField = document.getElementById('notes');
+            const originalNotes = notesField.value;
+            
+            // Format the notes with clear section headers
+            let formattedNotes = "";
+            formattedNotes += "=== DELIVERY LOCATION ===\n" + deliveryLocation + "\n\n";
+            formattedNotes += "=== DEPARTMENT ===\n" + department + "\n\n";
+            formattedNotes += "=== APPROVED BY ===\n" + approvedBy + "\n\n";
+            
+            if (originalNotes.trim()) {
+                formattedNotes += "=== NOTES ===\n" + originalNotes;
+            }
+            
+            notesField.value = formattedNotes;
         });
     });
 </script>

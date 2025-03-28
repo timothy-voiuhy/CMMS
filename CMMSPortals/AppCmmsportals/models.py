@@ -413,7 +413,7 @@ class PurchaseOrder(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, db_column='supplier_id')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    created_by = models.ForeignKey(InventoryPersonnel, on_delete=models.SET_NULL, null=True, db_column='created_by')
+    created_by = models.CharField(max_length=50)  # Employee ID of creator
     created_at = models.DateTimeField(auto_now_add=True)
     expected_delivery = models.DateField(null=True, blank=True)
     notes = models.TextField(null=True, blank=True)

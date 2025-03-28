@@ -14,6 +14,7 @@ import mysql.connector
 from mysql.connector import Error
 import pandas as pd
 import io
+import random
 
 from .models import (
     User, Craftsman, InventoryPersonnel, Equipment, WorkOrder, 
@@ -1540,6 +1541,9 @@ def create_purchase_order(request):
             messages.error(request, 'You do not have permission to create purchase orders')
             return redirect('purchase_orders')
         
+        # Generate PO number
+        po_number = f'PO-{timezone.now().strftime("%Y%m%d")}-{random.randint(1000, 9999)}'
+        
         # Get suppliers for dropdown
         suppliers = Supplier.objects.all().order_by('name')
         
@@ -1550,16 +1554,17 @@ def create_purchase_order(request):
             # Process form data
             supplier_id = request.POST.get('supplier')
             expected_delivery = request.POST.get('expected_delivery')
-            shipping_address = request.POST.get('shipping_address')
             notes = request.POST.get('notes')
+            total_amount = request.POST.get('total_amount')
             
-            # Create purchase order
+            # Create purchase order with only the fields that exist in the database
             po = PurchaseOrder.objects.create(
+                po_number=request.POST.get('po_number', po_number),
                 supplier_id=supplier_id,
                 expected_delivery=expected_delivery,
-                shipping_address=shipping_address,
-                notes=notes,
-                created_by=request.user.employee_id,
+                notes=notes,  # Notes will now contain the delivery location, department, and approved by
+                total_amount=total_amount,
+                created_by=1,  # Hardcoded user ID for testing
                 status='Pending'
             )
             
@@ -1569,6 +1574,7 @@ def create_purchase_order(request):
             unit_prices = request.POST.getlist('unit_price[]')
             
             for i in range(len(item_ids)):
+                # Create purchase order item without reference field
                 PurchaseOrderItem.objects.create(
                     po=po,
                     item_id=item_ids[i],
@@ -1582,7 +1588,9 @@ def create_purchase_order(request):
         return render(request, 'inventory/create_purchase_order.html', {
             'suppliers': suppliers,
             'items': items,
-            'user_is_admin': True  # Force set to True for the template
+            'user_is_admin': True,  # Force set to True for the template
+            'po_number': po_number,
+            'today': timezone.now().strftime('%Y-%m-%d')
         })
         
     except InventoryPersonnel.DoesNotExist:
@@ -1600,6 +1608,11 @@ def view_purchase_order(request, po_id):
     try:
         po = PurchaseOrder.objects.get(po_id=po_id)
         items = PurchaseOrderItem.objects.filter(po=po)
+        
+        # Calculate total price for each item
+        for item in items:
+            item.total_price = float(item.quantity) * float(item.unit_price)
+            
     except PurchaseOrder.DoesNotExist:
         messages.error(request, 'Purchase order not found')
         return redirect('purchase_orders')
