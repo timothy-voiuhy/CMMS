@@ -1,0 +1,12 @@
+{
+    "name": "cmmsportals",
+    "version": "1.0.0",
+    "description": "CMMS Portals Tailwind CSS Setup",
+    "scripts": {
+      "tailwind:dev": "tailwindcss -i ./theme/static/css/input.css -o ./theme/static/css/dist/styles.css --watch",
+      "tailwind:build": "tailwindcss -i ./theme/static/css/input.css -o ./theme/static/css/dist/styles.css --minify"
+    },
+    "devDependencies": {
+      "tailwindcss": "^3.4.1"
+    }
+  }

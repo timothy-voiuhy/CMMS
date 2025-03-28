@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'AppCmmsportals',
     'crispy_forms',  # For form styling similar to Bootstrap
     'crispy_bootstrap5',  # Bootstrap 5 template pack
+    'tailwind',
+    'theme'
 ]
 
 MIDDLEWARE = [
@@ -171,3 +173,8 @@ MAX_UPLOAD_SIZE = 16 * 1024 * 1024  # 16MB, same as in your Flask app
 
 # Use custom User model
 AUTH_USER_MODEL = 'AppCmmsportals.User'
+
+# tailwind app name
+TAILWIND_APP_NAME = "theme"
+
+NPM_BIN_PATH = "C:\\Program Files\\nodejs\\npm.cmd"
