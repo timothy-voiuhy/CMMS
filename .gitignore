@@ -1,2 +1,4 @@
 *.pyc 
 __pycache__
+CMMSPortals/node_modules/
+CMMSPortals/theme/static_src/node_modules
