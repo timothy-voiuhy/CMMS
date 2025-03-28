@@ -104,39 +104,48 @@ class EquipmentRegistrationWindow(QWidget):
         # Add standard fields
         self.fields = {}
         
-        # Required fields with tooltips
+        # All standard fields are now required with tooltips
         self.add_field(
             "part_number", 
-            "Part Number *", 
+            "Part Number", 
             required=True,
             tooltip="Enter the unique identifier for this equipment"
         )
+        self.fields["part_number"].textChanged.connect(self.validate_part_number)
+        
         self.add_field(
             "equipment_name", 
-            "Equipment Name *", 
+            "Equipment Name", 
             required=True,
             tooltip="Enter a descriptive name for the equipment"
         )
+        self.fields["equipment_name"].textChanged.connect(self.validate_equipment_name)
         
-        # Optional fields with tooltips
         self.add_field(
             "manufacturer",
             "Manufacturer",
+            required=True,
             tooltip="Name of the equipment manufacturer"
         )
+        
         self.add_field(
             "model",
             "Model",
+            required=True,
             tooltip="Model number or name of the equipment"
         )
+        
         self.add_field(
             "serial_number",
             "Serial Number",
+            required=True,
             tooltip="Unique serial number provided by the manufacturer"
         )
+        
         self.add_field(
             "location",
             "Location",
+            required=True,
             tooltip="Physical location where the equipment is installed"
         )
         
@@ -278,6 +287,19 @@ class EquipmentRegistrationWindow(QWidget):
         field = QLineEdit()
         if required:
             label += " *"
+            # Add visual indication for required fields
+            field.setStyleSheet("""
+                QLineEdit {
+                    border: 1px solid #3a3a3a;
+                    background-color: #2a2a2a;
+                    border-radius: 4px;
+                    padding: 5px;
+                    color: #e0e0e0;
+                }
+                QLineEdit:focus {
+                    border: 1px solid #505050;
+                }
+            """)
         if tooltip:
             field.setToolTip(tooltip)
         self.form_layout.addRow(label, field)
@@ -321,24 +343,33 @@ class EquipmentRegistrationWindow(QWidget):
         Check if equipment with similar details already exists.
         Returns (is_duplicate, message)
         """
-        part_number = self.fields["part_number"].text()
-        serial_number = self.fields["serial_number"].text()
-        equipment_name = self.fields["equipment_name"].text()
+        part_number = self.fields["part_number"].text().strip()
+        serial_number = self.fields["serial_number"].text().strip()
+        equipment_name = self.fields["equipment_name"].text().strip()
+        
+        # Skip empty fields in duplicate check
+        check_fields = {}
+        if part_number:
+            check_fields['part_number'] = part_number
+        if serial_number:
+            check_fields['serial_number'] = serial_number
+        if equipment_name:
+            check_fields['equipment_name'] = equipment_name
+        
+        # If no fields to check, return early
+        if not check_fields:
+            return False, ""
         
         # Get existing equipment
-        existing_equipment = self.db_manager.get_equipment_by_fields({
-            'part_number': part_number,
-            'serial_number': serial_number,
-            'equipment_name': equipment_name
-        })
+        existing_equipment = self.db_manager.get_equipment_by_fields(check_fields)
         
         if existing_equipment:
             duplicate_fields = []
-            if any(eq['part_number'] == part_number for eq in existing_equipment):
+            if part_number and any(eq.get('part_number') == part_number for eq in existing_equipment):
                 duplicate_fields.append("Part Number")
-            if any(eq['serial_number'] == serial_number for eq in existing_equipment):
+            if serial_number and any(eq.get('serial_number') == serial_number for eq in existing_equipment):
                 duplicate_fields.append("Serial Number")
-            if any(eq['equipment_name'] == equipment_name for eq in existing_equipment):
+            if equipment_name and any(eq.get('equipment_name') == equipment_name for eq in existing_equipment):
                 duplicate_fields.append("Equipment Name")
             
             if duplicate_fields:
@@ -347,10 +378,111 @@ class EquipmentRegistrationWindow(QWidget):
         return False, ""
 
     def save_equipment(self):
-        # Validate required fields
-        if not self.fields["part_number"].text() or not self.fields["equipment_name"].text():
-            QMessageBox.warning(self, "Validation Error", 
-                              "Part Number and Equipment Name are required fields!")
+        """Save equipment data after validation"""
+        # Reset validation errors
+        validation_errors = []
+        
+        # Validate all standard fields are not empty
+        for field_name, field in self.fields.items():
+            field_value = field.text().strip()
+            if not field_value:
+                # Convert field_name from snake_case to Title Case for display
+                display_name = " ".join(word.capitalize() for word in field_name.split("_"))
+                validation_errors.append(f"{display_name} is required")
+                field.setStyleSheet("""
+                    QLineEdit {
+                        border: 1px solid #ff5555;
+                        background-color: #2a2a2a;
+                        border-radius: 4px;
+                        padding: 5px;
+                        color: #e0e0e0;
+                    }
+                """)
+        
+        # Validate part number format (alphanumeric with hyphens allowed)
+        part_number = self.fields["part_number"].text().strip()
+        if part_number and not all(c.isalnum() or c == '-' for c in part_number):
+            validation_errors.append("Part Number should contain only letters, numbers, and hyphens")
+            self.fields["part_number"].setStyleSheet("""
+                QLineEdit {
+                    border: 1px solid #ffaa55;
+                    background-color: #2a2a2a;
+                    border-radius: 4px;
+                    padding: 5px;
+                    color: #e0e0e0;
+                }
+            """)
+        
+        # Validate serial number format
+        serial_number = self.fields["serial_number"].text().strip()
+        if serial_number and not all(c.isalnum() or c in '-_' for c in serial_number):
+            validation_errors.append("Serial Number should contain only letters, numbers, hyphens, and underscores")
+            self.fields["serial_number"].setStyleSheet("""
+                QLineEdit {
+                    border: 1px solid #ffaa55;
+                    background-color: #2a2a2a;
+                    border-radius: 4px;
+                    padding: 5px;
+                    color: #e0e0e0;
+                }
+            """)
+        
+        # Validate installation date is not in the future
+        current_date = QDate.currentDate()
+        selected_date = self.installation_date.date()
+        if selected_date > current_date:
+            validation_errors.append("Installation Date cannot be in the future")
+            self.installation_date.setStyleSheet("""
+                QDateEdit {
+                    border: 1px solid #ffaa55;
+                    background-color: #2a2a2a;
+                    border-radius: 4px;
+                    padding: 5px;
+                    color: #e0e0e0;
+                }
+            """)
+        
+        # Validate custom fields
+        custom_fields = {}
+        for i in range(self.custom_fields_layout.count()):
+            widget = self.custom_fields_layout.itemAt(i).widget()
+            if widget:
+                layout = widget.layout()
+                name = layout.itemAt(0).widget().text().strip()
+                value = layout.itemAt(1).widget().text().strip()
+                
+                # Validate custom field names
+                if name:
+                    if not value:
+                        validation_errors.append(f"Custom field '{name}' has no value")
+                        layout.itemAt(1).widget().setStyleSheet("""
+                            QLineEdit {
+                                border: 1px solid #ff5555;
+                                background-color: #2a2a2a;
+                                border-radius: 4px;
+                                padding: 5px;
+                                color: #e0e0e0;
+                            }
+                        """)
+                    elif name in ["Part Number", "Equipment Name", "Manufacturer", "Model", 
+                                 "Serial Number", "Location", "Installation Date", "Status"]:
+                        validation_errors.append(f"Custom field '{name}' conflicts with a standard field name")
+                        layout.itemAt(0).widget().setStyleSheet("""
+                            QLineEdit {
+                                border: 1px solid #ff5555;
+                                background-color: #2a2a2a;
+                                border-radius: 4px;
+                                padding: 5px;
+                                color: #e0e0e0;
+                            }
+                        """)
+                    else:
+                        custom_fields[name] = value
+        
+        # Show validation errors if any
+        if validation_errors:
+            error_message = "Please correct the following errors:\n• " + "\n• ".join(validation_errors)
+            QMessageBox.warning(self, "Validation Error", error_message)
             return
         
         # Check for duplicates
@@ -361,18 +493,17 @@ class EquipmentRegistrationWindow(QWidget):
         
         # Gather equipment data
         equipment_data = {
-            "Part Number": self.fields["part_number"].text(),
-            "Equipment Name": self.fields["equipment_name"].text(),
-            "Manufacturer": self.fields["manufacturer"].text(),
-            "Model": self.fields["model"].text(),
-            "Serial Number": self.fields["serial_number"].text(),
-            "Location": self.fields["location"].text(),
-            "Installation Date": self.installation_date.date().toString("yyyy-MM-dd"),
+            "Part Number": part_number,
+            "Equipment Name": self.fields["equipment_name"].text().strip(),
+            "Manufacturer": self.fields["manufacturer"].text().strip(),
+            "Model": self.fields["model"].text().strip(),
+            "Serial Number": serial_number,
+            "Location": self.fields["location"].text().strip(),
+            "Installation Date": selected_date.toString("yyyy-MM-dd"),
             "Status": self.status_combo.currentText()
         }
         
-        # Add custom fields
-        custom_fields = self.get_custom_fields()
+        # Add custom fields to equipment data
         equipment_data.update(custom_fields)
         
         # Show confirmation dialog
@@ -389,10 +520,14 @@ class EquipmentRegistrationWindow(QWidget):
                 "installation_date": equipment_data["Installation Date"],
                 "status": equipment_data["Status"]
             }
-            db_data.update(custom_fields)  # Add custom fields back
+            
+            # Add custom fields to db_data
+            for key, value in custom_fields.items():
+                db_data[key] = value
             
             # Save to database
-            if self.db_manager.register_equipment(1, db_data):
+            user_id = getattr(self, 'current_user_id', 1)  # Default to 1 if not set
+            if self.db_manager.register_equipment(user_id, db_data):
                 QMessageBox.information(self, "Success", "Equipment registered successfully!")
                 self.clear_form()
                 self.equipment_registered.emit()
@@ -400,12 +535,31 @@ class EquipmentRegistrationWindow(QWidget):
                 QMessageBox.critical(self, "Error", "Failed to register equipment!")
 
     def clear_form(self):
+        """Clear all form fields and reset validation styling"""
         # Clear standard fields
         for field in self.fields.values():
             field.clear()
+            field.setStyleSheet("""
+                QLineEdit {
+                    border: 1px solid #3a3a3a;
+                    background-color: #2a2a2a;
+                    border-radius: 4px;
+                    padding: 5px;
+                    color: #e0e0e0;
+                }
+            """)
         
         # Reset date to current
         self.installation_date.setDate(QDate.currentDate())
+        self.installation_date.setStyleSheet("""
+            QDateEdit {
+                border: 1px solid #3a3a3a;
+                background-color: #2a2a2a;
+                border-radius: 4px;
+                padding: 5px;
+                color: #e0e0e0;
+            }
+        """)
         
         # Reset status
         self.status_combo.setCurrentIndex(0)
@@ -480,6 +634,69 @@ class EquipmentRegistrationWindow(QWidget):
             
             self.custom_fields_layout.addWidget(custom_field_widget)
             remove_button.clicked.connect(lambda checked, w=custom_field_widget: self.remove_custom_field(w))
+
+    def validate_part_number(self):
+        """Validate part number as user types"""
+        part_number = self.fields["part_number"].text().strip()
+        if not part_number:
+            self.fields["part_number"].setStyleSheet("""
+                QLineEdit {
+                    border: 1px solid #ff5555;
+                    background-color: #2a2a2a;
+                    border-radius: 4px;
+                    padding: 5px;
+                    color: #e0e0e0;
+                }
+            """)
+            self.fields["part_number"].setToolTip("Part Number is required")
+        elif not all(c.isalnum() or c == '-' for c in part_number):
+            self.fields["part_number"].setStyleSheet("""
+                QLineEdit {
+                    border: 1px solid #ffaa55;
+                    background-color: #2a2a2a;
+                    border-radius: 4px;
+                    padding: 5px;
+                    color: #e0e0e0;
+                }
+            """)
+            self.fields["part_number"].setToolTip("Part Number should contain only letters, numbers, and hyphens")
+        else:
+            self.fields["part_number"].setStyleSheet("""
+                QLineEdit {
+                    border: 1px solid #55aa55;
+                    background-color: #2a2a2a;
+                    border-radius: 4px;
+                    padding: 5px;
+                    color: #e0e0e0;
+                }
+            """)
+            self.fields["part_number"].setToolTip("Valid Part Number")
+
+    def validate_equipment_name(self):
+        """Validate equipment name as user types"""
+        equipment_name = self.fields["equipment_name"].text().strip()
+        if not equipment_name:
+            self.fields["equipment_name"].setStyleSheet("""
+                QLineEdit {
+                    border: 1px solid #ff5555;
+                    background-color: #2a2a2a;
+                    border-radius: 4px;
+                    padding: 5px;
+                    color: #e0e0e0;
+                }
+            """)
+            self.fields["equipment_name"].setToolTip("Equipment Name is required")
+        else:
+            self.fields["equipment_name"].setStyleSheet("""
+                QLineEdit {
+                    border: 1px solid #55aa55;
+                    background-color: #2a2a2a;
+                    border-radius: 4px;
+                    padding: 5px;
+                    color: #e0e0e0;
+                }
+            """)
+            self.fields["equipment_name"].setToolTip("Valid Equipment Name")
 
 class ConfirmationDialog(QDialog):
     def __init__(self, equipment_data, parent=None):
