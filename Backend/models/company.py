@@ -1,0 +1,90 @@
+from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
+from db.base import Base
+from models.base import BaseModel
+
+
+class Company(Base, BaseModel):
+    __tablename__ = "companies"
+    
+    name = Column(String(200), nullable=False)
+    short_name = Column(String(50), nullable=True)
+    industry_type = Column(String(100), nullable=True)
+    registration_number = Column(String(100), nullable=True)
+    tax_id = Column(String(100), nullable=True)
+    
+    # Contact Information
+    address = Column(Text, nullable=True)
+    city = Column(String(100), nullable=True)
+    country = Column(String(100), nullable=True)
+    phone = Column(String(20), nullable=True)
+    email = Column(String(100), nullable=True)
+    website = Column(String(200), nullable=True)
+    
+    # Business Settings
+    currency = Column(String(10), default="USD", nullable=False)
+    timezone = Column(String(50), default="UTC", nullable=False)
+    language = Column(String(10), default="en", nullable=False)
+    
+    # Operational Settings
+    working_hours_start = Column(String(10), nullable=True)
+    working_hours_end = Column(String(10), nullable=True)
+    working_days = Column(String(50), nullable=True)  # JSON: ["Monday", "Tuesday", ...]
+    
+    # Logo and branding
+    logo_url = Column(String(500), nullable=True)
+    
+    # System settings
+    is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Relationships
+    facilities = relationship("Facility", back_populates="company")
+
+
+class Facility(Base, BaseModel):
+    __tablename__ = "facilities"
+    
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    
+    name = Column(String(200), nullable=False)
+    facility_type = Column(String(50), nullable=False)  # plant, warehouse, office
+    facility_code = Column(String(50), unique=True, nullable=False)
+    
+    # Location
+    address = Column(Text, nullable=True)
+    city = Column(String(100), nullable=True)
+    country = Column(String(100), nullable=True)
+    gps_coordinates = Column(String(100), nullable=True)
+    
+    # Contact
+    phone = Column(String(20), nullable=True)
+    manager_name = Column(String(100), nullable=True)
+    manager_contact = Column(String(20), nullable=True)
+    
+    # Settings
+    is_active = Column(Boolean, default=True, nullable=False)
+    notes = Column(Text, nullable=True)
+    
+    # Relationships
+    company = relationship("Company", back_populates="facilities")
+    departments = relationship("Department", back_populates="facility")
+
+
+class Department(Base, BaseModel):
+    __tablename__ = "departments"
+    
+    facility_id = Column(Integer, ForeignKey("facilities.id"), nullable=False)
+    
+    name = Column(String(100), nullable=False)
+    department_code = Column(String(50), unique=True, nullable=False)
+    description = Column(Text, nullable=True)
+    
+    # Manager
+    manager_name = Column(String(100), nullable=True)
+    cost_center = Column(String(50), nullable=True)
+    
+    # Settings
+    is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Relationships
+    facility = relationship("Facility", back_populates="departments")

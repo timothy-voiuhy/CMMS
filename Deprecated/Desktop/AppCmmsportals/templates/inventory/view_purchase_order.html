@@ -1,0 +1,137 @@
+{% extends "inventory/layout.html" %}
+
+{% block title %}Purchase Order Details{% endblock %}
+
+{% block inventory_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Purchase Order: {{ po.po_number }}</h1>
+        <div>
+            <a href="{% url 'purchase_orders' %}" class="btn btn-secondary me-2">Back to List</a>
+            {% if po.status != 'Cancelled' and po.status != 'Received' %}
+            <a href="{% url 'update_purchase_order' po.po_id %}" class="btn btn-primary">Edit</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">PO Number:</div>
+                        <div class="col-md-8">{{ po.po_number }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Date Created:</div>
+                        <div class="col-md-8">{{ po.created_at|date:"F d, Y" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Status:</div>
+                        <div class="col-md-8">
+                            <span class="badge {% if po.status == 'Pending' %}bg-warning{% elif po.status == 'Approved' %}bg-info{% elif po.status == 'Ordered' %}bg-primary{% elif po.status == 'Received' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ po.status }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Created By:</div>
+                        <div class="col-md-8">{{ po.created_by }}</div>
+                    </div>
+                    
+                    {% if po.notes %}
+                    <div class="row mb-3">
+                        <div class="col-md-12 fw-bold">Additional Information:</div>
+                        <div class="col-md-12">
+                            <pre class="notes-display">{{ po.notes }}</pre>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Supplier Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Supplier:</div>
+                        <div class="col-md-8">{{ po.supplier.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Contact:</div>
+                        <div class="col-md-8">{{ po.supplier.contact_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Email:</div>
+                        <div class="col-md-8">{{ po.supplier.email }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Phone:</div>
+                        <div class="col-md-8">{{ po.supplier.phone }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Expected Delivery:</div>
+                        <div class="col-md-8">{{ po.expected_delivery|date:"F d, Y" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Order Items</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ item.item.item_code }}</td>
+                            <td>{{ item.item.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>${{ item.unit_price|floatformat:2 }}</td>
+                            <td>${{ item.total_price|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">Total:</td>
+                            <td>${{ po.total_amount|floatformat:2 }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .notes-display {
+        white-space: pre-wrap;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: inherit;
+    }
+</style>
+
+{% endblock %} 

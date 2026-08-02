@@ -1,0 +1,664 @@
+{
+  "company": {
+    "name": "PSALMS Food Industries",
+    "short_name": "SUMZ",
+    "industry_type": "Food Processing & Manufacturing",
+    "address": "Industrial Area, Kampala",
+    "city": "Kampala",
+    "country": "Uganda",
+    "phone": "+256-XXX-XXXXXX",
+    "email": "info@psalmsfood.com",
+    "currency": "UGX",
+    "timezone": "Africa/Kampala",
+    "language": "en",
+    "working_hours_start": "08:00",
+    "working_hours_end": "18:00",
+    "working_days": "[\"Monday\", \"Tuesday\", \"Wednesday\", \"Thursday\", \"Friday\", \"Saturday\"]"
+  },
+  "facilities": [
+    {
+      "name": "Main Production Plant",
+      "facility_type": "plant",
+      "facility_code": "PLANT-001",
+      "address": "Plot 123, Industrial Area",
+      "city": "Kampala",
+      "country": "Uganda",
+      "manager_name": "John Ssemakula",
+      "manager_contact": "+256-XXX-XXXXXX"
+    }
+  ],
+  "departments": [
+    {
+      "name": "Production",
+      "department_code": "PROD-001",
+      "description": "Main production department",
+      "cost_center": "CC-PROD"
+    },
+    {
+      "name": "Maintenance",
+      "department_code": "MAINT-001",
+      "description": "Equipment maintenance and repair",
+      "cost_center": "CC-MAINT"
+    },
+    {
+      "name": "Quality Control",
+      "department_code": "QC-001",
+      "description": "Quality assurance and testing",
+      "cost_center": "CC-QC"
+    },
+    {
+      "name": "Warehouse",
+      "department_code": "WH-001",
+      "description": "Inventory and storage",
+      "cost_center": "CC-WH"
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@psalmsfood.com",
+      "full_name": "System Administrator",
+      "password": "admin123",
+      "role": "admin",
+      "phone": "+256-XXX-XXXXXX"
+    },
+    {
+      "username": "jdoe",
+      "email": "john.doe@psalmsfood.com",
+      "full_name": "John Doe",
+      "password": "craft123",
+      "role": "craftsman",
+      "phone": "+256-XXX-XXXXXX"
+    },
+    {
+      "username": "msmith",
+      "email": "mary.smith@psalmsfood.com",
+      "full_name": "Mary Smith",
+      "password": "craft123",
+      "role": "craftsman",
+      "phone": "+256-XXX-XXXXXX"
+    },
+    {
+      "username": "pkato",
+      "email": "peter.kato@psalmsfood.com",
+      "full_name": "Peter Kato",
+      "password": "inv123",
+      "role": "inventory",
+      "phone": "+256-XXX-XXXXXX"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Electrical Maintenance",
+      "description": "Electrical systems repair and maintenance",
+      "category": "Electrical"
+    },
+    {
+      "name": "Mechanical Maintenance",
+      "description": "Mechanical systems and equipment maintenance",
+      "category": "Mechanical"
+    },
+    {
+      "name": "Hydraulic Systems",
+      "description": "Hydraulic pump and system maintenance",
+      "category": "Hydraulic"
+    },
+    {
+      "name": "Food Processing Equipment",
+      "description": "Specialized food processing machinery",
+      "category": "Specialized"
+    },
+    {
+      "name": "Conveyor Systems",
+      "description": "Conveyor belt maintenance and repair",
+      "category": "Mechanical"
+    }
+  ],
+  "craftsmen": [
+    {
+      "user_username": "jdoe",
+      "employee_id": "EMP-001",
+      "department": "Maintenance",
+      "position": "Senior Maintenance Technician",
+      "hire_date": "2020-01-15",
+      "certification_level": "Level 3",
+      "hourly_rate": 25000,
+      "skills": ["Electrical Maintenance", "Mechanical Maintenance", "Food Processing Equipment"]
+    },
+    {
+      "user_username": "msmith",
+      "employee_id": "EMP-002",
+      "department": "Maintenance",
+      "position": "Hydraulic Specialist",
+      "hire_date": "2021-03-10",
+      "certification_level": "Level 2",
+      "hourly_rate": 22000,
+      "skills": ["Hydraulic Systems", "Mechanical Maintenance"]
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Potato Washing Machine",
+      "equipment_id": "EQP-PC-001",
+      "category": "Potato Crisps Line",
+      "manufacturer": "Industrial Food Equipment Ltd",
+      "location": "Production Line 1",
+      "status": "operational",
+      "specifications": "Capacity: 500kg/hr, Power: 5kW"
+    },
+    {
+      "name": "Potato Grader",
+      "equipment_id": "EQP-PC-002",
+      "category": "Potato Crisps Line",
+      "location": "Production Line 1",
+      "status": "operational"
+    },
+    {
+      "name": "Potato Peeler",
+      "equipment_id": "EQP-PC-003",
+      "category": "Potato Crisps Line",
+      "location": "Production Line 1",
+      "status": "operational"
+    },
+    {
+      "name": "Potato Slicer",
+      "equipment_id": "EQP-PC-004",
+      "category": "Potato Crisps Line",
+      "location": "Production Line 1",
+      "status": "operational",
+      "specifications": "Slice thickness: 1.5-2mm, Capacity: 300kg/hr"
+    },
+    {
+      "name": "Blancher",
+      "equipment_id": "EQP-PC-005",
+      "category": "Potato Crisps Line",
+      "location": "Production Line 1",
+      "status": "operational"
+    },
+    {
+      "name": "Frying Machine - Potato",
+      "equipment_id": "EQP-PC-006",
+      "category": "Potato Crisps Line",
+      "location": "Production Line 1",
+      "status": "operational",
+      "specifications": "Oil capacity: 200L, Temperature range: 160-180°C"
+    },
+    {
+      "name": "Vibro Shaker",
+      "equipment_id": "EQP-PC-007",
+      "category": "Potato Crisps Line",
+      "location": "Production Line 1",
+      "status": "operational"
+    },
+    {
+      "name": "Rolling Flavouring Drum",
+      "equipment_id": "EQP-PC-008",
+      "category": "Potato Crisps Line",
+      "location": "Production Line 1",
+      "status": "operational"
+    },
+    {
+      "name": "Gas Burner",
+      "equipment_id": "EQP-FC-001",
+      "category": "Fried Corn Line",
+      "location": "Production Line 2",
+      "status": "operational",
+      "specifications": "BTU rating: 150,000"
+    },
+    {
+      "name": "Hydraulic Pump - Oil Transfer",
+      "equipment_id": "EQP-FC-002",
+      "category": "Fried Corn Line",
+      "location": "Production Line 2",
+      "status": "operational",
+      "specifications": "Flow rate: 50L/min, Pressure: 10 bar"
+    },
+    {
+      "name": "Circular Fryer",
+      "equipment_id": "EQP-FC-003",
+      "category": "Fried Corn Line",
+      "location": "Production Line 2",
+      "status": "operational"
+    },
+    {
+      "name": "Rectangular Fryer",
+      "equipment_id": "EQP-FC-004",
+      "category": "Fried Corn Line",
+      "location": "Production Line 2",
+      "status": "operational"
+    },
+    {
+      "name": "Generator 1",
+      "equipment_id": "EQP-UTIL-001",
+      "category": "Utilities",
+      "manufacturer": "Cummins",
+      "model": "C150D5",
+      "location": "Generator House",
+      "status": "operational",
+      "specifications": "150kVA, Diesel"
+    },
+    {
+      "name": "Generator 2",
+      "equipment_id": "EQP-UTIL-002",
+      "category": "Utilities",
+      "manufacturer": "Cummins",
+      "model": "C150D5",
+      "location": "Generator House",
+      "status": "operational",
+      "specifications": "150kVA, Diesel"
+    },
+    {
+      "name": "Water Pump 1",
+      "equipment_id": "EQP-UTIL-003",
+      "category": "Utilities",
+      "location": "Well 1",
+      "status": "operational",
+      "specifications": "Submersible, 3HP"
+    },
+    {
+      "name": "Water Pump 2",
+      "equipment_id": "EQP-UTIL-004",
+      "category": "Utilities",
+      "location": "Well 2",
+      "status": "operational",
+      "specifications": "Submersible, 3HP"
+    },
+    {
+      "name": "Water Pump 3",
+      "equipment_id": "EQP-UTIL-005",
+      "category": "Utilities",
+      "location": "Well 3",
+      "status": "operational",
+      "specifications": "Submersible, 3HP"
+    },
+    {
+      "name": "Kerosene Storage Tank",
+      "equipment_id": "EQP-UTIL-006",
+      "category": "Utilities",
+      "location": "Tank Farm",
+      "status": "operational",
+      "specifications": "Capacity: 10,000L"
+    },
+    {
+      "name": "Conveyor Belt 1",
+      "equipment_id": "EQP-CONV-001",
+      "category": "Conveyors",
+      "location": "Production Line 1",
+      "status": "operational",
+      "specifications": "Length: 5m, Belt width: 600mm"
+    },
+    {
+      "name": "Conveyor Belt 2",
+      "equipment_id": "EQP-CONV-002",
+      "category": "Conveyors",
+      "location": "Production Line 1",
+      "status": "operational",
+      "specifications": "Length: 5m, Belt width: 600mm"
+    },
+    {
+      "name": "Conveyor Belt 3",
+      "equipment_id": "EQP-CONV-003",
+      "category": "Conveyors",
+      "location": "Production Line 2",
+      "status": "operational",
+      "specifications": "Length: 5m, Belt width: 600mm"
+    }
+  ],
+  "inventory_categories": [
+    {
+      "name": "Raw Materials",
+      "description": "Base materials for production"
+    },
+    {
+      "name": "Potatoes",
+      "description": "Various potato varieties",
+      "parent_name": "Raw Materials"
+    },
+    {
+      "name": "Grains",
+      "description": "Maize and other grains",
+      "parent_name": "Raw Materials"
+    },
+    {
+      "name": "Oils & Fats",
+      "description": "Cooking oils and fats",
+      "parent_name": "Raw Materials"
+    },
+    {
+      "name": "Flavors & Seasonings",
+      "description": "Flavor compounds and seasonings"
+    },
+    {
+      "name": "BBQ Flavor",
+      "description": "Barbecue flavoring powder",
+      "parent_name": "Flavors & Seasonings"
+    },
+    {
+      "name": "Salt & Vinegar",
+      "description": "Salt and vinegar flavoring",
+      "parent_name": "Flavors & Seasonings"
+    },
+    {
+      "name": "Original/Plain",
+      "description": "Plain salt seasoning",
+      "parent_name": "Flavors & Seasonings"
+    },
+    {
+      "name": "Cheese Flavor",
+      "description": "Cheese flavoring powder",
+      "parent_name": "Flavors & Seasonings"
+    },
+    {
+      "name": "Packaging Materials",
+      "description": "Packaging and labeling materials"
+    },
+    {
+      "name": "Bags & Pouches",
+      "description": "Product packaging bags",
+      "parent_name": "Packaging Materials"
+    },
+    {
+      "name": "Cartons & Boxes",
+      "description": "Shipping cartons",
+      "parent_name": "Packaging Materials"
+    },
+    {
+      "name": "Labels & Stickers",
+      "description": "Product labels",
+      "parent_name": "Packaging Materials"
+    },
+    {
+      "name": "Spare Parts",
+      "description": "Equipment spare parts and components"
+    },
+    {
+      "name": "Finished Goods",
+      "description": "Ready for sale products"
+    },
+    {
+      "name": "Work in Progress",
+      "description": "Products in production"
+    }
+  ],
+  "inventory_items": [
+    {
+      "item_code": "RM-POT-001",
+      "name": "Fresh Potatoes",
+      "description": "Raw potatoes for crisps production",
+      "category_name": "Potatoes",
+      "unit_of_measure": "kg",
+      "quantity": 5000,
+      "min_quantity": 2000,
+      "reorder_point": 2500,
+      "unit_cost": 1500,
+      "location": "Cold Storage A",
+      "supplier": "Kabale Farmers Cooperative"
+    },
+    {
+      "item_code": "RM-CORN-001",
+      "name": "Maize Grain",
+      "description": "Raw corn for fried corn products",
+      "category_name": "Grains",
+      "unit_of_measure": "kg",
+      "quantity": 3000,
+      "min_quantity": 1000,
+      "reorder_point": 1500,
+      "unit_cost": 2000,
+      "location": "Dry Storage B"
+    },
+    {
+      "item_code": "RM-OIL-001",
+      "name": "Cooking Oil",
+      "description": "Palm oil for frying",
+      "category_name": "Oils & Fats",
+      "unit_of_measure": "L",
+      "quantity": 2000,
+      "min_quantity": 500,
+      "reorder_point": 800,
+      "unit_cost": 8000,
+      "location": "Oil Storage"
+    },
+    {
+      "item_code": "FLV-BBQ-001",
+      "name": "BBQ Flavoring Powder",
+      "description": "Barbecue flavor seasoning",
+      "category_name": "BBQ Flavor",
+      "unit_of_measure": "kg",
+      "quantity": 150,
+      "min_quantity": 50,
+      "reorder_point": 70,
+      "unit_cost": 25000,
+      "location": "Flavor Storage",
+      "supplier": "Flavor Masters Ltd"
+    },
+    {
+      "item_code": "FLV-SV-001",
+      "name": "Salt & Vinegar Seasoning",
+      "description": "Salt and vinegar flavor compound",
+      "category_name": "Salt & Vinegar",
+      "unit_of_measure": "kg",
+      "quantity": 120,
+      "min_quantity": 40,
+      "reorder_point": 60,
+      "unit_cost": 22000,
+      "location": "Flavor Storage",
+      "supplier": "Flavor Masters Ltd"
+    },
+    {
+      "item_code": "FLV-PLN-001",
+      "name": "Plain Salt",
+      "description": "Fine salt for plain flavor",
+      "category_name": "Original/Plain",
+      "unit_of_measure": "kg",
+      "quantity": 500,
+      "min_quantity": 100,
+      "reorder_point": 150,
+      "unit_cost": 3000,
+      "location": "Flavor Storage"
+    },
+    {
+      "item_code": "SP-BELT-001",
+      "name": "Conveyor Belt",
+      "description": "Replacement conveyor belt 600mm",
+      "category_name": "Spare Parts",
+      "unit_of_measure": "m",
+      "quantity": 20,
+      "min_quantity": 5,
+      "reorder_point": 8,
+      "unit_cost": 50000,
+      "location": "Spare Parts Store"
+    },
+    {
+      "item_code": "SP-FILTER-001",
+      "name": "Oil Filter",
+      "description": "Fryer oil filter cartridge",
+      "category_name": "Spare Parts",
+      "unit_of_measure": "pcs",
+      "quantity": 15,
+      "min_quantity": 5,
+      "reorder_point": 7,
+      "unit_cost": 25000,
+      "location": "Spare Parts Store"
+    },
+    {
+      "item_code": "PKG-BAG-050",
+      "name": "50g Packaging Bags",
+      "description": "SUMZ branded 50g crisp bags",
+      "category_name": "Bags & Pouches",
+      "unit_of_measure": "pcs",
+      "quantity": 50000,
+      "min_quantity": 10000,
+      "reorder_point": 15000,
+      "unit_cost": 50,
+      "location": "Packaging Store"
+    },
+    {
+      "item_code": "PKG-BAG-100",
+      "name": "100g Packaging Bags",
+      "description": "SUMZ branded 100g crisp bags",
+      "category_name": "Bags & Pouches",
+      "unit_of_measure": "pcs",
+      "quantity": 30000,
+      "min_quantity": 8000,
+      "reorder_point": 10000,
+      "unit_cost": 80,
+      "location": "Packaging Store"
+    }
+  ],
+  "production_lines": [
+    {
+      "line_code": "LINE-PC-001",
+      "name": "Potato Crisps Production Line",
+      "description": "Complete potato crisps manufacturing line - from washing to flavouring",
+      "status": "active",
+      "capacity_per_hour": 250,
+      "capacity_unit": "kg",
+      "location": "Production Hall A",
+      "floor": "Ground Floor"
+    }
+  ],
+  "production_line_equipment": [
+    {
+      "line_code": "LINE-PC-001",
+      "equipment_name": "Potato Washing Machine",
+      "sequence_order": 1,
+      "station_name": "Washing Station",
+      "operators": ["EMP-001"],
+      "cycle_time_minutes": 5,
+      "notes": "Ensure water temperature is maintained at 15-20°C"
+    },
+    {
+      "line_code": "LINE-PC-001",
+      "equipment_name": "Potato Grader",
+      "sequence_order": 2,
+      "station_name": "Grading Station",
+      "operators": ["EMP-001", "EMP-002"],
+      "cycle_time_minutes": 3,
+      "notes": "Sort by size: Small (< 40mm), Medium (40-60mm), Large (> 60mm)"
+    },
+    {
+      "line_code": "LINE-PC-001",
+      "equipment_name": "Potato Peeler",
+      "sequence_order": 3,
+      "station_name": "Peeling Station",
+      "operators": ["EMP-002"],
+      "cycle_time_minutes": 8,
+      "notes": "Monitor peeling efficiency and minimize waste"
+    },
+    {
+      "line_code": "LINE-PC-001",
+      "equipment_name": "Potato Slicer",
+      "sequence_order": 4,
+      "station_name": "Slicing Station",
+      "operators": ["EMP-001"],
+      "cycle_time_minutes": 4,
+      "notes": "Slice thickness: 1.5-2mm for optimal crispiness"
+    },
+    {
+      "line_code": "LINE-PC-001",
+      "equipment_name": "Blancher",
+      "sequence_order": 5,
+      "station_name": "Blanching Station",
+      "operators": ["EMP-002"],
+      "cycle_time_minutes": 3,
+      "notes": "Water temp: 85-90°C, Duration: 2-3 minutes"
+    },
+    {
+      "line_code": "LINE-PC-001",
+      "equipment_name": "Frying Machine - Potato",
+      "sequence_order": 6,
+      "station_name": "Frying Station",
+      "operators": ["EMP-001", "EMP-002"],
+      "cycle_time_minutes": 6,
+      "notes": "Oil temperature: 170-180°C, Frying time: 3-4 minutes. Monitor oil quality regularly"
+    },
+    {
+      "line_code": "LINE-PC-001",
+      "equipment_name": "Vibro Shaker",
+      "sequence_order": 7,
+      "station_name": "De-oiling Station",
+      "operators": ["EMP-001"],
+      "cycle_time_minutes": 2,
+      "notes": "Remove excess oil and cool down crisps"
+    },
+    {
+      "line_code": "LINE-PC-001",
+      "equipment_name": "Rolling Flavouring Drum",
+      "sequence_order": 8,
+      "station_name": "Flavouring Station",
+      "operators": ["EMP-002"],
+      "cycle_time_minutes": 5,
+      "notes": "Apply flavour seasoning evenly. Ensure drum rotation speed is optimal"
+    }
+  ],
+  "shifts": [
+    {
+      "line_code": "LINE-PC-001",
+      "shift_type": "morning",
+      "start_time": "06:00",
+      "end_time": "14:00",
+      "team_leader_employee_id": "EMP-001",
+      "operator_employee_ids": ["EMP-001", "EMP-002"],
+      "active_days": [1, 2, 3, 4, 5, 6],
+      "is_active": true
+    },
+    {
+      "line_code": "LINE-PC-001",
+      "shift_type": "afternoon",
+      "start_time": "14:00",
+      "end_time": "22:00",
+      "team_leader_employee_id": "EMP-002",
+      "operator_employee_ids": ["EMP-001", "EMP-002"],
+      "active_days": [1, 2, 3, 4, 5, 6],
+      "is_active": true
+    }
+  ],
+  "production_orders": [
+    {
+      "line_code": "LINE-PC-001",
+      "order_number": "PO-202608-0001",
+      "product_name": "SUMZ Original Potato Crisps",
+      "product_code": "CRISPS-ORIG-50G",
+      "target_quantity": 1000,
+      "produced_quantity": 450,
+      "unit": "kg",
+      "defect_quantity": 15,
+      "status": "in_progress",
+      "priority": 2,
+      "scheduled_start": "2026-08-02T06:00:00",
+      "scheduled_end": "2026-08-02T14:00:00",
+      "actual_start": "2026-08-02T06:15:00",
+      "notes": "Rush order for supermarket chain. Priority production."
+    },
+    {
+      "line_code": "LINE-PC-001",
+      "order_number": "PO-202608-0002",
+      "product_name": "SUMZ BBQ Potato Crisps",
+      "product_code": "CRISPS-BBQ-50G",
+      "target_quantity": 500,
+      "produced_quantity": 0,
+      "unit": "kg",
+      "status": "pending",
+      "priority": 3,
+      "scheduled_start": "2026-08-03T06:00:00",
+      "scheduled_end": "2026-08-03T10:00:00",
+      "notes": "BBQ flavour - ensure adequate seasoning stock"
+    },
+    {
+      "line_code": "LINE-PC-001",
+      "order_number": "PO-202607-0099",
+      "product_name": "SUMZ Salt & Vinegar Potato Crisps",
+      "product_code": "CRISPS-SV-100G",
+      "target_quantity": 800,
+      "produced_quantity": 800,
+      "unit": "kg",
+      "status": "completed",
+      "priority": 3,
+      "scheduled_start": "2026-07-30T06:00:00",
+      "scheduled_end": "2026-07-30T16:00:00",
+      "actual_start": "2026-07-30T06:10:00",
+      "actual_end": "2026-07-30T15:45:00",
+      "completion_notes": "Production completed successfully. Quality checks passed. Packaged and dispatched."
+    }
+  ]
+}

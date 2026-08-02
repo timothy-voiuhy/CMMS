@@ -1,0 +1,214 @@
+{% extends "inventory/layout.html" %}
+
+{% block title %}Inventory Reports{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Inventory Reports</h1>
+
+<div class="row">
+    <!-- Report Types -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Available Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action" data-report="inventory_status">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Inventory Status Report</h5>
+                        </div>
+                        <p class="mb-1">Overview of all inventory items with current stock levels.</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" data-report="low_stock">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Low Stock Report</h5>
+                        </div>
+                        <p class="mb-1">Items with quantities below minimum stock levels.</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" data-report="valuation">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Inventory Valuation Report</h5>
+                        </div>
+                        <p class="mb-1">Total value of inventory items by category.</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" data-report="movement">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Inventory Movement Report</h5>
+                        </div>
+                        <p class="mb-1">Transactions showing inventory inflows and outflows.</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" data-report="purchase_orders">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Purchase Order Report</h5>
+                        </div>
+                        <p class="mb-1">Summary of purchase orders by status and supplier.</p>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" data-report="custom">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Custom Report</h5>
+                        </div>
+                        <p class="mb-1">Build a custom report with selected data fields.</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Parameters -->
+    <div class="col-md-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Report Parameters</h5>
+            </div>
+            <div class="card-body">
+                <form id="reportForm" method="post" action="#">
+                    <!-- Date Range -->
+                    <div class="mb-3">
+                        <label class="form-label">Date Range</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">From</span>
+                                    <input type="date" class="form-control" name="from_date" id="from_date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">To</span>
+                                    <input type="date" class="form-control" name="to_date" id="to_date">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <select class="form-select" id="category" name="category">
+                            <option value="">All Categories</option>
+                            {% for category in categories|default([]) %}
+                            <option value="{{ category }}">{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Status</option>
+                            <option value="In Stock">In Stock</option>
+                            <option value="Low Stock">Low Stock</option>
+                            <option value="Out of Stock">Out of Stock</option>
+                        </select>
+                    </div>
+
+                    <!-- Report Format -->
+                    <div class="mb-3">
+                        <label class="form-label">Report Format</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="format" id="formatPDF" value="pdf" checked>
+                            <label class="form-check-label" for="formatPDF">
+                                PDF
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="format" id="formatExcel" value="excel">
+                            <label class="form-check-label" for="formatExcel">
+                                Excel
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="format" id="formatCSV" value="csv">
+                            <label class="form-check-label" for="formatCSV">
+                                CSV
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Generate Report</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Reports -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Recent Reports</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_reports|default([]) %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Report Type</th>
+                                <th>Generated By</th>
+                                <th>Format</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in recent_reports %}
+                            <tr>
+                                <td>{{ report.date }}</td>
+                                <td>{{ report.type }}</td>
+                                <td>{{ report.user }}</td>
+                                <td>{{ report.format }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Download</a>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">No recent reports found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default date range (last 30 days)
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        
+        document.getElementById('to_date').valueAsDate = today;
+        document.getElementById('from_date').valueAsDate = thirtyDaysAgo;
+        
+        // Update form when report type is selected
+        const reportLinks = document.querySelectorAll('[data-report]');
+        reportLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const reportType = this.dataset.report;
+                
+                // Set the report type in a hidden field
+                let hiddenInput = document.getElementById('report_type');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = 'report_type';
+                    hiddenInput.name = 'report_type';
+                    document.getElementById('reportForm').appendChild(hiddenInput);
+                }
+                hiddenInput.value = reportType;
+                
+                // Highlight the selected report type
+                reportLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    });
+</script>
+{% endblock %}

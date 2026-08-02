@@ -1,0 +1,96 @@
+{% extends "inventory/layout.html" %}
+
+{% block title %}Purchase Orders{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Purchase Orders</h1>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" value="{{ search_text }}" placeholder="Search by PO number or supplier">
+            </div>
+            <div class="col-md-4">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Status</option>
+                    <option value="Pending" {% if selected_status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Approved" {% if selected_status == 'Approved' %}selected{% endif %}>Approved</option>
+                    <option value="Received" {% if selected_status == 'Received' %}selected{% endif %}>Received</option>
+                    <option value="Cancelled" {% if selected_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Action buttons -->
+<div class="mb-3">
+    <a href="#" class="btn btn-primary me-2">Create New Purchase Order</a>
+    <a href="#" class="btn btn-success me-2">Receive Items</a>
+    <a href="#" class="btn btn-secondary">Export POs</a>
+</div>
+
+<!-- Purchase Orders Table -->
+<div class="card">
+    <div class="card-body">
+        {% if purchase_orders %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>PO Number</th>
+                        <th>Supplier</th>
+                        <th>Date Created</th>
+                        <th>Expected Delivery</th>
+                        <th>Total Amount</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for po in purchase_orders %}
+                    <tr>
+                        <td>{{ po.po_number }}</td>
+                        <td>{{ po.supplier_name }}</td>
+                        <td>{{ po.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ po.expected_delivery.strftime('%Y-%m-%d') }}</td>
+                        <td>${{ "%.2f"|format(po.total_amount) }}</td>
+                        <td>
+                            {% if po.status == 'Pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                            {% elif po.status == 'Approved' %}
+                            <span class="badge bg-info">Approved</span>
+                            {% elif po.status == 'Received' %}
+                            <span class="badge bg-success">Received</span>
+                            {% elif po.status == 'Cancelled' %}
+                            <span class="badge bg-danger">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ po.created_by_name }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                {% if po.status not in ['Received', 'Cancelled'] %}
+                                <a href="#" class="btn btn-sm btn-outline-success">Update</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center">No purchase orders found matching your criteria.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
