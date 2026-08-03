@@ -660,5 +660,97 @@
       "actual_end": "2026-07-30T15:45:00",
       "completion_notes": "Production completed successfully. Quality checks passed. Packaged and dispatched."
     }
+  ],
+  "quality_inspections": [
+    {
+      "product_name": "BBQ Potato Chips 50g",
+      "batch_number": "BATCH-2026-001",
+      "inspection_type": "Final Product Inspection",
+      "inspection_date": "2026-07-30T15:00:00",
+      "sample_size": 50,
+      "defects_found": 2,
+      "status": "completed",
+      "result": "pass",
+      "pass_rate": 96.0,
+      "observations": "Minor packaging defects on 2 units. Overall quality acceptable.",
+      "notes": "Taste, texture, and crispness meet specifications.",
+      "inspection_items": [
+        {
+          "checkpoint_name": "Visual Appearance",
+          "specification": "Golden brown color, no burns",
+          "measured_value": "Pass",
+          "result": "pass"
+        },
+        {
+          "checkpoint_name": "Weight",
+          "specification": "50g ± 2g",
+          "measured_value": "50.5g",
+          "result": "pass"
+        },
+        {
+          "checkpoint_name": "Moisture Content",
+          "specification": "< 2%",
+          "measured_value": "1.8%",
+          "result": "pass"
+        },
+        {
+          "checkpoint_name": "Salt Content",
+          "specification": "1.5-2.0%",
+          "measured_value": "1.7%",
+          "result": "pass"
+        }
+      ]
+    },
+    {
+      "product_name": "Salt & Vinegar Chips 100g",
+      "batch_number": "BATCH-2026-002",
+      "inspection_type": "In-Process Inspection",
+      "inspection_date": "2026-08-01T10:30:00",
+      "sample_size": 30,
+      "defects_found": 5,
+      "status": "completed",
+      "result": "conditional",
+      "pass_rate": 83.3,
+      "observations": "5 units with uneven seasoning distribution. Production line adjustment recommended.",
+      "notes": "Monitoring required for next batch.",
+      "inspection_items": [
+        {
+          "checkpoint_name": "Seasoning Distribution",
+          "specification": "Uniform coverage",
+          "measured_value": "Variable",
+          "result": "conditional"
+        },
+        {
+          "checkpoint_name": "Crispness",
+          "specification": "Crisp texture",
+          "measured_value": "Pass",
+          "result": "pass"
+        }
+      ]
+    }
+  ],
+  "ncrs": [
+    {
+      "title": "Uneven Oil Temperature in Fryer Line 1",
+      "description": "Temperature fluctuations between 165-185°C detected during production. Specification requires 170-180°C. This caused inconsistent frying and color variations in chips.",
+      "severity": "major",
+      "status": "corrective_action",
+      "batch_number": "BATCH-2026-002",
+      "root_cause": "Faulty thermostat sensor in fryer heating element",
+      "corrective_action": "Replace thermostat sensor. Recalibrate temperature control system.",
+      "preventive_action": "Implement daily temperature checks and monthly sensor calibration schedule.",
+      "estimated_cost": 250000
+    },
+    {
+      "title": "Packaging Seal Defects",
+      "description": "Multiple bags found with weak seals that may compromise product freshness and shelf life.",
+      "severity": "critical",
+      "status": "investigating",
+      "batch_number": "BATCH-2026-001",
+      "root_cause": null,
+      "corrective_action": null,
+      "preventive_action": null,
+      "estimated_cost": 500000
+    }
   ]
 }

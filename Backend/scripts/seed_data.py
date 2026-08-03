@@ -17,7 +17,9 @@ from models import (
     User, Company, Facility, Department, Craftsman, Skill,
     Equipment, InventoryItem, UserRole, EquipmentStatus, InventoryCategory,
     ProductionLine, ProductionLineEquipment, Shift, ProductionOrder, PackagingOrder,
-    ProductionLineStatus, ShiftType, ProductionOrderStatus
+    ProductionLineStatus, ShiftType, ProductionOrderStatus,
+    QualityInspection, QualityInspectionItem, NonConformanceReport,
+    InspectionStatus, InspectionResult, NCRStatus, NCRSeverity
 )
 from core.security import get_password_hash
 
@@ -417,6 +419,15 @@ def main():
             if 'production_orders' in data:
                 production_orders = seed_production_orders(db, production_lines, data['production_orders'])
         
+        # Seed quality data if available
+        quality_inspections = []
+        ncrs = []
+        if 'quality_inspections' in data:
+            quality_inspections = seed_quality_inspections(db, users, production_orders, data['quality_inspections'])
+        
+        if 'ncrs' in data:
+            ncrs = seed_ncrs(db, users, quality_inspections, production_orders, equipment, data['ncrs'])
+        
         print("\n" + "=" * 60)
         print("✓ Database seeding completed successfully!")
         print("=" * 60)
@@ -435,6 +446,9 @@ def main():
             print(f"  - Equipment Stations: {len(equipment_stations)}")
             print(f"  - Shifts: {len(shifts)}")
             print(f"  - Production Orders: {len(production_orders)}")
+        if quality_inspections:
+            print(f"  - Quality Inspections: {len(quality_inspections)}")
+            print(f"  - Non-Conformance Reports: {len(ncrs)}")
         print("\nDefault login credentials:")
         print("  Username: admin")
         print("  Password: Admin@123")
@@ -450,3 +464,91 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def seed_quality_inspections(db: Session, users: list, production_orders: list, inspections_data: list):
+    """Seed quality inspections."""
+    print("\nCreating quality inspections...")
+    inspections = []
+    
+    # Get first admin user as inspector
+    inspector = next((u for u in users if u.role == UserRole.ADMIN), users[0])
+    
+    inspection_num = 1
+    for insp_data in inspections_data:
+        items_data = insp_data.pop('inspection_items', [])
+        
+        # Set inspector
+        insp_data['inspector_id'] = inspector.id
+        
+        # Generate inspection number
+        insp_data['inspection_number'] = f"QI-{inspection_num:06d}"
+        inspection_num += 1
+        
+        # Link to production order if batch_number matches
+        if 'batch_number' in insp_data and production_orders:
+            for order in production_orders:
+                insp_data['production_order_id'] = order.id
+                break
+        
+        inspection = QualityInspection(**insp_data)
+        db.add(inspection)
+        db.flush()
+        
+        # Add inspection items
+        for item_data in items_data:
+            item_data['inspection_id'] = inspection.id
+            item = QualityInspectionItem(**item_data)
+            db.add(item)
+        
+        inspections.append(inspection)
+    
+    db.commit()
+    for inspection in inspections:
+        db.refresh(inspection)
+    print(f"✓ Created {len(inspections)} quality inspections")
+    return inspections
+
+
+def seed_ncrs(db: Session, users: list, quality_inspections: list, production_orders: list, equipment: list, ncrs_data: list):
+    """Seed non-conformance reports."""
+    print("\nCreating non-conformance reports...")
+    ncrs = []
+    
+    # Get users for reporting and assignment
+    reporter = next((u for u in users if u.role == UserRole.ADMIN), users[0])
+    assigned_to = next((u for u in users if u.username != reporter.username), users[0])
+    
+    ncr_num = 1
+    for ncr_data in ncrs_data:
+        # Generate NCR number
+        ncr_data['ncr_number'] = f"NCR-{ncr_num:06d}"
+        ncr_num += 1
+        
+        # Set reporter and assignee
+        ncr_data['reported_by_id'] = reporter.id
+        ncr_data['assigned_to_id'] = assigned_to.id
+        
+        # Link to inspection if batch matches
+        if 'batch_number' in ncr_data and quality_inspections:
+            batch = ncr_data['batch_number']
+            matching_insp = next((i for i in quality_inspections if i.batch_number == batch), None)
+            if matching_insp:
+                ncr_data['inspection_id'] = matching_insp.id
+                ncr_data['production_order_id'] = matching_insp.production_order_id
+        
+        # Link to equipment if mentioned
+        if equipment and ncr_data.get('title', '').lower().find('fryer') >= 0:
+            fryer = next((e for e in equipment if 'fryer' in e.name.lower()), None)
+            if fryer:
+                ncr_data['equipment_id'] = fryer.id
+        
+        ncr = NonConformanceReport(**ncr_data)
+        db.add(ncr)
+        ncrs.append(ncr)
+    
+    db.commit()
+    for ncr in ncrs:
+        db.refresh(ncr)
+    print(f"✓ Created {len(ncrs)} non-conformance reports")
+    return ncrs

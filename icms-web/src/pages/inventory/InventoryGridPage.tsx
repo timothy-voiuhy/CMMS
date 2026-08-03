@@ -1,9 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import * as XLSX from 'xlsx'
 import {
-  Download,
-  Upload,
   ArrowLeft,
   Save,
   RefreshCw,
@@ -15,102 +12,21 @@ import {
   type InventoryItem,
   type InventoryCategory,
 } from '../../services/inventory.service'
-
-interface CellPosition {
-  row: number
-  col: number
-}
+import { Spreadsheet, type SpreadsheetColumn } from '../../components/Spreadsheet'
 
 const InventoryGridPage: React.FC = () => {
   const navigate = useNavigate()
-  const tableRef = useRef<HTMLDivElement>(null)
   
   const [items, setItems] = useState<InventoryItem[]>([])
   const [categories, setCategories] = useState<InventoryCategory[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [changedRows, setChangedRows] = useState<Set<number>>(new Set())
-  const [selectedCell, setSelectedCell] = useState<CellPosition | null>(null)
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
-  const [editingCell, setEditingCell] = useState<CellPosition | null>(null)
-  const [copiedData, setCopiedData] = useState<string | null>(null)
-
-  const columns = [
-    { key: 'item_code', label: 'Item Code', width: 120, editable: true },
-    { key: 'name', label: 'Name', width: 200, editable: true },
-    { key: 'description', label: 'Description', width: 250, editable: true },
-    { key: 'category_id', label: 'Category', width: 150, editable: true, type: 'select' },
-    { key: 'quantity', label: 'Quantity', width: 120, editable: true, type: 'number' },
-    { key: 'unit_of_measure', label: 'Unit', width: 100, editable: true },
-    { key: 'min_quantity', label: 'Min Qty', width: 110, editable: true, type: 'number' },
-    { key: 'max_quantity', label: 'Max Qty', width: 110, editable: true, type: 'number' },
-    { key: 'reorder_point', label: 'Reorder Point', width: 130, editable: true, type: 'number' },
-    { key: 'unit_cost', label: 'Unit Cost', width: 120, editable: true, type: 'number' },
-    { key: 'location', label: 'Location', width: 150, editable: true },
-    { key: 'supplier', label: 'Supplier', width: 150, editable: true },
-    { key: 'batch_number', label: 'Batch #', width: 120, editable: true },
-    { key: 'notes', label: 'Notes', width: 200, editable: true },
-  ]
 
   useEffect(() => {
     loadData()
   }, [])
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!selectedCell) return
-
-      // Copy (Ctrl+C)
-      if (e.ctrlKey && e.key === 'c') {
-        const item = items[selectedCell.row]
-        const column = columns[selectedCell.col]
-        const value = item[column.key as keyof InventoryItem]
-        setCopiedData(String(value || ''))
-        e.preventDefault()
-      }
-
-      // Paste (Ctrl+V)
-      if (e.ctrlKey && e.key === 'v' && copiedData) {
-        handleCellEdit(selectedCell.row, columns[selectedCell.col].key, copiedData)
-        e.preventDefault()
-      }
-
-      // Delete
-      if (e.key === 'Delete' && !editingCell) {
-        handleCellEdit(selectedCell.row, columns[selectedCell.col].key, '')
-      }
-
-      // Enter - start editing
-      if (e.key === 'Enter' && !editingCell) {
-        setEditingCell(selectedCell)
-        e.preventDefault()
-      }
-
-      // Escape - cancel editing
-      if (e.key === 'Escape' && editingCell) {
-        setEditingCell(null)
-      }
-
-      // Arrow navigation
-      if (!editingCell) {
-        let newRow = selectedCell.row
-        let newCol = selectedCell.col
-
-        if (e.key === 'ArrowUp' && newRow > 0) newRow--
-        if (e.key === 'ArrowDown' && newRow < items.length - 1) newRow++
-        if (e.key === 'ArrowLeft' && newCol > 0) newCol--
-        if (e.key === 'ArrowRight' && newCol < columns.length - 1) newCol++
-
-        if (newRow !== selectedCell.row || newCol !== selectedCell.col) {
-          setSelectedCell({ row: newRow, col: newCol })
-          e.preventDefault()
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedCell, editingCell, copiedData, items])
 
   const loadData = async () => {
     try {
@@ -129,62 +45,12 @@ const InventoryGridPage: React.FC = () => {
     }
   }
 
-  const handleCellEdit = (rowIndex: number, columnKey: string, value: any) => {
-    const newItems = [...items]
-    newItems[rowIndex] = {
-      ...newItems[rowIndex],
-      [columnKey]: value,
-    }
-    setItems(newItems)
-    setChangedRows((prev) => new Set(prev).add(newItems[rowIndex].id))
+  const handleCellChange = (rowIndex: number, columnKey: string, value: any, row: InventoryItem) => {
+    setChangedRows((prev) => new Set(prev).add(row.id))
   }
 
-  const handleCellClick = (rowIndex: number, colIndex: number) => {
-    setSelectedCell({ row: rowIndex, col: colIndex })
-    setEditingCell(null)
-  }
-
-  const handleCellDoubleClick = (rowIndex: number, colIndex: number) => {
-    if (columns[colIndex].editable) {
-      setEditingCell({ row: rowIndex, col: colIndex })
-      setSelectedCell({ row: rowIndex, col: colIndex })
-    }
-  }
-
-  const handleRowSelect = (rowIndex: number, isCtrlKey: boolean) => {
-    if (isCtrlKey) {
-      const newSelected = new Set(selectedRows)
-      if (newSelected.has(rowIndex)) {
-        newSelected.delete(rowIndex)
-      } else {
-        newSelected.add(rowIndex)
-      }
-      setSelectedRows(newSelected)
-    } else {
-      setSelectedRows(new Set([rowIndex]))
-    }
-  }
-
-  const getCategoryName = (categoryId: number) => {
-    return categories.find((c) => c.id === categoryId)?.name || 'Unknown'
-  }
-
-  const formatCellValue = (item: InventoryItem, column: typeof columns[0]) => {
-    const value = item[column.key as keyof InventoryItem]
-    
-    if (column.key === 'category_id') {
-      return getCategoryName(value as number)
-    }
-    
-    if (column.type === 'number' && value != null) {
-      return typeof value === 'number' ? value.toFixed(2) : value
-    }
-    
-    return value || ''
-  }
-
-  const isLowStock = (item: InventoryItem) => {
-    return item.reorder_point && item.quantity <= item.reorder_point
+  const handleRowsChange = (newData: InventoryItem[]) => {
+    setItems(newData)
   }
 
   const handleSaveChanges = async () => {
@@ -226,59 +92,6 @@ const InventoryGridPage: React.FC = () => {
     }
   }
 
-  const handleExportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(
-      items.map((item) => ({
-        'Item Code': item.item_code,
-        'Name': item.name,
-        'Description': item.description || '',
-        'Category': getCategoryName(item.category_id),
-        'Quantity': item.quantity,
-        'Unit': item.unit_of_measure,
-        'Min Quantity': item.min_quantity || '',
-        'Max Quantity': item.max_quantity || '',
-        'Reorder Point': item.reorder_point || '',
-        'Unit Cost': item.unit_cost || '',
-        'Location': item.location || '',
-        'Supplier': item.supplier || '',
-        'Batch Number': item.batch_number || '',
-        'Notes': item.notes || '',
-      }))
-    )
-
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory')
-    XLSX.writeFile(workbook, `inventory_${new Date().toISOString().split('T')[0]}.xlsx`)
-  }
-
-  const handleImportFromExcel = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer)
-        const workbook = XLSX.read(data, { type: 'array' })
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-        const jsonData = XLSX.utils.sheet_to_json(worksheet)
-
-        console.log('Imported data:', jsonData)
-        alert(`Imported ${jsonData.length} rows. Import functionality coming soon!`)
-        // TODO: Implement import logic with validation
-      } catch (error) {
-        console.error('Failed to import Excel:', error)
-        alert('Failed to import Excel file')
-      }
-    }
-    reader.readAsArrayBuffer(file)
-    event.target.value = '' // Reset input
-  }
-
-  const handleAddRow = () => {
-    navigate('/inventory/new')
-  }
-
   const handleDeleteSelected = async () => {
     if (selectedRows.size === 0) {
       alert('Please select rows to delete')
@@ -303,30 +116,132 @@ const InventoryGridPage: React.FC = () => {
     }
   }
 
+  const columns: SpreadsheetColumn<InventoryItem>[] = [
+    {
+      key: 'item_code',
+      label: 'Item Code',
+      width: 120,
+      editable: true,
+    },
+    {
+      key: 'name',
+      label: 'Name',
+      width: 200,
+      editable: true,
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      width: 250,
+      editable: true,
+    },
+    {
+      key: 'category_id',
+      label: 'Category',
+      width: 150,
+      editable: true,
+      type: 'select',
+      options: categories.map((cat) => ({
+        value: cat.id,
+        label: cat.name,
+      })),
+      format: (value) => {
+        const cat = categories.find((c) => c.id === value)
+        return cat?.name || 'Unknown'
+      },
+    },
+    {
+      key: 'quantity',
+      label: 'Quantity',
+      width: 120,
+      editable: true,
+      type: 'number',
+    },
+    {
+      key: 'unit_of_measure',
+      label: 'Unit',
+      width: 100,
+      editable: true,
+    },
+    {
+      key: 'min_quantity',
+      label: 'Min Qty',
+      width: 110,
+      editable: true,
+      type: 'number',
+    },
+    {
+      key: 'max_quantity',
+      label: 'Max Qty',
+      width: 110,
+      editable: true,
+      type: 'number',
+    },
+    {
+      key: 'reorder_point',
+      label: 'Reorder Point',
+      width: 130,
+      editable: true,
+      type: 'number',
+    },
+    {
+      key: 'unit_cost',
+      label: 'Unit Cost',
+      width: 120,
+      editable: true,
+      type: 'number',
+      format: (value) => (value != null ? `$${value.toFixed(2)}` : '-'),
+    },
+    {
+      key: 'location',
+      label: 'Location',
+      width: 150,
+      editable: true,
+    },
+    {
+      key: 'supplier',
+      label: 'Supplier',
+      width: 150,
+      editable: true,
+    },
+    {
+      key: 'batch_number',
+      label: 'Batch #',
+      width: 120,
+      editable: true,
+    },
+    {
+      key: 'notes',
+      label: 'Notes',
+      width: 200,
+      editable: true,
+    },
+  ]
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 h-screen flex flex-col">
+    <div className="p-6 h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/inventory')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to List
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">Inventory Spreadsheet</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Inventory Spreadsheet</h1>
             {changedRows.size > 0 && (
-              <span className="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded-full">
+              <span className="px-3 py-1 text-sm bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-full">
                 {changedRows.size} unsaved change(s)
               </span>
             )}
@@ -335,15 +250,15 @@ const InventoryGridPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={loadData}
-              className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
             </button>
             
             <button
-              onClick={handleAddRow}
-              className="flex items-center gap-2 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700"
+              onClick={() => navigate('/inventory/new')}
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600"
             >
               <Plus className="w-4 h-4" />
               Add New
@@ -352,35 +267,16 @@ const InventoryGridPage: React.FC = () => {
             <button
               onClick={handleDeleteSelected}
               disabled={selectedRows.size === 0}
-              className="flex items-center gap-2 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-red-600 dark:bg-red-500 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Trash2 className="w-4 h-4" />
               Delete ({selectedRows.size})
             </button>
             
-            <label className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-              <Upload className="w-4 h-4" />
-              Import Excel
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleImportFromExcel}
-                className="hidden"
-              />
-            </label>
-            
-            <button
-              onClick={handleExportToExcel}
-              className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              <Download className="w-4 h-4" />
-              Export Excel
-            </button>
-            
             <button
               onClick={handleSaveChanges}
               disabled={changedRows.size === 0 || isSaving}
-              className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <>
@@ -397,127 +293,41 @@ const InventoryGridPage: React.FC = () => {
           </div>
         </div>
 
-        <p className="text-sm text-gray-600">
-          Custom spreadsheet with full editing. Double-click cells to edit, use arrow keys to navigate.
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Excel-like spreadsheet with full keyboard navigation and editing capabilities.
         </p>
       </div>
 
-      {/* Custom Spreadsheet */}
-      <div ref={tableRef} className="flex-1 overflow-auto border border-gray-300 rounded-lg bg-white">
-        <table className="min-w-full border-collapse">
-          <thead className="sticky top-0 bg-gray-100 z-10">
-            <tr>
-              <th className="border border-gray-300 px-2 py-2 text-xs font-semibold text-gray-700 w-12">
-                #
-              </th>
-              {columns.map((column) => (
-                <th
-                  key={column.key}
-                  className="border border-gray-300 px-2 py-2 text-xs font-semibold text-gray-700 text-left"
-                  style={{ minWidth: column.width }}
-                >
-                  {column.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, rowIndex) => (
-              <tr
-                key={item.id}
-                className={`hover:bg-blue-50 ${selectedRows.has(rowIndex) ? 'bg-blue-100' : ''} ${
-                  isLowStock(item) ? 'bg-red-50' : ''
-                }`}
-              >
-                <td
-                  className="border border-gray-300 px-2 py-1 text-xs text-center cursor-pointer"
-                  onClick={(e) => handleRowSelect(rowIndex, e.ctrlKey || e.metaKey)}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.has(rowIndex)}
-                    onChange={(e) => handleRowSelect(rowIndex, e.ctrlKey || e.metaKey)}
-                    className="cursor-pointer"
-                  />
-                </td>
-                {columns.map((column, colIndex) => {
-                  const isSelected = selectedCell?.row === rowIndex && selectedCell?.col === colIndex
-                  const isEditing = editingCell?.row === rowIndex && editingCell?.col === colIndex
-
-                  return (
-                    <td
-                      key={column.key}
-                      className={`border border-gray-300 px-2 py-1 text-xs ${
-                        isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-                      } ${column.editable ? 'cursor-cell' : 'cursor-default'}`}
-                      onClick={() => handleCellClick(rowIndex, colIndex)}
-                      onDoubleClick={() => handleCellDoubleClick(rowIndex, colIndex)}
-                      style={{ minWidth: column.width }}
-                    >
-                      {isEditing ? (
-                        column.type === 'select' ? (
-                          <select
-                            autoFocus
-                            value={item[column.key as keyof InventoryItem] as any}
-                            onChange={(e) => {
-                              handleCellEdit(rowIndex, column.key, parseInt(e.target.value))
-                              setEditingCell(null)
-                            }}
-                            onBlur={() => setEditingCell(null)}
-                            className="w-full px-1 py-0 text-xs border-0 focus:ring-2 focus:ring-blue-500 outline-none"
-                          >
-                            {categories.map((cat) => (
-                              <option key={cat.id} value={cat.id}>
-                                {cat.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            autoFocus
-                            type={column.type === 'number' ? 'number' : 'text'}
-                            step={column.type === 'number' ? '0.01' : undefined}
-                            value={(item[column.key as keyof InventoryItem] as any) || ''}
-                            onChange={(e) => {
-                              const value = column.type === 'number' 
-                                ? (e.target.value ? parseFloat(e.target.value) : null)
-                                : e.target.value
-                              handleCellEdit(rowIndex, column.key, value)
-                            }}
-                            onBlur={() => setEditingCell(null)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                setEditingCell(null)
-                                if (rowIndex < items.length - 1) {
-                                  setSelectedCell({ row: rowIndex + 1, col: colIndex })
-                                }
-                              }
-                              if (e.key === 'Escape') {
-                                setEditingCell(null)
-                              }
-                            }}
-                            className="w-full px-1 py-0 text-xs border-0 focus:ring-2 focus:ring-blue-500 outline-none"
-                          />
-                        )
-                      ) : (
-                        <div className="truncate">
-                          {formatCellValue(item, column)}
-                        </div>
-                      )}
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Help Text */}
-      <div className="mt-2 text-xs text-gray-600 flex items-center gap-4">
-        <span>💡 Double-click to edit • Arrow keys to navigate • Enter to edit • Ctrl+C to copy • Ctrl+V to paste • Delete to clear</span>
-        {copiedData && <span className="text-green-600">✓ Copied: {copiedData.substring(0, 20)}...</span>}
-      </div>
+      {/* Spreadsheet - fills remaining space */}
+      <Spreadsheet
+        data={items}
+        columns={columns}
+        onCellChange={handleCellChange}
+        onRowsChange={handleRowsChange}
+        rowKey="id"
+        height="100%"
+        enableSelection={true}
+        enableKeyboardNav={true}
+        enableCopyPaste={true}
+        enableExport={true}
+        enableImport={false}
+        onSelectionChange={setSelectedRows}
+        exportFileName="inventory"
+        stickyHeader={true}
+        showRowNumbers={true}
+        rowClassName={(row) => {
+          if (row.reorder_point && row.quantity <= row.reorder_point) {
+            return 'bg-red-50'
+          }
+          return ''
+        }}
+        cellClassName={(value, row, column) => {
+          if (column.key === 'quantity' && row.reorder_point && row.quantity <= row.reorder_point) {
+            return 'text-red-600 font-semibold'
+          }
+          return ''
+        }}
+      />
     </div>
   )
 }

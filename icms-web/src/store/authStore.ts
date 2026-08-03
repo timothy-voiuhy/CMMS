@@ -3,13 +3,15 @@ import { persist } from 'zustand/middleware'
 
 export interface User {
   id: string
-  employeeId: string
-  firstName: string
-  lastName: string
+  username: string
+  full_name: string
   email: string
   role: 'admin' | 'craftsman' | 'inventory' | 'production' | 'quality' | 'manager'
-  accessLevel?: string
-  permissions: string[]
+  phone?: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  permissions?: string[]
 }
 
 interface AuthState {

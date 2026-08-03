@@ -98,12 +98,12 @@ const InventoryListPage: React.FC = () => {
   const getStockBadge = (item: InventoryItem) => {
     const status = getStockStatus(item)
     if (status === 'out-of-stock') {
-      return <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Out of Stock</span>
+      return <span className="px-2 py-1 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-full">Out of Stock</span>
     }
     if (status === 'low-stock') {
-      return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Low Stock</span>
+      return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-full">Low Stock</span>
     }
-    return <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">In Stock</span>
+    return <span className="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">In Stock</span>
   }
 
   const formatCategory = (category: string) => {
@@ -111,25 +111,25 @@ const InventoryListPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Inventory Management</h1>
-            <p className="text-gray-600 mt-1">Track and manage inventory items</p>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Inventory Management</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Track and manage inventory items</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/inventory/grid')}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <Grid className="w-4 h-4" />
               Grid View
             </button>
             <button
               onClick={() => navigate('/inventory/categories')}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <Filter className="w-4 h-4" />
               Manage Categories
@@ -139,14 +139,14 @@ const InventoryListPage: React.FC = () => {
                 loadItems()
                 loadStatistics()
               }}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
             </button>
             <button
               onClick={() => navigate('/inventory/new')}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
             >
               <Plus className="w-4 h-4" />
               Add Item
@@ -157,40 +157,40 @@ const InventoryListPage: React.FC = () => {
         {/* Statistics Cards */}
         {statistics && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Items</p>
-                  <p className="text-2xl font-bold text-gray-800">{statistics.total_items}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Items</p>
+                  <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{statistics.total_items}</p>
                 </div>
-                <Package className="w-8 h-8 text-blue-500" />
+                <Package className="w-8 h-8 text-blue-500 dark:text-blue-400" />
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Low Stock</p>
-                  <p className="text-2xl font-bold text-yellow-600">{statistics.low_stock_count}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Low Stock</p>
+                  <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{statistics.low_stock_count}</p>
                 </div>
-                <AlertTriangle className="w-8 h-8 text-yellow-500" />
+                <AlertTriangle className="w-8 h-8 text-yellow-500 dark:text-yellow-400" />
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Out of Stock</p>
-                  <p className="text-2xl font-bold text-red-600">{statistics.out_of_stock_count}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Out of Stock</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">{statistics.out_of_stock_count}</p>
                 </div>
-                <TrendingDown className="w-8 h-8 text-red-500" />
+                <TrendingDown className="w-8 h-8 text-red-500 dark:text-red-400" />
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Value</p>
-                  <p className="text-2xl font-bold text-green-600">${statistics.total_value.toLocaleString()}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Value</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">${statistics.total_value.toLocaleString()}</p>
                 </div>
-                <DollarSign className="w-8 h-8 text-green-500" />
+                <DollarSign className="w-8 h-8 text-green-500 dark:text-green-400" />
               </div>
             </div>
           </div>
@@ -198,23 +198,23 @@ const InventoryListPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 1 })}
                 placeholder="Search by name, code, or description..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
             <select
               value={filters.category_id || ''}
               onChange={(e) =>
@@ -224,7 +224,7 @@ const InventoryListPage: React.FC = () => {
                   page: 1,
                 })
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="">All Categories</option>
               {categories.map((cat) => (
@@ -235,22 +235,22 @@ const InventoryListPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Stock Status</label>
-            <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stock Status</label>
+            <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
               <input
                 type="checkbox"
                 checked={filters.low_stock}
                 onChange={(e) => setFilters({ ...filters, low_stock: e.target.checked, page: 1 })}
                 className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-sm">Low Stock Only</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">Low Stock Only</span>
             </label>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -264,8 +264,8 @@ const InventoryListPage: React.FC = () => {
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Item Code
@@ -293,27 +293,27 @@ const InventoryListPage: React.FC = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {items.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50">
+                    <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{item.item_code}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.item_code}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.name}</div>
                         {item.description && (
-                          <div className="text-sm text-gray-500">{item.description}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{item.description}</div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{item.category?.name || 'Uncategorized'}</div>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">{item.category?.name || 'Uncategorized'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-gray-900 dark:text-gray-100">
                           {item.quantity} {item.unit_of_measure}
                         </div>
                         {item.reorder_point && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             Reorder: {item.reorder_point}
                           </div>
                         )}
@@ -331,21 +331,21 @@ const InventoryListPage: React.FC = () => {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => navigate(`/inventory/${item.id}`)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => navigate(`/inventory/${item.id}/edit`)}
-                            className="text-green-600 hover:text-green-900"
+                            className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(item)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -359,8 +359,8 @@ const InventoryListPage: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-              <div className="text-sm text-gray-600">
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
                 Page {filters.page} of {totalPages}
               </div>
               <div className="flex gap-2">

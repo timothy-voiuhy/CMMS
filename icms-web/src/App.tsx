@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
+import { useThemeStore } from './store/themeStore'
 
 // Layouts
 import MainLayout from './layouts/MainLayout'
@@ -38,6 +40,7 @@ import PackagingDetailPage from './pages/production/PackagingDetailPage'
 import QualityPage from './pages/quality/QualityPage'
 import ReportsPage from './pages/reports/ReportsPage'
 import SettingsPage from './pages/settings/SettingsPage'
+import ProfilePage from './pages/profile/ProfilePage'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -51,6 +54,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 }
 
 function App() {
+  const { actualTheme } = useThemeStore()
+  
+  // Initialize theme on mount
+  useEffect(() => {
+    if (actualTheme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [actualTheme])
+  
   return (
     <Router>
       <Routes>
@@ -127,6 +141,9 @@ function App() {
           
           {/* Settings Routes */}
           <Route path="/settings" element={<SettingsPage />} />
+          
+          {/* Profile Routes */}
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
         {/* 404 */}

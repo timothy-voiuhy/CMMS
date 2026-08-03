@@ -138,6 +138,8 @@ class ProductionOrder(Base, BaseModel):
     production_line = relationship("ProductionLine", back_populates="production_orders")
     shift = relationship("Shift")
     supervisor = relationship("User")
+    quality_inspections = relationship("QualityInspection", back_populates="production_order")
+    ncrs = relationship("NonConformanceReport", back_populates="production_order")
 
 
 class PackagingOrder(Base, BaseModel):

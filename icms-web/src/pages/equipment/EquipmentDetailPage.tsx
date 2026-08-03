@@ -132,10 +132,10 @@ const EquipmentDetailPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading equipment details...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading equipment details...</p>
         </div>
       </div>
     )
@@ -143,12 +143,12 @@ const EquipmentDetailPage: React.FC = () => {
 
   if (!equipment) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
         <div className="text-center">
-          <p className="text-gray-600">Equipment not found</p>
+          <p className="text-gray-600 dark:text-gray-400">Equipment not found</p>
           <button
             onClick={() => navigate('/equipment')}
-            className="mt-4 text-blue-600 hover:text-blue-700"
+            className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
           >
             Back to Equipment List
           </button>
@@ -159,35 +159,35 @@ const EquipmentDetailPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      OPERATIONAL: 'bg-green-100 text-green-800',
-      MAINTENANCE: 'bg-yellow-100 text-yellow-800',
-      BREAKDOWN: 'bg-red-100 text-red-800',
-      RETIRED: 'bg-gray-100 text-gray-800',
+      OPERATIONAL: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+      MAINTENANCE: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
+      BREAKDOWN: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+      RETIRED: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
     }
     return colors[status as keyof typeof colors] || colors.OPERATIONAL
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       {/* Header */}
       <div className="mb-6">
         <button
           onClick={() => navigate('/equipment')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Equipment
         </button>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 h-16 w-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Wrench className="w-8 h-8 text-blue-600" />
+              <div className="flex-shrink-0 h-16 w-16 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <Wrench className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{equipment.name}</h1>
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{equipment.name}</h1>
+                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
                   <span>ID: {equipment.equipment_id}</span>
                   {equipment.category && <span>• {equipment.category}</span>}
                   {equipment.location && (
@@ -208,14 +208,14 @@ const EquipmentDetailPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate(`/equipment/${id}/edit`)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 <Edit className="w-4 h-4" />
                 Edit
               </button>
               <button
                 onClick={handleDelete}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-white dark:bg-gray-700 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete
@@ -227,7 +227,7 @@ const EquipmentDetailPage: React.FC = () => {
 
       {/* Tabs */}
       <div className="mb-6">
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="-mb-px flex space-x-8">
             {[
               { id: 'overview', label: 'Overview', icon: FileText },
@@ -242,8 +242,8 @@ const EquipmentDetailPage: React.FC = () => {
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -256,12 +256,12 @@ const EquipmentDetailPage: React.FC = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 uppercase mb-3">Basic Information</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-3">Basic Information</h3>
               <dl className="space-y-3">
                 {[
                   { label: 'Manufacturer', value: equipment.manufacturer },
@@ -271,8 +271,8 @@ const EquipmentDetailPage: React.FC = () => {
                   { label: 'Warranty Expiry', value: equipment.warranty_expiry },
                 ].map((item) => (
                   <div key={item.label} className="flex justify-between">
-                    <dt className="text-sm font-medium text-gray-600">{item.label}:</dt>
-                    <dd className="text-sm text-gray-900">{item.value || '-'}</dd>
+                    <dt className="text-sm font-medium text-gray-600 dark:text-gray-400">{item.label}:</dt>
+                    <dd className="text-sm text-gray-900 dark:text-gray-100">{item.value || '-'}</dd>
                   </div>
                 ))}
               </dl>
@@ -280,15 +280,15 @@ const EquipmentDetailPage: React.FC = () => {
 
             {equipment.specifications && (
               <div>
-                <h3 className="text-sm font-medium text-gray-500 uppercase mb-3">Specifications</h3>
-                <p className="text-sm text-gray-700">{equipment.specifications}</p>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-3">Specifications</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{equipment.specifications}</p>
               </div>
             )}
 
             {equipment.notes && (
               <div className="md:col-span-2">
-                <h3 className="text-sm font-medium text-gray-500 uppercase mb-3">Notes</h3>
-                <p className="text-sm text-gray-700">{equipment.notes}</p>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-3">Notes</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{equipment.notes}</p>
               </div>
             )}
           </div>
@@ -298,13 +298,13 @@ const EquipmentDetailPage: React.FC = () => {
         {activeTab === 'operators' && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Assigned Operators</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Assigned Operators</h3>
               <button
                 onClick={() => {
                   setIsAddingOperator(true)
                   loadAvailableCraftsmen()
                 }}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
               >
                 <Plus className="w-4 h-4" />
                 Assign Operator
@@ -313,12 +313,12 @@ const EquipmentDetailPage: React.FC = () => {
 
             {/* Add Operator Form */}
             {isAddingOperator && (
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
                 <div className="flex items-center gap-3">
                   <select
                     value={selectedCraftsmanId || ''}
                     onChange={(e) => setSelectedCraftsmanId(parseInt(e.target.value))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                   >
                     <option value="">Select craftsman...</option>
                     {availableCraftsmen.map((craftsman) => (
@@ -330,7 +330,7 @@ const EquipmentDetailPage: React.FC = () => {
                   <button
                     onClick={handleAssignOperator}
                     disabled={!selectedCraftsmanId}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Assign
                   </button>
@@ -339,7 +339,7 @@ const EquipmentDetailPage: React.FC = () => {
                       setIsAddingOperator(false)
                       setSelectedCraftsmanId(null)
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
                   >
                     Cancel
                   </button>
@@ -349,8 +349,8 @@ const EquipmentDetailPage: React.FC = () => {
 
             {/* Operators List */}
             {operators.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Users className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <Users className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
                 <p>No operators assigned</p>
               </div>
             ) : (
@@ -358,15 +358,15 @@ const EquipmentDetailPage: React.FC = () => {
                 {operators.map((operator) => (
                   <div
                     key={operator.craftsman_id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600"
                   >
                     <div>
-                      <p className="font-medium text-gray-900">{operator.craftsman_name}</p>
-                      <p className="text-sm text-gray-500">ID: {operator.employee_id}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{operator.craftsman_name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">ID: {operator.employee_id}</p>
                     </div>
                     <button
                       onClick={() => handleRemoveOperator(operator.craftsman_id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -379,16 +379,16 @@ const EquipmentDetailPage: React.FC = () => {
 
         {/* Maintenance Tab */}
         {activeTab === 'maintenance' && (
-          <div className="text-center py-8 text-gray-500">
-            <Wrench className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <Wrench className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
             <p>Maintenance history coming soon</p>
           </div>
         )}
 
         {/* History Tab */}
         {activeTab === 'history' && (
-          <div className="text-center py-8 text-gray-500">
-            <Activity className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <Activity className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
             <p>Equipment history coming soon</p>
           </div>
         )}

@@ -9,6 +9,10 @@ from models.production import (
     ProductionLine, ProductionLineEquipment, Shift, ProductionOrder, PackagingOrder,
     ShiftType, ProductionLineStatus, ProductionOrderStatus
 )
+from models.quality import (
+    QualityInspection, QualityInspectionItem, NonConformanceReport, QualityMetric,
+    InspectionStatus, InspectionResult, NCRStatus, NCRSeverity
+)
 
 __all__ = [
     "User",
@@ -37,4 +41,12 @@ __all__ = [
     "ShiftType",
     "ProductionLineStatus",
     "ProductionOrderStatus",
+    "QualityInspection",
+    "QualityInspectionItem",
+    "NonConformanceReport",
+    "QualityMetric",
+    "InspectionStatus",
+    "InspectionResult",
+    "NCRStatus",
+    "NCRSeverity",
 ]
