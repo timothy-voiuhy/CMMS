@@ -17,7 +17,7 @@ import {
   UserCog,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 interface SidebarProps {
   isOpen: boolean
@@ -28,42 +28,45 @@ interface NavItem {
   path: string
   icon: any
   label: string
-  roles?: string[]
+  /** Permission required to see this item (e.g., 'equipment.view') */
+  permission?: string
   children?: NavItem[]
 }
 
 const navItems: NavItem[] = [
-  { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/equipment', icon: Wrench, label: 'Equipment' },
-  { path: '/craftsmen', icon: Users, label: 'Craftsmen' },
-  { path: '/inventory', icon: Package, label: 'Inventory' },
+  { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', permission: 'dashboard.view' },
+  { path: '/equipment', icon: Wrench, label: 'Equipment', permission: 'equipment.view' },
+  { path: '/craftsmen', icon: Users, label: 'Craftsmen', permission: 'craftsmen.view' },
+  { path: '/inventory', icon: Package, label: 'Inventory', permission: 'inventory.view' },
   {
     path: '/maintenance',
     icon: History,
     label: 'Maintenance',
+    permission: 'maintenance.view',
     children: [
-      { path: '/maintenance/work-orders', icon: ClipboardList, label: 'Work Orders' },
-      { path: '/maintenance/reports', icon: FileText, label: 'Reports' },
-      { path: '/maintenance/personnel', icon: UserCog, label: 'Personnel' },
+      { path: '/maintenance/work-orders', icon: ClipboardList, label: 'Work Orders', permission: 'work_orders.view' },
+      { path: '/maintenance/reports', icon: FileText, label: 'Reports', permission: 'maintenance.view' },
+      { path: '/maintenance/personnel', icon: UserCog, label: 'Personnel', permission: 'craftsmen.view' },
     ],
   },
   {
     path: '/production',
     icon: Factory,
     label: 'Production',
+    permission: 'production.view',
     children: [
-      { path: '/production/lines', icon: Factory, label: 'Production Lines' },
-      { path: '/production/orders', icon: ClipboardList, label: 'Production Orders' },
-      { path: '/production/packaging', icon: PackageCheck, label: 'Packaging' },
+      { path: '/production/lines', icon: Factory, label: 'Production Lines', permission: 'production.lines' },
+      { path: '/production/orders', icon: ClipboardList, label: 'Production Orders', permission: 'production.view' },
+      { path: '/production/packaging', icon: PackageCheck, label: 'Packaging', permission: 'production.packaging' },
     ],
   },
-  { path: '/quality', icon: ShieldCheck, label: 'Quality' },
-  { path: '/reports', icon: BarChart3, label: 'Reports' },
-  { path: '/settings', icon: Settings, label: 'Settings' },
+  { path: '/quality', icon: ShieldCheck, label: 'Quality', permission: 'quality.view' },
+  { path: '/reports', icon: BarChart3, label: 'Reports', permission: 'reports.view' },
+  { path: '/settings', icon: Settings, label: 'Settings', permission: 'settings.view' },
 ]
 
 const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
-  const { user } = useAuthStore()
+  const { user, hasPermission } = useAuthStore()
   const [expandedItems, setExpandedItems] = useState<string[]>(['/maintenance', '/production'])
 
   const toggleExpanded = (path: string) => {
@@ -71,6 +74,30 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
     )
   }
+
+  // Filter nav items based on permissions
+  const filteredNavItems = useMemo(() => {
+    return navItems.filter((item) => {
+      // No permission required, or user has the permission
+      if (!item.permission) return true
+      return hasPermission(item.permission)
+    }).map((item) => {
+      if (item.children) {
+        return {
+          ...item,
+          children: item.children.filter((child) => {
+            if (!child.permission) return true
+            return hasPermission(child.permission)
+          }),
+        }
+      }
+      return item
+    }).filter((item) => {
+      // Remove parent items that have no visible children
+      if (item.children && item.children.length === 0) return false
+      return true
+    })
+  }, [user, hasPermission])
 
   return (
     <>
@@ -105,7 +132,7 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-3">
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <li key={item.path}>
                 {item.children ? (
                   // Parent with children

@@ -69,6 +69,8 @@ export interface Craftsman {
   employee_id: string
   department?: string
   position?: string
+  role_id?: number
+  role_name?: string
   hire_date?: string
   certification_level?: string
   hourly_rate?: number

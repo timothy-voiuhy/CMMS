@@ -26,7 +26,35 @@ export interface RefreshTokenResponse {
   token_type: string
 }
 
+export interface SetupStatusResponse {
+  setup_required: boolean
+  message: string
+}
+
+export interface InitialAdminSetupRequest {
+  username: string
+  email: string
+  full_name: string
+  password: string
+  phone?: string
+  company_name?: string
+}
+
 export const authService = {
+  /**
+   * Check if initial admin setup is required
+   */
+  async checkSetupStatus(): Promise<SetupStatusResponse> {
+    return apiClient.get<SetupStatusResponse>('/api/v1/auth/setup-status')
+  },
+
+  /**
+   * Initialize System Administrator account
+   */
+  async setupAdmin(data: InitialAdminSetupRequest): Promise<LoginResponse> {
+    return apiClient.post<LoginResponse>('/api/v1/auth/setup-admin', data)
+  },
+
   /**
    * Login user
    */

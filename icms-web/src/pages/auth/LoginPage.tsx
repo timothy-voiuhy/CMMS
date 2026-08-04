@@ -1,19 +1,35 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { authService } from '../../services/auth.service'
-import { LogIn } from 'lucide-react'
+import { LogIn, ShieldAlert } from 'lucide-react'
 
 const LoginPage = () => {
   const navigate = useNavigate()
   const { login } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [setupRequired, setSetupRequired] = useState(false)
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     rememberMe: false,
   })
+
+  useEffect(() => {
+    const checkSetup = async () => {
+      try {
+        const res = await authService.checkSetupStatus()
+        if (res.setup_required) {
+          setSetupRequired(true)
+          navigate('/setup', { replace: true })
+        }
+      } catch (err) {
+        console.error('Error checking setup status:', err)
+      }
+    }
+    checkSetup()
+  }, [navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,30 +51,35 @@ const LoginPage = () => {
       // Create a temporary user object just to set the token
       const tempUser = {
         id: '0',
-        employeeId: formData.username,
-        firstName: '',
-        lastName: '',
+        username: formData.username,
+        full_name: '',
         email: '',
-        role: 'admin' as const,
+        role: 'readonly' as const,
+        is_active: true,
+        created_at: '',
+        updated_at: '',
         permissions: [],
       }
       
       // Set token first
       tempStore.login(tempUser, response.access_token, response.refresh_token)
       
-      // Now get user info with the token in place
-      const user = await authService.getCurrentUser()
+      // Now get user info with the token in place (includes resolved permissions)
+      const user = await authService.getCurrentUser() as any
 
-      // Now set the real user data with the token
+      // Now set the real user data with the token and permissions
       login(
         {
           id: user.id.toString(),
-          employeeId: user.username,
-          firstName: user.full_name.split(' ')[0] || user.username,
-          lastName: user.full_name.split(' ')[1] || '',
+          username: user.username,
+          full_name: user.full_name,
           email: user.email,
-          role: user.role as any,
-          permissions: ['all'], // TODO: Get from backend
+          role: (user.role || 'readonly').toLowerCase() as any,
+          is_active: user.is_active,
+          phone: user.phone,
+          created_at: user.created_at || '',
+          updated_at: user.updated_at || '',
+          permissions: user.permissions || [],
         },
         response.access_token,
         response.refresh_token

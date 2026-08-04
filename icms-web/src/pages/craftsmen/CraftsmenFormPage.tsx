@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { craftsmanService, type CreateCraftsmanRequest } from '../../services/craftsman.service'
+import { companyService, type Role } from '../../services/company.service'
 
 const CraftsmenFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -18,15 +19,26 @@ const CraftsmenFormPage: React.FC = () => {
     hourly_rate: 0,
     notes: '',
   })
+  const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    loadRoles()
     if (isEditMode) {
       loadCraftsman()
     }
   }, [id])
+
+  const loadRoles = async () => {
+    try {
+      const data = await companyService.getRoles(true) // only active roles
+      setRoles(data)
+    } catch (error) {
+      console.error('Failed to load roles:', error)
+    }
+  }
 
   const loadCraftsman = async () => {
     if (!id) return
@@ -205,6 +217,28 @@ const CraftsmenFormPage: React.FC = () => {
               <option value="Level 4">Level 4</option>
               <option value="Master">Master</option>
             </select>
+          </div>
+
+          {/* Role */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Role
+            </label>
+            <select
+              value={formData.role_id || ''}
+              onChange={(e) => handleChange('role_id', e.target.value ? parseInt(e.target.value) : undefined)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">Select role</option>
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name} (L{role.level})
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Assign a role to define permissions and access level
+            </p>
           </div>
 
           {/* Hourly Rate */}

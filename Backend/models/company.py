@@ -1,3 +1,6 @@
+import json
+from typing import List, Optional
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from db.base import Base
@@ -107,3 +110,33 @@ class Role(Base, BaseModel):
     
     # Relationships - will be used by craftsmen
     # craftsmen = relationship("Craftsman", back_populates="role")
+
+    def get_permissions(self) -> List[str]:
+        """Parse and return permissions from permissions_json."""
+        if not self.permissions_json:
+            return []
+        try:
+            data = json.loads(self.permissions_json)
+            if isinstance(data, dict):
+                return data.get('permissions', [])
+            elif isinstance(data, list):
+                return data
+            return []
+        except (json.JSONDecodeError, TypeError):
+            return []
+
+    def set_permissions(
+        self,
+        permissions: List[str],
+        template: Optional[str] = None,
+        custom: bool = False
+    ):
+        """Set permissions JSON with metadata."""
+        config = {
+            "version": "1.0",
+            "permissions": permissions,
+            "template": template,
+            "custom": custom,
+            "last_modified": datetime.utcnow().isoformat()
+        }
+        self.permissions_json = json.dumps(config)

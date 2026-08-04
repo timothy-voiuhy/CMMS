@@ -6,6 +6,7 @@ export interface CreateCraftsmanRequest {
   employee_id: string
   department?: string
   position?: string
+  role_id?: number
   hire_date?: string
   certification_level?: string
   hourly_rate?: number

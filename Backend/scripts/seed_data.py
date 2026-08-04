@@ -19,7 +19,7 @@ from models import (
     ProductionLine, ProductionLineEquipment, Shift, ProductionOrder, PackagingOrder,
     ProductionLineStatus, ShiftType, ProductionOrderStatus,
     QualityInspection, QualityInspectionItem, NonConformanceReport,
-    InspectionStatus, InspectionResult, NCRStatus, NCRSeverity
+    InspectionStatus, InspectionResult, NCRStatus, NCRSeverity, Role
 )
 from core.security import get_password_hash
 from datetime import datetime
@@ -88,6 +88,137 @@ def seed_users(db: Session, users_data: list):
         users[user.username] = user
         print(f"✓ Created user: {user.username} ({user.role})")
     return users
+
+
+def seed_roles(db: Session):
+    """Seed default roles."""
+    print("\nCreating roles...")
+    
+    default_roles = [
+        {
+            "name": "General Manager",
+            "description": "Overall responsibility for plant operations",
+            "level": 10,
+            "category": "Management",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Production Manager",
+            "description": "Manages production operations and planning",
+            "level": 9,
+            "category": "Management",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Quality Manager",
+            "description": "Oversees quality assurance and control",
+            "level": 9,
+            "category": "Management",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Maintenance Manager",
+            "description": "Manages maintenance operations and schedules",
+            "level": 8,
+            "category": "Management",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Production Team Leader",
+            "description": "Leads production team operations",
+            "level": 6,
+            "category": "Supervision",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Packaging Team Leader",
+            "description": "Supervises packaging operations",
+            "level": 6,
+            "category": "Supervision",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Maintenance Team Leader",
+            "description": "Coordinates maintenance activities",
+            "level": 6,
+            "category": "Supervision",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Senior Technician",
+            "description": "Experienced technician with advanced skills",
+            "level": 5,
+            "category": "Technical",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Technician",
+            "description": "Performs technical operations and maintenance",
+            "level": 4,
+            "category": "Technical",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Maintenance Technician",
+            "description": "Performs equipment maintenance and repairs",
+            "level": 4,
+            "category": "Technical",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Quality Inspector",
+            "description": "Conducts quality inspections and testing",
+            "level": 4,
+            "category": "Technical",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Machine Operator",
+            "description": "Operates production machinery",
+            "level": 3,
+            "category": "Operations",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Packaging Operator",
+            "description": "Handles packaging operations",
+            "level": 3,
+            "category": "Operations",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "General Worker",
+            "description": "Performs general operational tasks",
+            "level": 2,
+            "category": "Operations",
+            "is_system_role": False,
+            "is_active": True
+        }
+    ]
+    
+    roles = []
+    for role_data in default_roles:
+        role = Role(**role_data)
+        db.add(role)
+        db.commit()
+        db.refresh(role)
+        roles.append(role)
+        print(f"✓ Created role: {role.name} (L{role.level})")
+    
+    return roles
 
 
 def seed_skills(db: Session, skills_data: list):
@@ -492,6 +623,10 @@ def main():
         company = seed_company(db, data['company'])
         facilities = seed_facilities(db, company.id, data['facilities'])
         departments = seed_departments(db, facilities[0].id, data['departments'])
+        
+        # Seed roles (system-defined)
+        roles = seed_roles(db)
+        
         users = seed_users(db, data['users'])
         skills = seed_skills(db, data['skills'])
         craftsmen = seed_craftsmen(db, users, skills, data['craftsmen'])

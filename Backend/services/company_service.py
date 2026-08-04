@@ -8,6 +8,7 @@ from schemas.company import (
     DepartmentCreate, DepartmentUpdate
 )
 from schemas.role import RoleCreate, RoleUpdate
+from models.user import User, UserRole
 
 
 # ==================== COMPANY SERVICES ====================
@@ -173,17 +174,24 @@ def create_role(db: Session, role: RoleCreate) -> Role:
     return db_role
 
 
-def update_role(db: Session, role_id: int, role: RoleUpdate) -> Optional[Role]:
+def is_admin(user: Optional[User]) -> bool:
+    if not user:
+        return False
+    user_role_val = user.role.value if hasattr(user.role, 'value') else str(user.role)
+    return user_role_val.lower() == "admin" or user.role == UserRole.ADMIN
+
+
+def update_role(db: Session, role_id: int, role: RoleUpdate, current_user: Optional[User] = None) -> Optional[Role]:
     """Update role."""
     db_role = get_role(db, role_id)
     if not db_role:
         return None
     
-    # Prevent modifying system roles
-    if db_role.is_system_role:
+    # System roles can only be modified by System Administrator
+    if db_role.is_system_role and not is_admin(current_user):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot modify system roles"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only System Administrators can modify system roles"
         )
     
     # Check name uniqueness if changing name
@@ -204,17 +212,17 @@ def update_role(db: Session, role_id: int, role: RoleUpdate) -> Optional[Role]:
     return db_role
 
 
-def delete_role(db: Session, role_id: int) -> bool:
+def delete_role(db: Session, role_id: int, current_user: Optional[User] = None) -> bool:
     """Delete role."""
     db_role = get_role(db, role_id)
     if not db_role:
         return False
     
-    # Prevent deleting system roles
-    if db_role.is_system_role:
+    # System roles can only be deleted by System Administrator
+    if db_role.is_system_role and not is_admin(current_user):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete system roles"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only System Administrators can delete system roles"
         )
     
     # Check if role is assigned to any craftsmen
@@ -229,3 +237,122 @@ def delete_role(db: Session, role_id: int) -> bool:
     db.delete(db_role)
     db.commit()
     return True
+
+
+# ==================== PERMISSION SERVICES ====================
+
+def get_role_with_permissions(db: Session, role_id: int) -> Optional[dict]:
+    """Get role with parsed permissions."""
+    db_role = get_role(db, role_id)
+    if not db_role:
+        return None
+    
+    return {
+        "id": db_role.id,
+        "name": db_role.name,
+        "description": db_role.description,
+        "level": db_role.level,
+        "category": db_role.category,
+        "permissions_json": db_role.permissions_json,
+        "is_active": db_role.is_active,
+        "is_system_role": db_role.is_system_role,
+        "created_at": str(db_role.created_at) if db_role.created_at else "",
+        "updated_at": str(db_role.updated_at) if db_role.updated_at else "",
+        "parsed_permissions": db_role.get_permissions()
+    }
+
+
+def update_role_permissions(
+    db: Session,
+    role_id: int,
+    permissions: List[str],
+    template: str = None,
+    custom: bool = False,
+    current_user: Optional[User] = None
+) -> Optional[Role]:
+    """Update role permissions."""
+    db_role = get_role(db, role_id)
+    if not db_role:
+        return None
+    
+    # System roles can only have permissions modified by System Administrator
+    if db_role.is_system_role and not is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only System Administrators can modify permissions of system roles"
+        )
+    
+    db_role.set_permissions(permissions, template, custom)
+    db.commit()
+    db.refresh(db_role)
+    return db_role
+
+
+def create_role_from_template(
+    db: Session,
+    name: str,
+    template_key: str,
+    template_permissions: List[str],
+    description: str = None,
+    level: int = 1,
+    category: str = None
+) -> Role:
+    """Create a new role from a template."""
+    # Check uniqueness
+    existing = db.query(Role).filter(Role.name == name).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role with this name already exists"
+        )
+    
+    # Create role
+    db_role = Role(
+        name=name,
+        description=description,
+        level=level,
+        category=category,
+        is_active=True,
+        is_system_role=False
+    )
+    db_role.set_permissions(template_permissions, template=template_key, custom=False)
+    
+    db.add(db_role)
+    db.commit()
+    db.refresh(db_role)
+    return db_role
+
+
+def get_user_permissions(db: Session, user_id: int) -> List[str]:
+    """
+    Resolve a user's effective permissions through the chain:
+    User → Craftsman → Role → permissions_json → resolve_permissions()
+    
+    Admin users (role='admin') get full access regardless of craftsman/role assignment.
+    """
+    from models.user import User, UserRole
+    from models.craftsman import Craftsman
+    from core.permissions import resolve_permissions
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return []
+    
+    # Admin users get full access
+    if user.role == UserRole.ADMIN:
+        return resolve_permissions(["admin.full_access"])
+    
+    # Find craftsman for this user
+    craftsman = db.query(Craftsman).filter(Craftsman.user_id == user_id).first()
+    if not craftsman or not craftsman.role_id:
+        return []
+    
+    # Get the role
+    role = get_role(db, craftsman.role_id)
+    if not role or not role.is_active:
+        return []
+    
+    # Get raw permissions and resolve with inheritance
+    raw_permissions = role.get_permissions()
+    return resolve_permissions(raw_permissions)
+

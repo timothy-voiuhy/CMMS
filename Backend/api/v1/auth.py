@@ -6,10 +6,102 @@ from core.security import (
     verify_password, get_password_hash, create_access_token,
     create_refresh_token, decode_token, get_current_active_user
 )
-from models.user import User
+from typing import Optional
+from pydantic import BaseModel
+from models.user import User, UserRole
 from schemas.user import Token, UserCreate, UserResponse
 
 router = APIRouter()
+
+
+class SetupStatusResponse(BaseModel):
+    setup_required: bool
+    message: str
+
+
+class InitialAdminSetup(BaseModel):
+    username: str = "admin"
+    email: str
+    full_name: str
+    password: str
+    phone: Optional[str] = None
+    company_name: Optional[str] = None
+
+
+@router.get("/setup-status", response_model=SetupStatusResponse)
+async def check_setup_status(db: Session = Depends(get_db)):
+    """Check if initial admin setup is required (no admin user in DB)."""
+    admin_count = db.query(User).filter(User.role == UserRole.ADMIN).count()
+    if admin_count == 0:
+        return {
+            "setup_required": True,
+            "message": "Initial System Administrator setup required"
+        }
+    return {
+        "setup_required": False,
+        "message": "System administrator exists"
+    }
+
+
+@router.post("/setup-admin", response_model=Token)
+async def setup_initial_admin(admin_data: InitialAdminSetup, db: Session = Depends(get_db)):
+    """Create the initial System Administrator when database has no admin users."""
+    admin_count = db.query(User).filter(User.role == UserRole.ADMIN).count()
+    if admin_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="System Administrator already exists. Setup is locked."
+        )
+
+    # Check if username or email exists
+    if db.query(User).filter(User.username == admin_data.username).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+    if db.query(User).filter(User.email == admin_data.email).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+
+    # Create initial company if specified and none exists
+    if admin_data.company_name:
+        from models.company import Company
+        if not db.query(Company).first():
+            company = Company(
+                name=admin_data.company_name,
+                industry_type="Industrial CMMS",
+                currency="USD",
+                timezone="UTC",
+                language="en"
+            )
+            db.add(company)
+            db.commit()
+
+    # Create admin user
+    user = User(
+        username=admin_data.username,
+        email=admin_data.email,
+        full_name=admin_data.full_name,
+        hashed_password=get_password_hash(admin_data.password),
+        role=UserRole.ADMIN,
+        phone=admin_data.phone
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    # Generate tokens
+    access_token = create_access_token(data={"sub": user.id})
+    refresh_token = create_refresh_token(data={"sub": user.id})
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -131,7 +223,25 @@ async def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_
     }
 
 
-@router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_active_user)):
-    """Get current logged-in user info."""
-    return current_user
+@router.get("/me")
+async def get_current_user_info(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get current logged-in user info with resolved permissions."""
+    from services.company_service import get_user_permissions
+    
+    permissions = get_user_permissions(db, current_user.id)
+    
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "role": current_user.role.value if current_user.role else "readonly",
+        "is_active": current_user.is_active,
+        "phone": current_user.phone,
+        "created_at": str(current_user.created_at) if current_user.created_at else "",
+        "updated_at": str(current_user.updated_at) if current_user.updated_at else "",
+        "permissions": permissions
+    }

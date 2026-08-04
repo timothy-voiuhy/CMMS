@@ -9,7 +9,11 @@ from schemas.company import (
     FacilityCreate, FacilityUpdate, FacilityResponse,
     DepartmentCreate, DepartmentUpdate, DepartmentResponse
 )
-from schemas.role import RoleCreate, RoleUpdate, RoleResponse
+from schemas.role import (
+    RoleCreate, RoleUpdate, RoleResponse,
+    RolePermissionsUpdate, RoleWithPermissions,
+    CreateRoleFromTemplate
+)
 from services import company_service
 
 router = APIRouter()
@@ -224,7 +228,7 @@ async def update_role(
     current_user: User = Depends(get_current_active_user)
 ):
     """Update role."""
-    updated = company_service.update_role(db, role_id, role)
+    updated = company_service.update_role(db, role_id, role, current_user=current_user)
     if not updated:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
     return updated
@@ -237,6 +241,103 @@ async def delete_role(
     current_user: User = Depends(get_current_active_user)
 ):
     """Delete role."""
-    deleted = company_service.delete_role(db, role_id)
+    deleted = company_service.delete_role(db, role_id, current_user=current_user)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+
+
+# ==================== PERMISSION ENDPOINTS ====================
+
+@router.get("/roles/{role_id}/permissions", response_model=RoleWithPermissions)
+async def get_role_permissions(
+    role_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get role with parsed permissions."""
+    role_data = company_service.get_role_with_permissions(db, role_id)
+    if not role_data:
+        raise HTTPException(status_code=404, detail="Role not found")
+    return role_data
+
+
+@router.put("/roles/{role_id}/permissions", response_model=RoleWithPermissions)
+async def update_role_permissions(
+    role_id: int,
+    permissions_update: RolePermissionsUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update role permissions."""
+    updated = company_service.update_role_permissions(
+        db,
+        role_id,
+        permissions_update.permissions,
+        permissions_update.template,
+        permissions_update.custom,
+        current_user=current_user
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    return {
+        "id": updated.id,
+        "name": updated.name,
+        "description": updated.description,
+        "level": updated.level,
+        "category": updated.category,
+        "permissions_json": updated.permissions_json,
+        "is_active": updated.is_active,
+        "is_system_role": updated.is_system_role,
+        "created_at": str(updated.created_at) if updated.created_at else "",
+        "updated_at": str(updated.updated_at) if updated.updated_at else "",
+        "parsed_permissions": updated.get_permissions()
+    }
+
+
+@router.get("/permissions/registry")
+async def get_permission_registry(
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get complete permission registry with all definitions and categories."""
+    from core.permissions import get_permission_registry
+    return get_permission_registry()
+
+
+@router.get("/permissions/templates")
+async def get_permission_templates(
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get available role templates."""
+    from core.permissions import get_role_templates
+    templates = get_role_templates()
+    return [
+        {"key": key, **value}
+        for key, value in templates.items()
+    ]
+
+
+@router.post("/roles/from-template", response_model=RoleResponse, status_code=status.HTTP_201_CREATED)
+async def create_role_from_template(
+    data: CreateRoleFromTemplate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Create a new role from a template."""
+    from core.permissions import get_template_permissions, get_template_metadata
+
+    template_perms = get_template_permissions(data.template)
+    if not template_perms:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    metadata = get_template_metadata(data.template)
+
+    return company_service.create_role_from_template(
+        db,
+        name=data.name,
+        template_key=data.template,
+        template_permissions=template_perms,
+        description=data.description or metadata.get('description'),
+        level=data.level or metadata.get('level', 1),
+        category=data.category or metadata.get('category')
+    )

@@ -157,6 +157,41 @@ export interface UpdateDepartmentRequest {
   is_active?: boolean
 }
 
+// ==================== ROLE TYPES ====================
+
+export interface Role {
+  id: number
+  name: string
+  description?: string
+  level: number
+  category?: string
+  permissions_json?: string
+  is_active: boolean
+  is_system_role: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateRoleRequest {
+  name: string
+  description?: string
+  level?: number
+  category?: string
+  permissions_json?: string
+  is_active?: boolean
+  is_system_role?: boolean
+}
+
+export interface UpdateRoleRequest {
+  name?: string
+  description?: string
+  level?: number
+  category?: string
+  permissions_json?: string
+  is_active?: boolean
+  is_system_role?: boolean
+}
+
 class CompanyService {
   private baseUrl = '/api/v1/company'
 
@@ -220,6 +255,30 @@ class CompanyService {
 
   async deleteDepartment(id: number) {
     return apiClient.delete(`${this.baseUrl}/departments/${id}`)
+  }
+
+  // ==================== ROLE METHODS ====================
+
+  async getRoles(activeOnly?: boolean) {
+    const params = new URLSearchParams()
+    if (activeOnly) params.append('active_only', 'true')
+    return apiClient.get<Role[]>(`${this.baseUrl}/roles?${params.toString()}`)
+  }
+
+  async getRoleById(id: number) {
+    return apiClient.get<Role>(`${this.baseUrl}/roles/${id}`)
+  }
+
+  async createRole(data: CreateRoleRequest) {
+    return apiClient.post<Role>(`${this.baseUrl}/roles`, data)
+  }
+
+  async updateRole(id: number, data: UpdateRoleRequest) {
+    return apiClient.put<Role>(`${this.baseUrl}/roles/${id}`, data)
+  }
+
+  async deleteRole(id: number) {
+    return apiClient.delete(`${this.baseUrl}/roles/${id}`)
   }
 }
 

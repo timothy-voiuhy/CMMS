@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
 import { useThemeStore } from './store/themeStore'
+import { PermissionRoute } from './components/auth/PermissionGuard'
 
 // Layouts
 import MainLayout from './layouts/MainLayout'
@@ -9,6 +10,7 @@ import AuthLayout from './layouts/AuthLayout'
 
 // Pages
 import LoginPage from './pages/auth/LoginPage'
+import SetupPage from './pages/auth/SetupPage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import EquipmentListPage from './pages/equipment/EquipmentListPage'
 import EquipmentDetailPage from './pages/equipment/EquipmentDetailPage'
@@ -73,6 +75,7 @@ function App() {
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/setup" element={<SetupPage />} />
         </Route>
 
         {/* Protected Routes */}
@@ -87,68 +90,68 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           
           {/* Equipment Routes */}
-          <Route path="/equipment" element={<EquipmentListPage />} />
-          <Route path="/equipment/new" element={<EquipmentFormPage />} />
-          <Route path="/equipment/:id/edit" element={<EquipmentFormPage />} />
-          <Route path="/equipment/:id" element={<EquipmentDetailPage />} />
+          <Route path="/equipment" element={<PermissionRoute permission="equipment.view"><EquipmentListPage /></PermissionRoute>} />
+          <Route path="/equipment/new" element={<PermissionRoute permission="equipment.create"><EquipmentFormPage /></PermissionRoute>} />
+          <Route path="/equipment/:id/edit" element={<PermissionRoute permission="equipment.edit"><EquipmentFormPage /></PermissionRoute>} />
+          <Route path="/equipment/:id" element={<PermissionRoute permission="equipment.view"><EquipmentDetailPage /></PermissionRoute>} />
           
           {/* Craftsmen Routes */}
-          <Route path="/craftsmen" element={<CraftsmenListPage />} />
-          <Route path="/craftsmen/new" element={<CraftsmenFormPage />} />
-          <Route path="/craftsmen/:id/edit" element={<CraftsmenFormPage />} />
-          <Route path="/craftsmen/:id" element={<CraftsmenDetailPage />} />
+          <Route path="/craftsmen" element={<PermissionRoute permission="craftsmen.view"><CraftsmenListPage /></PermissionRoute>} />
+          <Route path="/craftsmen/new" element={<PermissionRoute permission="craftsmen.create"><CraftsmenFormPage /></PermissionRoute>} />
+          <Route path="/craftsmen/:id/edit" element={<PermissionRoute permission="craftsmen.edit"><CraftsmenFormPage /></PermissionRoute>} />
+          <Route path="/craftsmen/:id" element={<PermissionRoute permission="craftsmen.view"><CraftsmenDetailPage /></PermissionRoute>} />
           
           {/* Inventory Routes */}
-          <Route path="/inventory" element={<InventoryListPage />} />
-          <Route path="/inventory/grid" element={<InventoryGridPage />} />
-          <Route path="/inventory/categories" element={<InventoryCategoriesPage />} />
-          <Route path="/inventory/new" element={<InventoryFormPage />} />
-          <Route path="/inventory/:id/edit" element={<InventoryFormPage />} />
-          <Route path="/inventory/:id" element={<InventoryDetailPage />} />
+          <Route path="/inventory" element={<PermissionRoute permission="inventory.view"><InventoryListPage /></PermissionRoute>} />
+          <Route path="/inventory/grid" element={<PermissionRoute permission="inventory.view"><InventoryGridPage /></PermissionRoute>} />
+          <Route path="/inventory/categories" element={<PermissionRoute permission="inventory.categories"><InventoryCategoriesPage /></PermissionRoute>} />
+          <Route path="/inventory/new" element={<PermissionRoute permission="inventory.create"><InventoryFormPage /></PermissionRoute>} />
+          <Route path="/inventory/:id/edit" element={<PermissionRoute permission="inventory.edit"><InventoryFormPage /></PermissionRoute>} />
+          <Route path="/inventory/:id" element={<PermissionRoute permission="inventory.view"><InventoryDetailPage /></PermissionRoute>} />
           
           {/* Maintenance Routes */}
-          <Route path="/maintenance" element={<MaintenanceListPage />} />
-          <Route path="/maintenance/reports" element={<MaintenanceListPage />} />
-          <Route path="/maintenance/reports/new" element={<MaintenanceFormPage />} />
-          <Route path="/maintenance/reports/:id/edit" element={<MaintenanceFormPage />} />
-          <Route path="/maintenance/reports/:id" element={<MaintenanceDetailPage />} />
-          <Route path="/maintenance/new" element={<MaintenanceFormPage />} />
-          <Route path="/maintenance/:id/edit" element={<MaintenanceFormPage />} />
-          <Route path="/maintenance/:id" element={<MaintenanceDetailPage />} />
-          <Route path="/maintenance/work-orders" element={<WorkOrdersListPage />} />
-          <Route path="/maintenance/work-orders/new" element={<WorkOrderFormPage />} />
-          <Route path="/maintenance/work-orders/:id/edit" element={<WorkOrderFormPage />} />
-          <Route path="/maintenance/work-orders/:id" element={<WorkOrderDetailPage />} />
-          <Route path="/maintenance/personnel" element={<MaintenancePersonnelPage />} />
+          <Route path="/maintenance" element={<PermissionRoute permission="maintenance.view"><MaintenanceListPage /></PermissionRoute>} />
+          <Route path="/maintenance/reports" element={<PermissionRoute permission="maintenance.view"><MaintenanceListPage /></PermissionRoute>} />
+          <Route path="/maintenance/reports/new" element={<PermissionRoute permission="maintenance.create"><MaintenanceFormPage /></PermissionRoute>} />
+          <Route path="/maintenance/reports/:id/edit" element={<PermissionRoute permission="maintenance.edit"><MaintenanceFormPage /></PermissionRoute>} />
+          <Route path="/maintenance/reports/:id" element={<PermissionRoute permission="maintenance.view"><MaintenanceDetailPage /></PermissionRoute>} />
+          <Route path="/maintenance/new" element={<PermissionRoute permission="maintenance.create"><MaintenanceFormPage /></PermissionRoute>} />
+          <Route path="/maintenance/:id/edit" element={<PermissionRoute permission="maintenance.edit"><MaintenanceFormPage /></PermissionRoute>} />
+          <Route path="/maintenance/:id" element={<PermissionRoute permission="maintenance.view"><MaintenanceDetailPage /></PermissionRoute>} />
+          <Route path="/maintenance/work-orders" element={<PermissionRoute permission="work_orders.view"><WorkOrdersListPage /></PermissionRoute>} />
+          <Route path="/maintenance/work-orders/new" element={<PermissionRoute permission="work_orders.create"><WorkOrderFormPage /></PermissionRoute>} />
+          <Route path="/maintenance/work-orders/:id/edit" element={<PermissionRoute permission="work_orders.edit"><WorkOrderFormPage /></PermissionRoute>} />
+          <Route path="/maintenance/work-orders/:id" element={<PermissionRoute permission="work_orders.view"><WorkOrderDetailPage /></PermissionRoute>} />
+          <Route path="/maintenance/personnel" element={<PermissionRoute permission="craftsmen.view"><MaintenancePersonnelPage /></PermissionRoute>} />
           
           {/* Production Routes */}
-          <Route path="/production/lines" element={<ProductionLinesPage />} />
-          <Route path="/production/lines/new" element={<ProductionLineFormPage />} />
-          <Route path="/production/lines/:id/edit" element={<ProductionLineFormPage />} />
-          <Route path="/production/lines/:id" element={<ProductionLineDetailPage />} />
-          <Route path="/production/orders" element={<ProductionOrdersPage />} />
-          <Route path="/production/orders/new" element={<ProductionOrderFormPage />} />
-          <Route path="/production/orders/:id/edit" element={<ProductionOrderFormPage />} />
-          <Route path="/production/orders/:id" element={<ProductionOrderDetailPage />} />
-          <Route path="/production/packaging" element={<PackagingPage />} />
-          <Route path="/production/packaging/new" element={<PackagingFormPage />} />
-          <Route path="/production/packaging/:id/edit" element={<PackagingFormPage />} />
-          <Route path="/production/packaging/:id" element={<PackagingDetailPage />} />
+          <Route path="/production/lines" element={<PermissionRoute permission="production.view"><ProductionLinesPage /></PermissionRoute>} />
+          <Route path="/production/lines/new" element={<PermissionRoute permission="production.lines"><ProductionLineFormPage /></PermissionRoute>} />
+          <Route path="/production/lines/:id/edit" element={<PermissionRoute permission="production.lines"><ProductionLineFormPage /></PermissionRoute>} />
+          <Route path="/production/lines/:id" element={<PermissionRoute permission="production.view"><ProductionLineDetailPage /></PermissionRoute>} />
+          <Route path="/production/orders" element={<PermissionRoute permission="production.view"><ProductionOrdersPage /></PermissionRoute>} />
+          <Route path="/production/orders/new" element={<PermissionRoute permission="production.create"><ProductionOrderFormPage /></PermissionRoute>} />
+          <Route path="/production/orders/:id/edit" element={<PermissionRoute permission="production.edit"><ProductionOrderFormPage /></PermissionRoute>} />
+          <Route path="/production/orders/:id" element={<PermissionRoute permission="production.view"><ProductionOrderDetailPage /></PermissionRoute>} />
+          <Route path="/production/packaging" element={<PermissionRoute permission="production.packaging"><PackagingPage /></PermissionRoute>} />
+          <Route path="/production/packaging/new" element={<PermissionRoute permission="production.packaging"><PackagingFormPage /></PermissionRoute>} />
+          <Route path="/production/packaging/:id/edit" element={<PermissionRoute permission="production.packaging"><PackagingFormPage /></PermissionRoute>} />
+          <Route path="/production/packaging/:id" element={<PermissionRoute permission="production.packaging"><PackagingDetailPage /></PermissionRoute>} />
           
           {/* Quality Routes */}
-          <Route path="/quality" element={<QualityPage />} />
-          <Route path="/quality/inspections/new" element={<InspectionFormPage />} />
-          <Route path="/quality/inspections/:id" element={<InspectionFormPage />} />
-          <Route path="/quality/inspections/:id/edit" element={<InspectionFormPage />} />
-          <Route path="/quality/ncrs/new" element={<NCRFormPage />} />
-          <Route path="/quality/ncrs/:id" element={<NCRFormPage />} />
-          <Route path="/quality/ncrs/:id/edit" element={<NCRFormPage />} />
+          <Route path="/quality" element={<PermissionRoute permission="quality.view"><QualityPage /></PermissionRoute>} />
+          <Route path="/quality/inspections/new" element={<PermissionRoute permission="quality.inspect"><InspectionFormPage /></PermissionRoute>} />
+          <Route path="/quality/inspections/:id" element={<PermissionRoute permission="quality.view"><InspectionFormPage /></PermissionRoute>} />
+          <Route path="/quality/inspections/:id/edit" element={<PermissionRoute permission="quality.inspect"><InspectionFormPage /></PermissionRoute>} />
+          <Route path="/quality/ncrs/new" element={<PermissionRoute permission="quality.ncr_create"><NCRFormPage /></PermissionRoute>} />
+          <Route path="/quality/ncrs/:id" element={<PermissionRoute permission="quality.view"><NCRFormPage /></PermissionRoute>} />
+          <Route path="/quality/ncrs/:id/edit" element={<PermissionRoute permission="quality.ncr_create"><NCRFormPage /></PermissionRoute>} />
           
           {/* Reports Routes */}
-          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/reports" element={<PermissionRoute permission="reports.view"><ReportsPage /></PermissionRoute>} />
           
           {/* Settings Routes */}
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings" element={<PermissionRoute permission="settings.view"><SettingsPage /></PermissionRoute>} />
           
           {/* Profile Routes */}
           <Route path="/profile" element={<ProfilePage />} />
