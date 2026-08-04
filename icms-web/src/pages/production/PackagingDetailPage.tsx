@@ -85,7 +85,7 @@ const PackagingDetailPage: React.FC = () => {
   if (isLoading || !order) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
       </div>
     )
   }
@@ -98,27 +98,27 @@ const PackagingDetailPage: React.FC = () => {
       <div className="mb-6">
         <button
           onClick={() => navigate('/production/packaging')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Packaging Orders
         </button>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">{order.product_name}</h1>
-            <p className="text-gray-600 mt-1">{order.order_number}</p>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{order.product_name}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">{order.order_number}</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(`/production/packaging/${order.id}/edit`)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
             >
               <Edit className="w-4 h-4" />
               Edit
             </button>
             <button
               onClick={handleDelete}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-lg hover:bg-red-700 dark:hover:bg-red-600"
             >
               <Trash2 className="w-4 h-4" />
               Delete
@@ -129,31 +129,31 @@ const PackagingDetailPage: React.FC = () => {
 
       {/* Status and Progress Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Status</p>
-            <Clock className="w-5 h-5 text-gray-400" />
+            <p className="text-sm text-gray-600 dark:text-gray-400">Status</p>
+            <Clock className="w-5 h-5 text-gray-400 dark:text-gray-500" />
           </div>
           <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
             {formatStatus(order.status)}
           </span>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Progress</p>
-            <TrendingUp className="w-5 h-5 text-gray-400" />
+            <p className="text-sm text-gray-600 dark:text-gray-400">Progress</p>
+            <TrendingUp className="w-5 h-5 text-gray-400 dark:text-gray-500" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">{progress}%</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{progress}%</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Packaged</p>
-            <Package className="w-5 h-5 text-gray-400" />
+            <p className="text-sm text-gray-600 dark:text-gray-400">Packaged</p>
+            <Package className="w-5 h-5 text-gray-400 dark:text-gray-500" />
           </div>
-          <p className="text-2xl font-bold text-green-600">
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
             {order.packaged_quantity.toFixed(0)}
           </p>
-          <p className="text-xs text-gray-500 mt-1">of {order.target_quantity.toFixed(0)} {order.unit}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">of {order.target_quantity.toFixed(0)} {order.unit}</p>
         </div>
       </div>
 
@@ -161,69 +161,69 @@ const PackagingDetailPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Order Details */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Order Details</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Order Details</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Product Name</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{order.product_name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Product Name</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{order.product_name}</p>
                 </div>
                 {order.product_code && (
                   <div>
-                    <p className="text-sm text-gray-600">Product Code</p>
-                    <p className="text-sm font-medium text-gray-900 mt-1">{order.product_code}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Product Code</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">{order.product_code}</p>
                   </div>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Target Quantity</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Target Quantity</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                     {order.target_quantity.toFixed(2)} {order.unit}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Packaged Quantity</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Packaged Quantity</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                     {order.packaged_quantity.toFixed(2)} {order.unit}
                   </p>
                 </div>
               </div>
               {order.notes && (
                 <div>
-                  <p className="text-sm text-gray-600">Notes</p>
-                  <p className="text-sm text-gray-900 mt-1">{order.notes}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Notes</p>
+                  <p className="text-sm text-gray-900 dark:text-gray-100 mt-1">{order.notes}</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Packaging Details */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
               <PackageCheck className="w-5 h-5" />
               Packaging Details
             </h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Packaging Type</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Packaging Type</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                     {order.packaging_type || 'Not specified'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Packaging Material</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Packaging Material</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                     {order.packaging_material || 'Not specified'}
                   </p>
                 </div>
               </div>
               {order.units_per_package && (
                 <div>
-                  <p className="text-sm text-gray-600">Units per Package</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Units per Package</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                     {order.units_per_package}
                   </p>
                 </div>
@@ -232,36 +232,36 @@ const PackagingDetailPage: React.FC = () => {
           </div>
 
           {/* Schedule */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
               <Calendar className="w-5 h-5" />
               Schedule
             </h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Scheduled Start</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Scheduled Start</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                     {formatDate(order.scheduled_start)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Scheduled End</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Scheduled End</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                     {formatDate(order.scheduled_end)}
                   </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Actual Start</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Actual Start</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                     {formatDate(order.actual_start)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Actual End</p>
-                  <p className="text-sm font-medium text-gray-900 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Actual End</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                     {formatDate(order.actual_end)}
                   </p>
                 </div>
@@ -273,18 +273,18 @@ const PackagingDetailPage: React.FC = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Metadata */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Metadata</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Metadata</h2>
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-gray-600">Created</p>
-                <p className="text-sm font-medium text-gray-900 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Created</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                   {new Date(order.created_at).toLocaleString()}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Last Updated</p>
-                <p className="text-sm font-medium text-gray-900 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Last Updated</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                   {new Date(order.updated_at).toLocaleString()}
                 </p>
               </div>

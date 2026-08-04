@@ -114,7 +114,7 @@ const PackagingFormPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
       </div>
     )
   }
@@ -125,55 +125,55 @@ const PackagingFormPage: React.FC = () => {
       <div className="mb-6">
         <button
           onClick={() => navigate('/production/packaging')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Packaging Orders
         </button>
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
           {isEdit ? 'Edit Packaging Order' : 'New Packaging Order'}
         </h1>
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h2>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Basic Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Product Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.product_name}
                   onChange={(e) => handleChange('product_name', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="Product Name"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Product Code
                 </label>
                 <input
                   type="text"
                   value={formData.product_code}
                   onChange={(e) => handleChange('product_code', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="SKU or Product Code"
                 />
               </div>
               {isEdit && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => handleChange('status', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <option value="pending">Pending</option>
                     <option value="in_progress">In Progress</option>
@@ -186,10 +186,10 @@ const PackagingFormPage: React.FC = () => {
 
           {/* Quantity */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Quantity</h2>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Quantity</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Target Quantity <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -197,27 +197,27 @@ const PackagingFormPage: React.FC = () => {
                   step="0.01"
                   value={formData.target_quantity}
                   onChange={(e) => handleChange('target_quantity', parseFloat(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="1000"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Unit <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.unit}
                   onChange={(e) => handleChange('unit', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="pcs, boxes, pallets, etc."
                   required
                 />
               </div>
               {isEdit && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Packaged Quantity
                   </label>
                   <input
@@ -225,7 +225,7 @@ const PackagingFormPage: React.FC = () => {
                     step="0.01"
                     value={formData.packaged_quantity || 0}
                     onChange={(e) => handleChange('packaged_quantity', parseFloat(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     placeholder="0"
                   />
                 </div>
@@ -235,34 +235,34 @@ const PackagingFormPage: React.FC = () => {
 
           {/* Packaging Details */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Packaging Details</h2>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Packaging Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Packaging Type
                 </label>
                 <input
                   type="text"
                   value={formData.packaging_type}
                   onChange={(e) => handleChange('packaging_type', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="Box, Pallet, Bag, etc."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Packaging Material
                 </label>
                 <input
                   type="text"
                   value={formData.packaging_material}
                   onChange={(e) => handleChange('packaging_material', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="Cardboard, Plastic, etc."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Units per Package
                 </label>
                 <input
@@ -270,7 +270,7 @@ const PackagingFormPage: React.FC = () => {
                   step="0.01"
                   value={formData.units_per_package || ''}
                   onChange={(e) => handleChange('units_per_package', e.target.value ? parseFloat(e.target.value) : undefined)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="12"
                 />
               </div>
@@ -279,28 +279,28 @@ const PackagingFormPage: React.FC = () => {
 
           {/* Schedule */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Schedule</h2>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Schedule</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Scheduled Start
                 </label>
                 <input
                   type="datetime-local"
                   value={formData.scheduled_start}
                   onChange={(e) => handleChange('scheduled_start', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Scheduled End
                 </label>
                 <input
                   type="datetime-local"
                   value={formData.scheduled_end}
                   onChange={(e) => handleChange('scheduled_end', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -308,29 +308,29 @@ const PackagingFormPage: React.FC = () => {
 
           {/* Notes */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Notes</h2>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Notes</h2>
             <textarea
               value={formData.notes}
               onChange={(e) => handleChange('notes', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               rows={4}
               placeholder="Additional notes or instructions..."
             />
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={() => navigate('/production/packaging')}
-              className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
             >
               {isSaving ? (
                 <>

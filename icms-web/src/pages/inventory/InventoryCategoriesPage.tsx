@@ -102,35 +102,35 @@ const InventoryCategoriesPage: React.FC = () => {
       <div key={node.id}>
         <div
           className={`flex items-center justify-between p-3 border rounded-lg mb-2 ${
-            !category.is_active ? 'bg-gray-100 opacity-60' : 'bg-white'
+            !category.is_active ? 'bg-gray-100 dark:bg-gray-700 opacity-60' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'
           }`}
           style={{ marginLeft: `${level * 2}rem` }}
         >
           <div className="flex items-center gap-3">
-            <FolderTree className="w-5 h-5 text-gray-400" />
+            <FolderTree className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             <div>
-              <h3 className="font-medium text-gray-800">
+              <h3 className="font-medium text-gray-800 dark:text-gray-100">
                 {category.name}
                 {!category.is_active && (
-                  <span className="ml-2 text-xs text-gray-500">(Inactive)</span>
+                  <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">(Inactive)</span>
                 )}
               </h3>
               {category.description && (
-                <p className="text-sm text-gray-600">{category.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{category.description}</p>
               )}
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleEdit(category)}
-              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+              className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
               title="Edit"
             >
               <Edit2 className="w-4 h-4" />
             </button>
             <button
               onClick={() => handleDelete(category.id, category.name)}
-              className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+              className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
               title="Delete"
             >
               <Trash2 className="w-4 h-4" />
@@ -149,7 +149,7 @@ const InventoryCategoriesPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
       </div>
     )
   }
@@ -159,12 +159,12 @@ const InventoryCategoriesPage: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Inventory Categories</h1>
-          <p className="text-gray-600 mt-1">Manage hierarchical inventory categories</p>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Inventory Categories</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage hierarchical inventory categories</p>
         </div>
         <button
           onClick={handleCreate}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Add Category
@@ -172,14 +172,14 @@ const InventoryCategoriesPage: React.FC = () => {
       </div>
 
       {/* Category Tree */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         {categoryTree.length === 0 ? (
           <div className="text-center py-12">
-            <FolderTree className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500">No categories yet</p>
+            <FolderTree className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400">No categories yet</p>
             <button
               onClick={handleCreate}
-              className="mt-4 text-blue-600 hover:underline"
+              className="mt-4 text-blue-600 dark:text-blue-400 hover:underline"
             >
               Create your first category
             </button>
@@ -194,14 +194,14 @@ const InventoryCategoriesPage: React.FC = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
               {editingCategory ? 'Edit Category' : 'Add Category'}
             </h2>
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -209,26 +209,26 @@ const InventoryCategoriesPage: React.FC = () => {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     placeholder="e.g., Flavors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Description
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     placeholder="Category description..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Parent Category
                   </label>
                   <select
@@ -239,7 +239,7 @@ const InventoryCategoriesPage: React.FC = () => {
                         parent_id: e.target.value ? parseInt(e.target.value) : undefined,
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <option value="">None (Root Category)</option>
                     {categories
@@ -258,9 +258,9 @@ const InventoryCategoriesPage: React.FC = () => {
                     id="is_active"
                     checked={formData.is_active}
                     onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
                   />
-                  <label htmlFor="is_active" className="text-sm text-gray-700">
+                  <label htmlFor="is_active" className="text-sm text-gray-700 dark:text-gray-300">
                     Active
                   </label>
                 </div>
@@ -270,13 +270,13 @@ const InventoryCategoriesPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
                 >
                   {editingCategory ? 'Update' : 'Create'}
                 </button>

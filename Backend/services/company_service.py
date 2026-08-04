@@ -1,11 +1,13 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from models.company import Company, Facility, Department
+from fastapi import HTTPException, status
+from models.company import Company, Facility, Department, Role
 from schemas.company import (
     CompanyCreate, CompanyUpdate,
     FacilityCreate, FacilityUpdate,
     DepartmentCreate, DepartmentUpdate
 )
+from schemas.role import RoleCreate, RoleUpdate
 
 
 # ==================== COMPANY SERVICES ====================
@@ -135,5 +137,95 @@ def delete_department(db: Session, department_id: int) -> bool:
         return False
     
     db.delete(db_department)
+    db.commit()
+    return True
+
+
+# ==================== ROLE SERVICES ====================
+
+def get_roles(db: Session, active_only: bool = False) -> List[Role]:
+    """Get all roles."""
+    query = db.query(Role)
+    if active_only:
+        query = query.filter(Role.is_active == True)
+    return query.order_by(Role.level.desc(), Role.name).all()
+
+
+def get_role(db: Session, role_id: int) -> Optional[Role]:
+    """Get role by ID."""
+    return db.query(Role).filter(Role.id == role_id).first()
+
+
+def create_role(db: Session, role: RoleCreate) -> Role:
+    """Create role."""
+    # Check if role name already exists
+    existing = db.query(Role).filter(Role.name == role.name).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role with this name already exists"
+        )
+    
+    db_role = Role(**role.model_dump())
+    db.add(db_role)
+    db.commit()
+    db.refresh(db_role)
+    return db_role
+
+
+def update_role(db: Session, role_id: int, role: RoleUpdate) -> Optional[Role]:
+    """Update role."""
+    db_role = get_role(db, role_id)
+    if not db_role:
+        return None
+    
+    # Prevent modifying system roles
+    if db_role.is_system_role:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot modify system roles"
+        )
+    
+    # Check name uniqueness if changing name
+    if role.name and role.name != db_role.name:
+        existing = db.query(Role).filter(Role.name == role.name).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Role with this name already exists"
+            )
+    
+    update_data = role.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_role, field, value)
+    
+    db.commit()
+    db.refresh(db_role)
+    return db_role
+
+
+def delete_role(db: Session, role_id: int) -> bool:
+    """Delete role."""
+    db_role = get_role(db, role_id)
+    if not db_role:
+        return False
+    
+    # Prevent deleting system roles
+    if db_role.is_system_role:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete system roles"
+        )
+    
+    # Check if role is assigned to any craftsmen
+    from models.craftsman import Craftsman
+    assigned_count = db.query(Craftsman).filter(Craftsman.role_id == role_id).count()
+    if assigned_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete role. It is assigned to {assigned_count} craftsmen."
+        )
+    
+    db.delete(db_role)
     db.commit()
     return True

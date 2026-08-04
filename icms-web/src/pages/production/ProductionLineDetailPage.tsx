@@ -323,7 +323,7 @@ const ProductionLineDetailPage: React.FC = () => {
   if (isLoading || !line) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
       </div>
     )
   }
@@ -334,27 +334,27 @@ const ProductionLineDetailPage: React.FC = () => {
       <div className="mb-6">
         <button
           onClick={() => navigate('/production/lines')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Production Lines
         </button>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">{line.name}</h1>
-            <p className="text-gray-600 mt-1">{line.line_code}</p>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{line.name}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">{line.line_code}</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(`/production/lines/${line.id}/edit`)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
             >
               <Edit className="w-4 h-4" />
               Edit
             </button>
             <button
               onClick={handleDelete}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-lg hover:bg-red-700 dark:hover:bg-red-600"
             >
               <Trash2 className="w-4 h-4" />
               Delete
@@ -365,36 +365,36 @@ const ProductionLineDetailPage: React.FC = () => {
 
       {/* Line Details */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Line Information</h2>
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Line Information</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600">Status</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Status</p>
                 <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-1 ${getStatusColor(line.status)}`}>
                   {formatShiftType(line.status)}
                 </span>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Capacity</p>
-                <p className="text-sm font-medium text-gray-900 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Capacity</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-1">
                   {line.capacity_per_hour ? `${line.capacity_per_hour} ${line.capacity_unit || 'units'}/hr` : 'Not set'}
                 </p>
               </div>
             </div>
             {line.description && (
               <div>
-                <p className="text-sm text-gray-600">Description</p>
-                <p className="text-sm text-gray-900 mt-1">{line.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Description</p>
+                <p className="text-sm text-gray-900 dark:text-gray-100 mt-1">{line.description}</p>
               </div>
             )}
             {line.location && (
               <div>
-                <p className="text-sm text-gray-600 flex items-center gap-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
                   Location
                 </p>
-                <p className="text-sm text-gray-900 mt-1">
+                <p className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                   {line.location}
                   {line.floor && ` - Floor ${line.floor}`}
                 </p>
@@ -403,25 +403,25 @@ const ProductionLineDetailPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Quick Stats</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Quick Stats</h2>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Factory className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <Factory className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total Shifts</p>
-                <p className="text-lg font-bold text-gray-900">{shifts.length}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total Shifts</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{shifts.length}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Activity className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <Activity className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Active Shifts</p>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Active Shifts</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                   {shifts.filter((s) => s.is_active).length}
                 </p>
               </div>
@@ -431,16 +431,16 @@ const ProductionLineDetailPage: React.FC = () => {
       </div>
 
       {/* Tabbed Section */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         {/* Tabs */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <div className="flex">
             <button
               onClick={() => setActiveTab('equipment')}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'equipment'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -452,8 +452,8 @@ const ProductionLineDetailPage: React.FC = () => {
               onClick={() => setActiveTab('shifts')}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'shifts'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -470,14 +470,14 @@ const ProductionLineDetailPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-800">Production Line Equipment</h2>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Production Line Equipment</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Configure equipment stations and assign operators in the order products flow through
                   </p>
                 </div>
                 <button
                   onClick={() => setShowEquipmentModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
                 >
                   <Plus className="w-4 h-4" />
                   Add Equipment
@@ -485,16 +485,16 @@ const ProductionLineDetailPage: React.FC = () => {
               </div>
 
               {equipmentStations.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <Factory className="w-16 h-16 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600 font-medium">No equipment configured</p>
-                  <p className="text-sm text-gray-500 mt-1">Add equipment stations to define your production flow</p>
+                <div className="text-center py-12 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <Factory className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                  <p className="text-gray-600 dark:text-gray-300 font-medium">No equipment configured</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Add equipment stations to define your production flow</p>
                 </div>
               ) : (
                 <div>
                   {/* Visual Flow Diagram */}
-                  <div className="mb-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                  <div className="mb-6 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg p-6">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
                       <Activity className="w-4 h-4" />
                       Production Flow Visualization
                     </h3>
@@ -502,20 +502,20 @@ const ProductionLineDetailPage: React.FC = () => {
                       {equipmentStations.map((station, index) => (
                         <React.Fragment key={station.id}>
                           {/* Station Card */}
-                          <div className="flex-shrink-0 bg-white rounded-lg shadow-sm border-2 border-blue-200 p-3 w-48">
+                          <div className="flex-shrink-0 bg-white dark:bg-gray-700 rounded-lg shadow-sm border-2 border-blue-200 dark:border-blue-700 p-3 w-48">
                             <div className="flex items-center gap-2 mb-2">
-                              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                              <div className="w-6 h-6 bg-blue-600 dark:bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                                 <span className="text-xs font-bold text-white">{station.sequence_order}</span>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-gray-900 truncate">
+                                <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate">
                                   {station.station_name || station.equipment?.name}
                                 </p>
                               </div>
                             </div>
                             {station.equipment && (
                               <div className="mb-2">
-                                <p className="text-xs text-gray-600 truncate">{station.equipment.name}</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{station.equipment.name}</p>
                                 {station.equipment.status && (
                                   <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${getStatusBadgeColor(station.equipment.status)}`}>
                                     {station.equipment.status}
@@ -524,13 +524,13 @@ const ProductionLineDetailPage: React.FC = () => {
                               </div>
                             )}
                             {station.cycle_time_minutes && (
-                              <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                              <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mb-1">
                                 <Clock className="w-3 h-3" />
                                 {station.cycle_time_minutes} min
                               </div>
                             )}
                             {station.operators_data && station.operators_data.length > 0 && (
-                              <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                                 <Users className="w-3 h-3" />
                                 {station.operators_data.length} operator(s)
                               </div>
@@ -539,7 +539,7 @@ const ProductionLineDetailPage: React.FC = () => {
                           
                           {/* Arrow */}
                           {index < equipmentStations.length - 1 && (
-                            <div className="flex-shrink-0 text-blue-400">
+                            <div className="flex-shrink-0 text-blue-400 dark:text-blue-500">
                               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                               </svg>
@@ -551,12 +551,12 @@ const ProductionLineDetailPage: React.FC = () => {
                   </div>
 
                   {/* Detailed Station List */}
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Station Details</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Station Details</h3>
                   <div className="space-y-3">
                     {equipmentStations.map((station, index) => (
                       <div
                         key={station.id}
-                        className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-white"
+                        className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-600 transition-colors bg-white dark:bg-gray-700"
                       >
                         <div className="flex items-start gap-4">
                           {/* Sequence Order Controls */}
@@ -564,18 +564,18 @@ const ProductionLineDetailPage: React.FC = () => {
                             <button
                               onClick={() => handleMoveStation(station.id, 'up')}
                               disabled={index === 0}
-                              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Move up"
                             >
                               <ArrowUp className="w-4 h-4" />
                             </button>
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-bold text-blue-600">{station.sequence_order}</span>
+                            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{station.sequence_order}</span>
                             </div>
                             <button
                               onClick={() => handleMoveStation(station.id, 'down')}
                               disabled={index === equipmentStations.length - 1}
-                              className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Move down"
                             >
                               <ArrowDown className="w-4 h-4" />
@@ -586,16 +586,16 @@ const ProductionLineDetailPage: React.FC = () => {
                           <div className="flex-1">
                             <div className="flex items-start justify-between mb-3">
                               <div>
-                                <h3 className="font-semibold text-gray-900 text-lg">
+                                <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-lg">
                                   {station.station_name || station.equipment?.name || getEquipmentName(station.equipment_id)}
                                 </h3>
                                 {station.station_name && station.equipment && (
-                                  <p className="text-sm text-gray-600 mt-1">
+                                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                     Equipment: {station.equipment.name} ({station.equipment.equipment_id})
                                   </p>
                                 )}
                                 {station.equipment?.location && (
-                                  <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
                                     <MapPin className="w-3 h-3" />
                                     {station.equipment.location}
                                   </p>
@@ -604,14 +604,14 @@ const ProductionLineDetailPage: React.FC = () => {
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => handleEditStation(station)}
-                                  className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                                   title="Edit station"
                                 >
                                   <Edit className="w-5 h-5" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteEquipmentStation(station.id)}
-                                  className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                  className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                                   title="Remove from line"
                                 >
                                   <X className="w-5 h-5" />
@@ -623,7 +623,7 @@ const ProductionLineDetailPage: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                               {station.equipment?.status && (
                                 <div>
-                                  <p className="text-xs text-gray-500 mb-1">Equipment Status</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Equipment Status</p>
                                   <span className={`inline-block text-xs px-2 py-1 rounded-full font-medium ${getStatusBadgeColor(station.equipment.status)}`}>
                                     {station.equipment.status.replace('_', ' ').toUpperCase()}
                                   </span>
@@ -631,9 +631,9 @@ const ProductionLineDetailPage: React.FC = () => {
                               )}
                               {station.cycle_time_minutes && (
                                 <div>
-                                  <p className="text-xs text-gray-500 mb-1">Cycle Time</p>
-                                  <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                                    <Clock className="w-4 h-4 text-blue-600" />
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Cycle Time</p>
+                                  <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                                    <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                     {station.cycle_time_minutes} minutes
                                   </div>
                                 </div>
@@ -642,10 +642,10 @@ const ProductionLineDetailPage: React.FC = () => {
 
                             {/* Operators */}
                             {station.operators_data && station.operators_data.length > 0 && (
-                              <div className="bg-blue-50 rounded-lg p-3">
+                              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <Users className="w-4 h-4 text-blue-600" />
-                                  <p className="text-sm font-medium text-gray-900">
+                                  <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                     Assigned Operators ({station.operators_data.length})
                                   </p>
                                 </div>
@@ -653,14 +653,14 @@ const ProductionLineDetailPage: React.FC = () => {
                                   {station.operators_data.map((operator) => (
                                     <div
                                       key={operator.id}
-                                      className="bg-white px-3 py-2 rounded-lg border border-blue-200"
+                                      className="bg-white dark:bg-gray-700 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-700"
                                     >
-                                      <p className="text-sm font-medium text-gray-900">
+                                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                         {operator.full_name || 'Unknown'}
                                       </p>
-                                      <p className="text-xs text-gray-600">{operator.employee_id || 'N/A'}</p>
+                                      <p className="text-xs text-gray-600 dark:text-gray-400">{operator.employee_id || 'N/A'}</p>
                                       {operator.position && (
-                                        <p className="text-xs text-gray-500">{operator.position}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">{operator.position}</p>
                                       )}
                                     </div>
                                   ))}
@@ -670,9 +670,9 @@ const ProductionLineDetailPage: React.FC = () => {
 
                             {/* Notes */}
                             {station.notes && (
-                              <div className="mt-3 bg-yellow-50 border-l-4 border-yellow-400 p-3">
-                                <p className="text-xs font-medium text-yellow-800 mb-1">Station Notes</p>
-                                <p className="text-sm text-yellow-900">{station.notes}</p>
+                              <div className="mt-3 bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 dark:border-yellow-500 p-3">
+                                <p className="text-xs font-medium text-yellow-800 dark:text-yellow-400 mb-1">Station Notes</p>
+                                <p className="text-sm text-yellow-900 dark:text-yellow-300">{station.notes}</p>
                               </div>
                             )}
                           </div>
@@ -688,10 +688,10 @@ const ProductionLineDetailPage: React.FC = () => {
           {activeTab === 'shifts' && (
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-800">Shifts</h2>
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Shifts</h2>
                 <button
                   onClick={() => setShowShiftModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
                 >
                   <Plus className="w-4 h-4" />
                   Add Shift
@@ -699,36 +699,36 @@ const ProductionLineDetailPage: React.FC = () => {
               </div>
 
               {shifts.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg">
-                  <Clock className="w-16 h-16 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600 font-medium">No shifts configured</p>
-                  <p className="text-sm text-gray-500 mt-1">Add shifts to schedule production operations</p>
+                <div className="text-center py-12 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <Clock className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                  <p className="text-gray-600 dark:text-gray-300 font-medium">No shifts configured</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Add shifts to schedule production operations</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {shifts.map((shift) => (
-                    <div key={shift.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={shift.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-700">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-medium text-gray-900">{formatShiftType(shift.shift_type)} Shift</h3>
-                            <span className={`px-2 py-1 text-xs rounded-full ${shift.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                            <h3 className="font-medium text-gray-900 dark:text-gray-100">{formatShiftType(shift.shift_type)} Shift</h3>
+                            <span className={`px-2 py-1 text-xs rounded-full ${shift.is_active ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-400'}`}>
                               {shift.is_active ? 'Active' : 'Inactive'}
                             </span>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div className="flex items-center gap-2 text-gray-600">
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                               <Clock className="w-4 h-4" />
                               {shift.start_time} - {shift.end_time}
                             </div>
                             {shift.operators && shift.operators.length > 0 && (
-                              <div className="flex items-center gap-2 text-gray-600">
+                              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                 <Users className="w-4 h-4" />
                                 {shift.operators.length} Operators
                               </div>
                             )}
                             {shift.active_days && shift.active_days.length > 0 && (
-                              <div className="flex items-center gap-2 text-gray-600">
+                              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                 <Calendar className="w-4 h-4" />
                                 {shift.active_days.map((d) => getDayName(d - 1).slice(0, 3)).join(', ')}
                               </div>
@@ -737,7 +737,7 @@ const ProductionLineDetailPage: React.FC = () => {
                         </div>
                         <button
                           onClick={() => handleDeleteShift(shift.id)}
-                          className="text-red-600 hover:text-red-900 ml-4"
+                          className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 ml-4"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -754,21 +754,21 @@ const ProductionLineDetailPage: React.FC = () => {
       {/* Equipment Station Modal */}
       {showEquipmentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
                 {editingStation ? 'Edit Equipment Station' : 'Add Equipment Station'}
               </h2>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Equipment <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={equipmentFormData.equipment_id}
                       onChange={(e) => setEquipmentFormData({ ...equipmentFormData, equipment_id: parseInt(e.target.value) })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       required
                       disabled={!!editingStation}
                     >
@@ -780,23 +780,23 @@ const ProductionLineDetailPage: React.FC = () => {
                       ))}
                     </select>
                     {editingStation && (
-                      <p className="text-xs text-gray-500 mt-1">Equipment cannot be changed after creation</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Equipment cannot be changed after creation</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Station Name
                     </label>
                     <input
                       type="text"
                       value={equipmentFormData.station_name}
                       onChange={(e) => setEquipmentFormData({ ...equipmentFormData, station_name: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                       placeholder="e.g., Cutting Station, Assembly Station"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Cycle Time (minutes)
                     </label>
                     <input
@@ -804,30 +804,30 @@ const ProductionLineDetailPage: React.FC = () => {
                       step="0.1"
                       value={equipmentFormData.cycle_time_minutes || ''}
                       onChange={(e) => setEquipmentFormData({ ...equipmentFormData, cycle_time_minutes: e.target.value ? parseFloat(e.target.value) : undefined })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                       placeholder="Expected cycle time"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Assign Operators
                   </label>
-                  <div className="border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto">
+                  <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 max-h-48 overflow-y-auto bg-white dark:bg-gray-700">
                     {availableCraftsmen.length === 0 ? (
-                      <p className="text-sm text-gray-500">No craftsmen available</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">No craftsmen available</p>
                     ) : (
                       <div className="space-y-2">
                         {availableCraftsmen.map((craftsman) => (
-                          <label key={craftsman.id} className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded cursor-pointer">
+                          <label key={craftsman.id} className="flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-600 p-2 rounded cursor-pointer">
                             <input
                               type="checkbox"
                               checked={equipmentFormData.operators?.includes(craftsman.id)}
                               onChange={() => toggleOperator(craftsman.id)}
                               className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
                             />
-                            <span className="text-sm text-gray-900">
+                            <span className="text-sm text-gray-900 dark:text-gray-100">
                               {craftsman.user?.full_name || 'Unknown'} ({craftsman.employee_id || 'N/A'})
                             </span>
                           </label>
@@ -838,13 +838,13 @@ const ProductionLineDetailPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Notes
                   </label>
                   <textarea
                     value={equipmentFormData.notes}
                     onChange={(e) => setEquipmentFormData({ ...equipmentFormData, notes: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     rows={3}
                     placeholder="Special instructions or notes for this station..."
                   />
@@ -854,13 +854,13 @@ const ProductionLineDetailPage: React.FC = () => {
               <div className="flex items-center justify-end gap-3 mt-6">
                 <button
                   onClick={handleCancelEdit}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddEquipmentStation}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
                 >
                   {editingStation ? 'Update Station' : 'Add Station'}
                 </button>
@@ -873,19 +873,19 @@ const ProductionLineDetailPage: React.FC = () => {
       {/* Shift Modal */}
       {showShiftModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Add Shift</h2>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Add Shift</h2>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Shift Type <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={shiftFormData.shift_type}
                       onChange={(e) => setShiftFormData({ ...shiftFormData, shift_type: e.target.value as any })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     >
                       <option value="morning">Morning</option>
                       <option value="afternoon">Afternoon</option>
@@ -894,37 +894,37 @@ const ProductionLineDetailPage: React.FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
                     <select
                       value={shiftFormData.is_active ? 'active' : 'inactive'}
                       onChange={(e) => setShiftFormData({ ...shiftFormData, is_active: e.target.value === 'active' })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     >
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Start Time <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="time"
                       value={shiftFormData.start_time}
                       onChange={(e) => setShiftFormData({ ...shiftFormData, start_time: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       End Time <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="time"
                       value={shiftFormData.end_time}
                       onChange={(e) => setShiftFormData({ ...shiftFormData, end_time: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       required
                     />
                   </div>
@@ -934,13 +934,13 @@ const ProductionLineDetailPage: React.FC = () => {
               <div className="flex items-center justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowShiftModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateShift}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
                 >
                   Create Shift
                 </button>

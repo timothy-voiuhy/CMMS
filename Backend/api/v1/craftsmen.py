@@ -41,15 +41,17 @@ async def list_craftsmen(
     # Get craftsmen list
     craftsmen = craftsman_service.get_craftsmen(db, skip=skip, limit=limit, search=search)
     
-    # Enrich with user data
+    # Enrich with user data and role
     result = []
     for craftsman in craftsmen:
+        role_name = craftsman.role.name if craftsman.role else None
         result.append(CraftsmanWithUser(
             **craftsman.__dict__,
             username=craftsman.user.username,
             email=craftsman.user.email,
             full_name=craftsman.user.full_name,
-            phone=craftsman.user.phone
+            phone=craftsman.user.phone,
+            role_name=role_name
         ))
     
     total_pages = math.ceil(total / limit) if limit > 0 else 0

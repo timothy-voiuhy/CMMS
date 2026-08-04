@@ -280,8 +280,8 @@ const SettingsPage = () => {
               onClick={() => setActiveTab('company')}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'company'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -293,8 +293,8 @@ const SettingsPage = () => {
               onClick={() => setActiveTab('business')}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'business'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -306,8 +306,8 @@ const SettingsPage = () => {
               onClick={() => setActiveTab('operational')}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'operational'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -319,8 +319,8 @@ const SettingsPage = () => {
               onClick={() => setActiveTab('facilities')}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'facilities'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -332,8 +332,8 @@ const SettingsPage = () => {
               onClick={() => setActiveTab('departments')}
               className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'departments'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -351,109 +351,109 @@ const SettingsPage = () => {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Name</label>
                   <input
                     type="text"
                     value={companyForm.name || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Short Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Short Name</label>
                   <input
                     type="text"
                     value={companyForm.short_name || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, short_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Industry Type</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Industry Type</label>
                   <input
                     type="text"
                     value={companyForm.industry_type || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, industry_type: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Registration Number</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Registration Number</label>
                   <input
                     type="text"
                     value={companyForm.registration_number || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, registration_number: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tax ID</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tax ID</label>
                   <input
                     type="text"
                     value={companyForm.tax_id || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, tax_id: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
                   <textarea
                     value={companyForm.address || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
                     rows={2}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City</label>
                   <input
                     type="text"
                     value={companyForm.city || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, city: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Country</label>
                   <input
                     type="text"
                     value={companyForm.country || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, country: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
                   <input
                     type="text"
                     value={companyForm.phone || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, phone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
                   <input
                     type="email"
                     value={companyForm.email || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Website</label>
                   <input
                     type="text"
                     value={companyForm.website || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, website: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
               <button
                 onClick={handleSaveCompany}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 Save Company Information
@@ -467,11 +467,11 @@ const SettingsPage = () => {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Currency</label>
                   <select
                     value={companyForm.currency || 'USD'}
                     onChange={(e) => setCompanyForm({ ...companyForm, currency: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <option value="USD">USD - US Dollar</option>
                     <option value="EUR">EUR - Euro</option>
@@ -482,11 +482,11 @@ const SettingsPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Timezone</label>
                   <select
                     value={companyForm.timezone || 'UTC'}
                     onChange={(e) => setCompanyForm({ ...companyForm, timezone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <option value="UTC">UTC</option>
                     <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
@@ -497,11 +497,11 @@ const SettingsPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Language</label>
                   <select
                     value={companyForm.language || 'en'}
                     onChange={(e) => setCompanyForm({ ...companyForm, language: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <option value="en">English</option>
                     <option value="fr">French</option>
@@ -512,7 +512,7 @@ const SettingsPage = () => {
               <button
                 onClick={handleSaveCompany}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 Save Business Settings
@@ -525,33 +525,33 @@ const SettingsPage = () => {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Working Hours Start</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Working Hours Start</label>
                   <input
                     type="time"
                     value={companyForm.working_hours_start || '08:00'}
                     onChange={(e) => setCompanyForm({ ...companyForm, working_hours_start: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Working Hours End</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Working Hours End</label>
                   <input
                     type="time"
                     value={companyForm.working_hours_end || '17:00'}
                     onChange={(e) => setCompanyForm({ ...companyForm, working_hours_end: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Working Days (JSON format)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Working Days (JSON format)</label>
                   <input
                     type="text"
                     value={companyForm.working_days || ''}
                     onChange={(e) => setCompanyForm({ ...companyForm, working_days: e.target.value })}
                     placeholder='["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]'
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   />
-                  <p className="mt-1 text-sm text-gray-500">Enter working days as JSON array</p>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Enter working days as JSON array</p>
                 </div>
                 <div className="md:col-span-2">
                   <label className="flex items-center gap-2">
@@ -561,14 +561,14 @@ const SettingsPage = () => {
                       onChange={(e) => setCompanyForm({ ...companyForm, is_active: e.target.checked })}
                       className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                     />
-                    <span className="text-sm font-medium text-gray-700">Company Active</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Company Active</span>
                   </label>
                 </div>
               </div>
               <button
                 onClick={handleSaveCompany}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 Save Operational Settings
@@ -582,40 +582,40 @@ const SettingsPage = () => {
               <button
                 onClick={() => handleOpenFacilityDialog()}
                 disabled={!company}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
               >
                 <Plus className="w-4 h-4" />
                 Add Facility
               </button>
 
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Manager</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Code</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">City</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Manager</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {facilities.map((facility) => (
-                      <tr key={facility.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{facility.facility_code}</td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{facility.name}</td>
+                      <tr key={facility.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{facility.facility_code}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{facility.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                          <span className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded-full">
                             {facility.facility_type}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{facility.city}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{facility.manager_name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{facility.city}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{facility.manager_name}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            facility.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            facility.is_active ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-300'
                           }`}>
                             {facility.is_active ? 'Active' : 'Inactive'}
                           </span>
@@ -623,13 +623,13 @@ const SettingsPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                           <button
                             onClick={() => handleOpenFacilityDialog(facility)}
-                            className="text-blue-600 hover:text-blue-900 mr-3"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 mr-3"
                           >
                             <Edit className="w-4 h-4 inline" />
                           </button>
                           <button
                             onClick={() => handleDeleteFacility(facility.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                           >
                             <Trash2 className="w-4 h-4 inline" />
                           </button>
@@ -648,38 +648,38 @@ const SettingsPage = () => {
               <button
                 onClick={() => handleOpenDepartmentDialog()}
                 disabled={facilities.length === 0}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
               >
                 <Plus className="w-4 h-4" />
                 Add Department
               </button>
 
-              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Facility</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Manager</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cost Center</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Code</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Facility</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Manager</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Cost Center</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {departments.map((department) => (
-                      <tr key={department.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{department.department_code}</td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{department.name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
+                      <tr key={department.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{department.department_code}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{department.name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                           {facilities.find(f => f.id === department.facility_id)?.name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{department.manager_name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{department.cost_center}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{department.manager_name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{department.cost_center}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            department.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            department.is_active ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-300'
                           }`}>
                             {department.is_active ? 'Active' : 'Inactive'}
                           </span>
@@ -687,13 +687,13 @@ const SettingsPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                           <button
                             onClick={() => handleOpenDepartmentDialog(department)}
-                            className="text-blue-600 hover:text-blue-900 mr-3"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 mr-3"
                           >
                             <Edit className="w-4 h-4 inline" />
                           </button>
                           <button
                             onClick={() => handleDeleteDepartment(department.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                           >
                             <Trash2 className="w-4 h-4 inline" />
                           </button>
@@ -712,38 +712,38 @@ const SettingsPage = () => {
       {/* Facility Dialog */}
       {facilityDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 {editingFacility ? 'Edit Facility' : 'Add Facility'}
               </h3>
             </div>
             <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
                   <input
                     type="text"
                     value={facilityForm.name || ''}
                     onChange={(e) => setFacilityForm({ ...facilityForm, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Facility Code</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Facility Code</label>
                   <input
                     type="text"
                     value={facilityForm.facility_code || ''}
                     onChange={(e) => setFacilityForm({ ...facilityForm, facility_code: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Facility Type</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Facility Type</label>
                   <select
                     value={facilityForm.facility_type || 'plant'}
                     onChange={(e) => setFacilityForm({ ...facilityForm, facility_type: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <option value="plant">Plant</option>
                     <option value="warehouse">Warehouse</option>
@@ -751,71 +751,71 @@ const SettingsPage = () => {
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
                   <textarea
                     value={facilityForm.address || ''}
                     onChange={(e) => setFacilityForm({ ...facilityForm, address: e.target.value })}
                     rows={2}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">City</label>
                   <input
                     type="text"
                     value={facilityForm.city || ''}
                     onChange={(e) => setFacilityForm({ ...facilityForm, city: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Country</label>
                   <input
                     type="text"
                     value={facilityForm.country || ''}
                     onChange={(e) => setFacilityForm({ ...facilityForm, country: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Manager Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manager Name</label>
                   <input
                     type="text"
                     value={facilityForm.manager_name || ''}
                     onChange={(e) => setFacilityForm({ ...facilityForm, manager_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Manager Contact</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manager Contact</label>
                   <input
                     type="text"
                     value={facilityForm.manager_contact || ''}
                     onChange={(e) => setFacilityForm({ ...facilityForm, manager_contact: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
                   <textarea
                     value={facilityForm.notes || ''}
                     onChange={(e) => setFacilityForm({ ...facilityForm, notes: e.target.value })}
                     rows={2}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
               <button
                 onClick={() => setFacilityDialog(false)}
-                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveFacility}
-                className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
               >
                 Save
               </button>
@@ -827,21 +827,21 @@ const SettingsPage = () => {
       {/* Department Dialog */}
       {departmentDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 {editingDepartment ? 'Edit Department' : 'Add Department'}
               </h3>
             </div>
             <div className="px-6 py-4">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Facility</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Facility</label>
                   <select
                     value={departmentForm.facility_id || ''}
                     onChange={(e) => setDepartmentForm({ ...departmentForm, facility_id: parseInt(e.target.value) })}
                     disabled={!!editingDepartment}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <option value="">Select Facility</option>
                     {facilities.map((facility) => (
@@ -852,62 +852,62 @@ const SettingsPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
                   <input
                     type="text"
                     value={departmentForm.name || ''}
                     onChange={(e) => setDepartmentForm({ ...departmentForm, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Department Code</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Department Code</label>
                   <input
                     type="text"
                     value={departmentForm.department_code || ''}
                     onChange={(e) => setDepartmentForm({ ...departmentForm, department_code: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
                   <textarea
                     value={departmentForm.description || ''}
                     onChange={(e) => setDepartmentForm({ ...departmentForm, description: e.target.value })}
                     rows={2}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Manager Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Manager Name</label>
                   <input
                     type="text"
                     value={departmentForm.manager_name || ''}
                     onChange={(e) => setDepartmentForm({ ...departmentForm, manager_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cost Center</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cost Center</label>
                   <input
                     type="text"
                     value={departmentForm.cost_center || ''}
                     onChange={(e) => setDepartmentForm({ ...departmentForm, cost_center: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
               <button
                 onClick={() => setDepartmentDialog(false)}
-                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveDepartment}
-                className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
               >
                 Save
               </button>

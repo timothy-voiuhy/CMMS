@@ -71,7 +71,7 @@ const CraftsmenDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
       </div>
     )
   }
@@ -80,10 +80,10 @@ const CraftsmenDetailPage: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <p className="text-gray-500">Craftsman not found</p>
+          <p className="text-gray-500 dark:text-gray-400">Craftsman not found</p>
           <button
             onClick={() => navigate('/craftsmen')}
-            className="mt-4 text-blue-600 hover:text-blue-700"
+            className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500"
           >
             Back to Craftsmen List
           </button>
@@ -98,26 +98,26 @@ const CraftsmenDetailPage: React.FC = () => {
       <div className="mb-6">
         <button
           onClick={() => navigate('/craftsmen')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4"
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Craftsmen
         </button>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-blue-600 font-bold text-2xl">
+            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+              <span className="text-blue-600 dark:text-blue-400 font-bold text-2xl">
                 {craftsman.full_name.charAt(0).toUpperCase()}
               </span>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">{craftsman.full_name}</h1>
-              <p className="text-gray-600">{craftsman.position || 'Craftsman'}</p>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{craftsman.full_name}</h1>
+              <p className="text-gray-600 dark:text-gray-400">{craftsman.position || 'Craftsman'}</p>
             </div>
           </div>
           <button
             onClick={() => navigate(`/craftsmen/${id}/edit`)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
           >
             Edit Profile
           </button>
@@ -128,47 +128,47 @@ const CraftsmenDetailPage: React.FC = () => {
         {/* Left Column - Personal Info */}
         <div className="lg:col-span-1 space-y-6">
           {/* Basic Info Card */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Personal Information</h2>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <User className="w-5 h-5 text-gray-400 mt-0.5" />
+                <User className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Employee ID</p>
-                  <p className="text-sm font-medium text-gray-900">{craftsman.employee_id}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Employee ID</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{craftsman.employee_id}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
+                <Mail className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="text-sm font-medium text-gray-900">{craftsman.email}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{craftsman.email}</p>
                 </div>
               </div>
               {craftsman.phone && (
                 <div className="flex items-start gap-3">
-                  <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <Phone className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">Phone</p>
-                    <p className="text-sm font-medium text-gray-900">{craftsman.phone}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{craftsman.phone}</p>
                   </div>
                 </div>
               )}
               <div className="flex items-start gap-3">
-                <Briefcase className="w-5 h-5 text-gray-400 mt-0.5" />
+                <Briefcase className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-500">Department</p>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Department</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {craftsman.department || 'N/A'}
                   </p>
                 </div>
               </div>
               {craftsman.hire_date && (
                 <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <Calendar className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">Hire Date</p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Hire Date</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {new Date(craftsman.hire_date).toLocaleDateString()}
                     </p>
                   </div>
@@ -176,10 +176,10 @@ const CraftsmenDetailPage: React.FC = () => {
               )}
               {craftsman.certification_level && (
                 <div className="flex items-start gap-3">
-                  <Award className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <Award className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-500">Certification Level</p>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Certification Level</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {craftsman.certification_level}
                     </p>
                   </div>
@@ -189,20 +189,20 @@ const CraftsmenDetailPage: React.FC = () => {
           </div>
 
           {/* Skills Card */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Skills</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Skills</h2>
             <div className="flex flex-wrap gap-2">
               {craftsman.skills && craftsman.skills.length > 0 ? (
                 craftsman.skills.map((skill) => (
                   <span
                     key={skill.id}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                    className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded-full text-sm"
                   >
                     {skill.name}
                   </span>
                 ))
               ) : (
-                <p className="text-sm text-gray-500">No skills assigned</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No skills assigned</p>
               )}
             </div>
           </div>
@@ -212,40 +212,40 @@ const CraftsmenDetailPage: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Work Orders</p>
-                  <p className="text-2xl font-bold text-gray-800">{stats.totalWorkOrders}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Work Orders</p>
+                  <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{stats.totalWorkOrders}</p>
                 </div>
-                <ClipboardList className="w-8 h-8 text-blue-500" />
+                <ClipboardList className="w-8 h-8 text-blue-500 dark:text-blue-400" />
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.completedWorkOrders}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Completed</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.completedWorkOrders}</p>
                 </div>
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 font-bold">✓</span>
+                <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Pending</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.pendingWorkOrders}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.pendingWorkOrders}</p>
                 </div>
-                <TrendingUp className="w-8 h-8 text-orange-500" />
+                <TrendingUp className="w-8 h-8 text-orange-500 dark:text-orange-400" />
               </div>
             </div>
           </div>
 
           {/* Equipment Card */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
               <Wrench className="w-5 h-5" />
               Operated Equipment
             </h2>
@@ -254,21 +254,21 @@ const CraftsmenDetailPage: React.FC = () => {
                 {equipment.map((eq) => (
                   <div
                     key={eq.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100"
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600"
                   >
                     <div>
-                      <p className="font-medium text-gray-900">{eq.name}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{eq.name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {eq.equipment_id} • {eq.category}
                       </p>
                     </div>
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         eq.status === 'OPERATIONAL'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
                           : eq.status === 'MAINTENANCE'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400'
+                          : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
                       }`}
                     >
                       {eq.status}
@@ -277,13 +277,13 @@ const CraftsmenDetailPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">No equipment assigned</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">No equipment assigned</p>
             )}
           </div>
 
           {/* Work Orders Card */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
               <ClipboardList className="w-5 h-5" />
               Recent Work Orders
             </h2>
@@ -292,21 +292,21 @@ const CraftsmenDetailPage: React.FC = () => {
                 {workOrders.slice(0, 5).map((wo) => (
                   <div
                     key={wo.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
                     onClick={() => navigate(`/work-orders/${wo.id}`)}
                   >
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">{wo.title}</p>
-                      <p className="text-sm text-gray-600">WO-{wo.work_order_number}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{wo.title}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">WO-{wo.work_order_number}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           wo.priority === 'HIGH'
-                            ? 'bg-red-100 text-red-800'
+                            ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
                             : wo.priority === 'MEDIUM'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400'
+                            : 'bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-300'
                         }`}
                       >
                         {wo.priority}
@@ -314,10 +314,10 @@ const CraftsmenDetailPage: React.FC = () => {
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           wo.status === 'COMPLETED'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
                             : wo.status === 'IN_PROGRESS'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400'
+                            : 'bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-300'
                         }`}
                       >
                         {wo.status}
@@ -327,7 +327,7 @@ const CraftsmenDetailPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">No work orders assigned</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">No work orders assigned</p>
             )}
           </div>
         </div>

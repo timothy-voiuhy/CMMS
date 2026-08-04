@@ -25,6 +25,7 @@ class CraftsmanBase(BaseModel):
     employee_id: str = Field(..., max_length=50)
     department: Optional[str] = None
     position: Optional[str] = None
+    role_id: Optional[int] = None
     hire_date: Optional[str] = None
     certification_level: Optional[str] = None
     hourly_rate: Optional[float] = None
@@ -38,6 +39,7 @@ class CraftsmanCreate(CraftsmanBase):
 class CraftsmanUpdate(BaseModel):
     department: Optional[str] = None
     position: Optional[str] = None
+    role_id: Optional[int] = None
     certification_level: Optional[str] = None
     hourly_rate: Optional[float] = None
     notes: Optional[str] = None
@@ -46,6 +48,7 @@ class CraftsmanUpdate(BaseModel):
 class CraftsmanResponse(CraftsmanBase):
     id: int
     user_id: int
+    role_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
     skills: List[SkillResponse] = []
@@ -59,3 +62,4 @@ class CraftsmanWithUser(CraftsmanResponse):
     email: str
     full_name: str
     phone: Optional[str] = None
+    role_name: Optional[str] = None  # Role name for display

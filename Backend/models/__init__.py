@@ -1,5 +1,5 @@
 from models.user import User, UserRole
-from models.company import Company, Facility, Department
+from models.company import Company, Facility, Department, Role
 from models.craftsman import Craftsman, Skill
 from models.equipment import Equipment, EquipmentStatus
 from models.inventory import InventoryItem, InventoryTransaction, InventoryCategory, TransactionType
@@ -20,6 +20,7 @@ __all__ = [
     "Company",
     "Facility",
     "Department",
+    "Role",
     "Craftsman",
     "Skill",
     "Equipment",

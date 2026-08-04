@@ -88,3 +88,22 @@ class Department(Base, BaseModel):
     
     # Relationships
     facility = relationship("Facility", back_populates="departments")
+
+
+class Role(Base, BaseModel):
+    __tablename__ = "roles"
+    
+    name = Column(String(100), nullable=False, unique=True)
+    description = Column(Text, nullable=True)
+    level = Column(Integer, default=1, nullable=False)  # Hierarchy level (1=lowest, higher=more senior)
+    category = Column(String(50), nullable=True)  # e.g., "Operations", "Management", "Technical"
+    
+    # Permissions metadata (for future access control)
+    permissions_json = Column(Text, nullable=True)  # JSON string for future use
+    
+    # Settings
+    is_active = Column(Boolean, default=True, nullable=False)
+    is_system_role = Column(Boolean, default=False, nullable=False)  # System roles cannot be deleted
+    
+    # Relationships - will be used by craftsmen
+    # craftsmen = relationship("Craftsman", back_populates="role")

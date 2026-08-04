@@ -9,6 +9,7 @@ from schemas.company import (
     FacilityCreate, FacilityUpdate, FacilityResponse,
     DepartmentCreate, DepartmentUpdate, DepartmentResponse
 )
+from schemas.role import RoleCreate, RoleUpdate, RoleResponse
 from services import company_service
 
 router = APIRouter()
@@ -178,3 +179,64 @@ async def delete_department(
     deleted = company_service.delete_department(db, department_id)
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Department not found")
+
+
+# ==================== ROLE ENDPOINTS ====================
+
+@router.get("/roles", response_model=List[RoleResponse])
+async def list_roles(
+    active_only: bool = False,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get all roles."""
+    return company_service.get_roles(db, active_only)
+
+
+@router.post("/roles", response_model=RoleResponse, status_code=status.HTTP_201_CREATED)
+async def create_role(
+    role: RoleCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Create new role."""
+    return company_service.create_role(db, role)
+
+
+@router.get("/roles/{role_id}", response_model=RoleResponse)
+async def get_role(
+    role_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get role by ID."""
+    role = company_service.get_role(db, role_id)
+    if not role:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+    return role
+
+
+@router.put("/roles/{role_id}", response_model=RoleResponse)
+async def update_role(
+    role_id: int,
+    role: RoleUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update role."""
+    updated = company_service.update_role(db, role_id, role)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+    return updated
+
+
+@router.delete("/roles/{role_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_role(
+    role_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Delete role."""
+    deleted = company_service.delete_role(db, role_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")

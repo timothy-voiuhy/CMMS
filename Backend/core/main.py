@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from db.session import engine
 from db.base import Base
-from api.v1 import auth, users, craftsmen, equipment, inventory, work_orders, maintenance, production, company, quality
+from api.v1 import auth, users, craftsmen, equipment, inventory, work_orders, maintenance, production, company, quality, reports
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -34,6 +34,7 @@ app.include_router(maintenance.router, prefix="/api/v1/maintenance", tags=["Main
 app.include_router(production.router, prefix="/api/v1/production", tags=["Production"])
 app.include_router(quality.router, prefix="/api/v1/quality", tags=["Quality"])
 app.include_router(company.router, prefix="/api/v1/company", tags=["Company"])
+app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
 
 
 @app.get("/")

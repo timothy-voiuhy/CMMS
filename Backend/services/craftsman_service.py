@@ -181,14 +181,14 @@ def get_individual_craftsman_statistics(db: Session, craftsman_id: int) -> dict:
     from models.work_order import WorkOrder, WorkOrderStatus
     
     # Get work order counts
-    total_work_orders = db.query(WorkOrder).filter(WorkOrder.assigned_craftsman_id == craftsman_id).count()
+    total_work_orders = db.query(WorkOrder).filter(WorkOrder.assigned_to == craftsman_id).count()
     completed = db.query(WorkOrder).filter(
-        WorkOrder.assigned_craftsman_id == craftsman_id,
+        WorkOrder.assigned_to == craftsman_id,
         WorkOrder.status == WorkOrderStatus.COMPLETED
     ).count()
     pending = db.query(WorkOrder).filter(
-        WorkOrder.assigned_craftsman_id == craftsman_id,
-        WorkOrder.status.in_([WorkOrderStatus.OPEN, WorkOrderStatus.IN_PROGRESS])
+        WorkOrder.assigned_to == craftsman_id,
+        WorkOrder.status.in_([WorkOrderStatus.PENDING, WorkOrderStatus.IN_PROGRESS])
     ).count()
     
     # Calculate average completion time (placeholder for now)
@@ -230,7 +230,7 @@ def get_craftsman_work_orders(db: Session, craftsman_id: int) -> List:
     from models.work_order import WorkOrder
     
     work_orders = db.query(WorkOrder).filter(
-        WorkOrder.assigned_craftsman_id == craftsman_id
+        WorkOrder.assigned_to == craftsman_id
     ).all()
     
     result = []

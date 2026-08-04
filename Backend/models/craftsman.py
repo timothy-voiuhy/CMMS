@@ -39,6 +39,7 @@ class Craftsman(Base, BaseModel):
     employee_id = Column(String(50), unique=True, nullable=False)
     department = Column(String(100), nullable=True)
     position = Column(String(100), nullable=True)
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=True)  # New role field
     hire_date = Column(String(20), nullable=True)
     certification_level = Column(String(50), nullable=True)
     hourly_rate = Column(Integer, nullable=True)
@@ -46,6 +47,7 @@ class Craftsman(Base, BaseModel):
     
     # Relationships
     user = relationship("User", back_populates="craftsman")
+    role = relationship("Role")  # New role relationship
     skills = relationship("Skill", secondary=craftsman_skills, back_populates="craftsmen")
     work_orders = relationship("WorkOrder", back_populates="craftsman", foreign_keys="WorkOrder.assigned_to")
     maintenance_reports = relationship("MaintenanceReport", back_populates="craftsman")

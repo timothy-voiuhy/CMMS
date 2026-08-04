@@ -38,6 +38,8 @@ import PackagingPage from './pages/production/PackagingPage'
 import PackagingFormPage from './pages/production/PackagingFormPage'
 import PackagingDetailPage from './pages/production/PackagingDetailPage'
 import QualityPage from './pages/quality/QualityPage'
+import InspectionFormPage from './pages/quality/InspectionFormPage'
+import NCRFormPage from './pages/quality/NCRFormPage'
 import ReportsPage from './pages/reports/ReportsPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import ProfilePage from './pages/profile/ProfilePage'
@@ -135,6 +137,12 @@ function App() {
           
           {/* Quality Routes */}
           <Route path="/quality" element={<QualityPage />} />
+          <Route path="/quality/inspections/new" element={<InspectionFormPage />} />
+          <Route path="/quality/inspections/:id" element={<InspectionFormPage />} />
+          <Route path="/quality/inspections/:id/edit" element={<InspectionFormPage />} />
+          <Route path="/quality/ncrs/new" element={<NCRFormPage />} />
+          <Route path="/quality/ncrs/:id" element={<NCRFormPage />} />
+          <Route path="/quality/ncrs/:id/edit" element={<NCRFormPage />} />
           
           {/* Reports Routes */}
           <Route path="/reports" element={<ReportsPage />} />

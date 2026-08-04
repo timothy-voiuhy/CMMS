@@ -22,7 +22,7 @@ from models import (
     InspectionStatus, InspectionResult, NCRStatus, NCRSeverity
 )
 from core.security import get_password_hash
-
+from datetime import datetime
 
 def load_seed_data():
     """Load seed data from JSON file."""
@@ -353,6 +353,108 @@ def seed_production_orders(db: Session, lines: dict, orders_data: list):
     return orders
 
 
+def seed_quality_inspections(db: Session, users: dict, production_orders: list, inspections_data: list):
+    """Seed quality inspections."""
+    print("\nCreating quality inspections...")
+    inspections = []
+    
+    # Get first admin user as inspector
+    admin_users = [u for u in users.values() if u.role == UserRole.ADMIN]
+    inspector = admin_users[0] if admin_users else list(users.values())[0]
+    
+    inspection_num = 1
+    for insp_data in inspections_data:
+        items_data = insp_data.pop('inspection_items', [])
+        
+        # Set inspector
+        insp_data['inspector_id'] = inspector.id
+        
+        # Generate inspection number
+        insp_data['inspection_number'] = f"QI-{inspection_num:06d}"
+        inspection_num += 1
+        
+        # Parse datetime strings
+        if 'inspection_date' in insp_data and isinstance(insp_data['inspection_date'], str):
+            insp_data['inspection_date'] = datetime.fromisoformat(insp_data['inspection_date'])
+        
+        if 'completed_at' in insp_data and isinstance(insp_data['completed_at'], str):
+            insp_data['completed_at'] = datetime.fromisoformat(insp_data['completed_at'])
+        
+        # Link to production order if batch_number matches
+        if 'batch_number' in insp_data and production_orders:
+            for order in production_orders:
+                insp_data['production_order_id'] = order.id
+                break
+        
+        inspection = QualityInspection(**insp_data)
+        db.add(inspection)
+        db.flush()
+        
+        # Add inspection items
+        for item_data in items_data:
+            item_data['inspection_id'] = inspection.id
+            item = QualityInspectionItem(**item_data)
+            db.add(item)
+        
+        inspections.append(inspection)
+    
+    db.commit()
+    for inspection in inspections:
+        db.refresh(inspection)
+    print(f"✓ Created {len(inspections)} quality inspections")
+    return inspections
+
+
+def seed_ncrs(db: Session, users: dict, quality_inspections: list, production_orders: list, equipment: list, ncrs_data: list):
+    """Seed non-conformance reports."""
+    print("\nCreating non-conformance reports...")
+    ncrs = []
+    
+    # Get users for reporting and assignment
+    admin_users = [u for u in users.values() if u.role == UserRole.ADMIN]
+    reporter = admin_users[0] if admin_users else list(users.values())[0]
+    user_list = list(users.values())
+    assigned_to = user_list[1] if len(user_list) > 1 else reporter
+    
+    ncr_num = 1
+    for ncr_data in ncrs_data:
+        # Generate NCR number
+        ncr_data['ncr_number'] = f"NCR-{ncr_num:06d}"
+        ncr_num += 1
+        
+        # Set reporter and assignee
+        ncr_data['reported_by_id'] = reporter.id
+        ncr_data['assigned_to_id'] = assigned_to.id
+        
+        # Parse datetime strings
+        if 'closed_at' in ncr_data and isinstance(ncr_data['closed_at'], str):
+            ncr_data['closed_at'] = datetime.fromisoformat(ncr_data['closed_at'])
+        
+        # Link to inspection if batch matches
+        if 'batch_number' in ncr_data and quality_inspections:
+            batch = ncr_data['batch_number']
+            matching_insp = next((i for i in quality_inspections if i.batch_number == batch), None)
+            if matching_insp:
+                ncr_data['inspection_id'] = matching_insp.id
+                ncr_data['production_order_id'] = matching_insp.production_order_id
+        
+        # Link to equipment if mentioned
+        if equipment and ncr_data.get('title', '').lower().find('fryer') >= 0:
+            fryer = next((e for e in equipment if 'fryer' in e.name.lower()), None)
+            if fryer:
+                ncr_data['equipment_id'] = fryer.id
+        
+        ncr = NonConformanceReport(**ncr_data)
+        db.add(ncr)
+        ncrs.append(ncr)
+    
+    db.commit()
+    for ncr in ncrs:
+        db.refresh(ncr)
+    print(f"✓ Created {len(ncrs)} non-conformance reports")
+    return ncrs
+
+
 def main():
     """Main seeding function."""
     print("=" * 60)
@@ -451,7 +553,7 @@ def main():
             print(f"  - Non-Conformance Reports: {len(ncrs)}")
         print("\nDefault login credentials:")
         print("  Username: admin")
-        print("  Password: Admin@123")
+        print("  Password: admin123")
         print("\n")
         
     except Exception as e:
@@ -464,91 +566,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-def seed_quality_inspections(db: Session, users: list, production_orders: list, inspections_data: list):
-    """Seed quality inspections."""
-    print("\nCreating quality inspections...")
-    inspections = []
-    
-    # Get first admin user as inspector
-    inspector = next((u for u in users if u.role == UserRole.ADMIN), users[0])
-    
-    inspection_num = 1
-    for insp_data in inspections_data:
-        items_data = insp_data.pop('inspection_items', [])
-        
-        # Set inspector
-        insp_data['inspector_id'] = inspector.id
-        
-        # Generate inspection number
-        insp_data['inspection_number'] = f"QI-{inspection_num:06d}"
-        inspection_num += 1
-        
-        # Link to production order if batch_number matches
-        if 'batch_number' in insp_data and production_orders:
-            for order in production_orders:
-                insp_data['production_order_id'] = order.id
-                break
-        
-        inspection = QualityInspection(**insp_data)
-        db.add(inspection)
-        db.flush()
-        
-        # Add inspection items
-        for item_data in items_data:
-            item_data['inspection_id'] = inspection.id
-            item = QualityInspectionItem(**item_data)
-            db.add(item)
-        
-        inspections.append(inspection)
-    
-    db.commit()
-    for inspection in inspections:
-        db.refresh(inspection)
-    print(f"✓ Created {len(inspections)} quality inspections")
-    return inspections
-
-
-def seed_ncrs(db: Session, users: list, quality_inspections: list, production_orders: list, equipment: list, ncrs_data: list):
-    """Seed non-conformance reports."""
-    print("\nCreating non-conformance reports...")
-    ncrs = []
-    
-    # Get users for reporting and assignment
-    reporter = next((u for u in users if u.role == UserRole.ADMIN), users[0])
-    assigned_to = next((u for u in users if u.username != reporter.username), users[0])
-    
-    ncr_num = 1
-    for ncr_data in ncrs_data:
-        # Generate NCR number
-        ncr_data['ncr_number'] = f"NCR-{ncr_num:06d}"
-        ncr_num += 1
-        
-        # Set reporter and assignee
-        ncr_data['reported_by_id'] = reporter.id
-        ncr_data['assigned_to_id'] = assigned_to.id
-        
-        # Link to inspection if batch matches
-        if 'batch_number' in ncr_data and quality_inspections:
-            batch = ncr_data['batch_number']
-            matching_insp = next((i for i in quality_inspections if i.batch_number == batch), None)
-            if matching_insp:
-                ncr_data['inspection_id'] = matching_insp.id
-                ncr_data['production_order_id'] = matching_insp.production_order_id
-        
-        # Link to equipment if mentioned
-        if equipment and ncr_data.get('title', '').lower().find('fryer') >= 0:
-            fryer = next((e for e in equipment if 'fryer' in e.name.lower()), None)
-            if fryer:
-                ncr_data['equipment_id'] = fryer.id
-        
-        ncr = NonConformanceReport(**ncr_data)
-        db.add(ncr)
-        ncrs.append(ncr)
-    
-    db.commit()
-    for ncr in ncrs:
-        db.refresh(ncr)
-    print(f"✓ Created {len(ncrs)} non-conformance reports")
-    return ncrs
