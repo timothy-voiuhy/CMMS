@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from sqlalchemy.orm import Session
 from db.session import SessionLocal
 from db.base import Base
+from core.permissions import ROLE_TEMPLATES
 from models import (
     User, Company, Facility, Department, Craftsman, Skill,
     Equipment, InventoryItem, UserRole, EquipmentStatus, InventoryCategory,
@@ -110,6 +111,10 @@ def seed_users(db: Session, users_data: list):
 def seed_roles(db: Session):
     """Seed default roles."""
     print("\nCreating roles...")
+    template_by_role_name = {
+        template["name"]: template_key
+        for template_key, template in ROLE_TEMPLATES.items()
+    }
     
     default_roles = [
         {
@@ -133,6 +138,22 @@ def seed_roles(db: Session):
             "description": "Oversees quality assurance and control",
             "level": 9,
             "category": "Management",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Sales Manager",
+            "description": "Manages customers, sales orders, and dispatch coordination",
+            "level": 9,
+            "category": "Management",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Sales Representative",
+            "description": "Creates customer records and draft sales orders",
+            "level": 4,
+            "category": "Operations",
             "is_system_role": False,
             "is_active": True
         },
@@ -209,6 +230,22 @@ def seed_roles(db: Session):
             "is_active": True
         },
         {
+            "name": "Inventory Clerk",
+            "description": "Manages inventory operations",
+            "level": 3,
+            "category": "Operations",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
+            "name": "Dispatch Clerk",
+            "description": "Fulfills confirmed sales orders and issues finished goods stock",
+            "level": 3,
+            "category": "Operations",
+            "is_system_role": False,
+            "is_active": True
+        },
+        {
             "name": "Packaging Operator",
             "description": "Handles packaging operations",
             "level": 3,
@@ -229,6 +266,13 @@ def seed_roles(db: Session):
     roles = []
     for role_data in default_roles:
         role = Role(**role_data)
+        template_key = template_by_role_name.get(role.name)
+        if template_key:
+            role.set_permissions(
+                ROLE_TEMPLATES[template_key]["permissions"],
+                template=template_key,
+                custom=False,
+            )
         db.add(role)
         db.commit()
         db.refresh(role)

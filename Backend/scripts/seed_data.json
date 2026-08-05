@@ -87,6 +87,62 @@
       "phone": "+256-XXX-XXXXXX"
     },
     {
+      "username": "gmukasa",
+      "email": "grace.mukasa@psalmsfood.com",
+      "full_name": "Grace Mukasa",
+      "password": "gm123",
+      "role": "manager",
+      "phone": "+256-700-000001"
+    },
+    {
+      "username": "lwaswa",
+      "email": "daniel.lwaswa@psalmsfood.com",
+      "full_name": "Daniel Lwaswa",
+      "password": "prod123",
+      "role": "production",
+      "phone": "+256-700-000002"
+    },
+    {
+      "username": "mbabazi",
+      "email": "helen.mbabazi@psalmsfood.com",
+      "full_name": "Helen Mbabazi",
+      "password": "maint123",
+      "role": "manager",
+      "phone": "+256-700-000003"
+    },
+    {
+      "username": "nakyeyune",
+      "email": "rose.nakyeyune@psalmsfood.com",
+      "full_name": "Rose Nakyeyune",
+      "password": "quality123",
+      "role": "quality",
+      "phone": "+256-700-000004"
+    },
+    {
+      "username": "sserwanga",
+      "email": "martin.sserwanga@psalmsfood.com",
+      "full_name": "Martin Sserwanga",
+      "password": "sales123",
+      "role": "manager",
+      "phone": "+256-700-000005"
+    },
+    {
+      "username": "akeru",
+      "email": "juliet.akeru@psalmsfood.com",
+      "full_name": "Juliet Akeru",
+      "password": "salesrep123",
+      "role": "readonly",
+      "phone": "+256-700-000006"
+    },
+    {
+      "username": "kisembo",
+      "email": "paul.kisembo@psalmsfood.com",
+      "full_name": "Paul Kisembo",
+      "password": "dispatch123",
+      "role": "inventory",
+      "phone": "+256-700-000007"
+    },
+    {
       "username": "nnamutebi",
       "email": "nancy.namutebi@psalmsfood.com",
       "full_name": "Nancy Namutebi",
@@ -172,6 +228,16 @@
       "name": "Packaging Equipment",
       "description": "Packaging line setup, sealing, and film feed troubleshooting",
       "category": "Packaging"
+    },
+    {
+      "name": "Operations Leadership",
+      "description": "Plant operations planning, cross-functional coordination, and approvals",
+      "category": "Management"
+    },
+    {
+      "name": "Sales Operations",
+      "description": "Customer account management, order capture, and dispatch coordination",
+      "category": "Sales"
     }
   ],
   "craftsmen": [
@@ -207,6 +273,94 @@
       "certification_level": "Level 4",
       "hourly_rate": 30000,
       "skills": ["Electrical Maintenance", "Mechanical Maintenance", "PLC Troubleshooting", "Food Processing Equipment"]
+    },
+    {
+      "user_username": "gmukasa",
+      "employee_id": "EMP-008",
+      "department": "Management",
+      "position": "General Manager",
+      "role_name": "General Manager",
+      "hire_date": "2018-01-08",
+      "certification_level": "Executive",
+      "hourly_rate": 50000,
+      "skills": ["Operations Leadership"]
+    },
+    {
+      "user_username": "lwaswa",
+      "employee_id": "EMP-009",
+      "department": "Production",
+      "position": "Production Manager",
+      "role_name": "Production Manager",
+      "hire_date": "2019-05-14",
+      "certification_level": "Level 4",
+      "hourly_rate": 36000,
+      "skills": ["Operations Leadership", "Food Processing Equipment"]
+    },
+    {
+      "user_username": "mbabazi",
+      "employee_id": "EMP-010",
+      "department": "Maintenance",
+      "position": "Maintenance Manager",
+      "role_name": "Maintenance Manager",
+      "hire_date": "2018-10-22",
+      "certification_level": "Level 4",
+      "hourly_rate": 38000,
+      "skills": ["Operations Leadership", "Electrical Maintenance", "Mechanical Maintenance"]
+    },
+    {
+      "user_username": "nakyeyune",
+      "employee_id": "EMP-011",
+      "department": "Quality Control",
+      "position": "Quality Manager",
+      "role_name": "Quality Manager",
+      "hire_date": "2020-06-02",
+      "certification_level": "Level 4",
+      "hourly_rate": 34000,
+      "skills": ["Operations Leadership", "Food Processing Equipment"]
+    },
+    {
+      "user_username": "sserwanga",
+      "employee_id": "EMP-012",
+      "department": "Sales",
+      "position": "Sales Manager",
+      "role_name": "Sales Manager",
+      "hire_date": "2021-01-11",
+      "certification_level": "Level 3",
+      "hourly_rate": 33000,
+      "skills": ["Sales Operations", "Operations Leadership"]
+    },
+    {
+      "user_username": "akeru",
+      "employee_id": "EMP-013",
+      "department": "Sales",
+      "position": "Sales Representative",
+      "role_name": "Sales Representative",
+      "hire_date": "2023-02-13",
+      "certification_level": "Level 2",
+      "hourly_rate": 18000,
+      "skills": ["Sales Operations"]
+    },
+    {
+      "user_username": "pkato",
+      "employee_id": "EMP-014",
+      "department": "Warehouse",
+      "position": "Inventory Clerk",
+      "role_name": "Inventory Clerk",
+      "hire_date": "2022-07-04",
+      "certification_level": "Level 2",
+      "hourly_rate": 18000,
+      "skills": ["Operations Leadership"]
+    },
+    {
+      "user_username": "kisembo",
+      "employee_id": "EMP-015",
+      "department": "Dispatch",
+      "position": "Dispatch Clerk",
+      "role_name": "Dispatch Clerk",
+      "hire_date": "2023-03-27",
+      "certification_level": "Level 1",
+      "hourly_rate": 16000,
+      "skills": ["Sales Operations"]
     },
     {
       "user_username": "okello",

@@ -1,5 +1,5 @@
 services:
-  icms-db:
+  db:
     image: postgres:16-alpine
     container_name: icms-postgres
     restart: unless-stopped
@@ -18,14 +18,14 @@ services:
       retries: 5
       start_period: 10s
 
-  icms-backend:
+  backend:
     build:
       context: ./Backend
       dockerfile: Dockerfile
     container_name: icms-backend
     restart: unless-stopped
     depends_on:
-      icms-db:
+      db:
         condition: service_healthy
     environment:
       APP_NAME: ICMS Backend
