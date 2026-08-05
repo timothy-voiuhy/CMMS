@@ -115,6 +115,12 @@ def seed_roles(db: Session):
         template["name"]: template_key
         for template_key, template in ROLE_TEMPLATES.items()
     }
+    template_by_role_name.update({
+        "Senior Technician": "maintenance_technician",
+        "Technician": "maintenance_technician",
+        "Packaging Team Leader": "production_team_leader",
+        "Packaging Operator": "machine_operator",
+    })
     
     default_roles = [
         {

@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
-import { useAuthStore } from './store/authStore'
+import { useAuthStore, type User as AuthStoreUser } from './store/authStore'
 import { useThemeStore } from './store/themeStore'
 import { useCompanyStore } from './store/companyStore'
 import { PermissionRoute } from './components/auth/PermissionGuard'
@@ -55,8 +55,17 @@ import ReportsPage from './pages/reports/ReportsPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import ProfilePage from './pages/profile/ProfilePage'
 import NotificationsPage from './pages/notifications/NotificationsPage'
+import RoleTestingPage from './pages/dev/RoleTestingPage'
 
 import authService from './services/auth.service'
+
+const toAuthStoreRole = (role?: string): AuthStoreUser['role'] => {
+  const normalized = (role || 'readonly').toLowerCase()
+  const allowedRoles: AuthStoreUser['role'][] = ['admin', 'craftsman', 'inventory', 'production', 'quality', 'manager', 'readonly']
+  return allowedRoles.includes(normalized as AuthStoreUser['role'])
+    ? normalized as AuthStoreUser['role']
+    : 'readonly'
+}
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -86,13 +95,13 @@ function App() {
   // Sync user profile and permissions from backend on session mount/refresh
   useEffect(() => {
     if (isAuthenticated) {
-      authService.getCurrentUser().then((userData: any) => {
+      authService.getCurrentUser().then((userData) => {
         updateUser({
           id: userData.id.toString(),
           username: userData.username,
           full_name: userData.full_name,
           email: userData.email,
-          role: (userData.role || 'readonly').toLowerCase() as any,
+          role: toAuthStoreRole(userData.role),
           is_active: userData.is_active,
           phone: userData.phone,
           created_at: userData.created_at || '',
@@ -117,6 +126,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/setup" element={<SetupPage />} />
         </Route>
+        <Route path="/dev/role-testing" element={<RoleTestingPage />} />
 
         {/* Protected Routes */}
         <Route

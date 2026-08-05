@@ -37,7 +37,7 @@ def upgrade() -> None:
     sa.Column('language', sa.String(length=10), nullable=False),
     sa.Column('working_hours_start', sa.String(length=10), nullable=True),
     sa.Column('working_hours_end', sa.String(length=10), nullable=True),
-    sa.Column('working_days', sa.String(length=50), nullable=True),
+    sa.Column('working_days', sa.Text(), nullable=True),
     sa.Column('logo_url', sa.String(length=500), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),

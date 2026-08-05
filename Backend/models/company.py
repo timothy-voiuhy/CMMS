@@ -32,7 +32,7 @@ class Company(Base, BaseModel):
     # Operational Settings
     working_hours_start = Column(String(10), nullable=True)
     working_hours_end = Column(String(10), nullable=True)
-    working_days = Column(String(50), nullable=True)  # JSON: ["Monday", "Tuesday", ...]
+    working_days = Column(Text, nullable=True)  # JSON: ["Monday", "Tuesday", ...]
     
     # Logo and branding
     logo_url = Column(String(500), nullable=True)

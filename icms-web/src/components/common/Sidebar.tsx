@@ -16,7 +16,9 @@ import {
   FileText,
   ShoppingCart,
   UserCog,
+  FlaskConical,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useCompanyStore } from '../../store/companyStore'
 import { useState, useMemo } from 'react'
@@ -28,7 +30,7 @@ interface SidebarProps {
 
 interface NavItem {
   path: string
-  icon: any
+  icon: LucideIcon
   label: string
   /** Permission required to see this item (e.g., 'equipment.view') */
   permission?: string
@@ -87,6 +89,7 @@ const navItems: NavItem[] = [
   { path: '/quality', icon: ShieldCheck, label: 'Quality', permission: 'quality.view' },
   { path: '/reports', icon: BarChart3, label: 'Reports', permission: 'reports.view' },
   { path: '/settings', icon: Settings, label: 'Settings', permission: 'settings.view' },
+  { path: '/dev/role-testing', icon: FlaskConical, label: 'Role Testing' },
 ]
 
 const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
@@ -136,7 +139,7 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       if (item.children && item.children.length === 0) return false
       return true
     })
-  }, [user, hasPermission])
+  }, [hasPermission])
 
   return (
     <>

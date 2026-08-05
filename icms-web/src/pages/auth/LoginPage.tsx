@@ -1,15 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAuthStore } from '../../store/authStore'
+import { useAuthStore, type User as AuthStoreUser } from '../../store/authStore'
 import { authService } from '../../services/auth.service'
-import { LogIn, ShieldAlert, Eye, EyeOff } from 'lucide-react'
+import { LogIn, Eye, EyeOff, Users } from 'lucide-react'
+
+const toAuthStoreRole = (role?: string): AuthStoreUser['role'] => {
+  const normalized = (role || 'readonly').toLowerCase()
+  const allowedRoles: AuthStoreUser['role'][] = ['admin', 'craftsman', 'inventory', 'production', 'quality', 'manager', 'readonly']
+  return allowedRoles.includes(normalized as AuthStoreUser['role'])
+    ? normalized as AuthStoreUser['role']
+    : 'readonly'
+}
 
 const LoginPage = () => {
   const navigate = useNavigate()
   const { login, logout } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [setupRequired, setSetupRequired] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     username: '',
@@ -22,7 +29,6 @@ const LoginPage = () => {
       try {
         const res = await authService.checkSetupStatus()
         if (res.setup_required) {
-          setSetupRequired(true)
           navigate('/setup', { replace: true })
         }
       } catch (err) {
@@ -66,7 +72,7 @@ const LoginPage = () => {
       tempStore.login(tempUser, response.access_token, response.refresh_token)
       
       // Now get user info with the token in place (includes resolved permissions)
-      const user = await authService.getCurrentUser() as any
+      const user = await authService.getCurrentUser()
 
       // Now set the real user data with the token and permissions
       login(
@@ -75,7 +81,7 @@ const LoginPage = () => {
           username: user.username,
           full_name: user.full_name,
           email: user.email,
-          role: (user.role || 'readonly').toLowerCase() as any,
+          role: toAuthStoreRole(user.role),
           is_active: user.is_active,
           phone: user.phone,
           created_at: user.created_at || '',
@@ -87,22 +93,25 @@ const LoginPage = () => {
       )
 
       navigate('/dashboard')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err)
       logout()
       
       // Handle validation errors (422) which return an array
       let errorMessage = 'Invalid username or password'
       
-      if (err.response?.data?.detail) {
-        const detail = err.response.data.detail
-        if (Array.isArray(detail)) {
-          // Format validation errors
-          errorMessage = detail.map((e: any) => e.msg || e.message).join(', ')
-        } else if (typeof detail === 'string') {
-          errorMessage = detail
+      if (typeof err === 'object' && err !== null && 'response' in err) {
+        const response = (err as { response?: { data?: { detail?: unknown }; status?: number; statusText?: string } }).response
+        const detail = response?.data?.detail
+        if (detail) {
+          if (Array.isArray(detail)) {
+            // Format validation errors
+            errorMessage = detail.map((e: { msg?: string; message?: string }) => e.msg || e.message).join(', ')
+          } else if (typeof detail === 'string') {
+            errorMessage = detail
+          }
         }
-      } else if (err.message) {
+      } else if (err instanceof Error) {
         errorMessage = err.message
       }
       
@@ -110,10 +119,16 @@ const LoginPage = () => {
       
       // Log full error details to console so you can see them
       console.error('Full error details:', {
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data,
-        message: err.message,
+        status: typeof err === 'object' && err !== null && 'response' in err
+          ? (err as { response?: { status?: number } }).response?.status
+          : undefined,
+        statusText: typeof err === 'object' && err !== null && 'response' in err
+          ? (err as { response?: { statusText?: string } }).response?.statusText
+          : undefined,
+        data: typeof err === 'object' && err !== null && 'response' in err
+          ? (err as { response?: { data?: unknown } }).response?.data
+          : undefined,
+        message: err instanceof Error ? err.message : undefined,
       })
     } finally {
       setLoading(false)
@@ -213,6 +228,16 @@ const LoginPage = () => {
       </form>
 
       <div className="mt-6 text-center">
+        <Link
+          to="/dev/role-testing"
+          className="inline-flex items-center justify-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
+        >
+          <Users className="h-4 w-4" />
+          Open development role tester
+        </Link>
+      </div>
+
+      <div className="mt-4 text-center">
         <p className="text-sm text-gray-600">
           Need help?{' '}
           <button type="button" className="text-blue-600 hover:text-blue-700 font-medium">

@@ -19,6 +19,9 @@ export interface User {
   role: string
   is_active: boolean
   phone?: string
+  created_at?: string
+  updated_at?: string
+  permissions?: string[]
 }
 
 export interface RefreshTokenResponse {
