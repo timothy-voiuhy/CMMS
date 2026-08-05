@@ -1,5 +1,5 @@
 services:
-  db:
+  icms-db:
     image: postgres:16-alpine
     container_name: icms-postgres
     restart: unless-stopped
@@ -18,7 +18,7 @@ services:
       retries: 5
       start_period: 10s
 
-  backend:
+  icms-backend:
     build:
       context: ./Backend
       dockerfile: Dockerfile
@@ -30,8 +30,8 @@ services:
     environment:
       APP_NAME: ICMS Backend
       APP_VERSION: 1.0.0
-      DEBUG: "False"
-      ENVIRONMENT: production
+      DEBUG: "True"
+      ENVIRONMENT: development
       HOST: 0.0.0.0
       PORT: "8000"
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-icms}:${POSTGRES_PASSWORD:-icms_password}@db:5432/${POSTGRES_DB:-icms}
@@ -45,7 +45,7 @@ services:
       LOG_LEVEL: INFO
       LOG_FILE: ./logs/icms.log
       RUN_MIGRATIONS: "true"
-      RUN_SEED_DATA: ${RUN_SEED_DATA:-false}
+      RUN_SEED_DATA: ${RUN_SEED_DATA:-true}
       SEED_DATA_RESEED: ${SEED_DATA_RESEED:-false}
     ports:
       - "8000:8000"
