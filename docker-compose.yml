@@ -25,7 +25,7 @@ services:
     container_name: icms-backend
     restart: unless-stopped
     depends_on:
-      db:
+      icms-db:
         condition: service_healthy
     environment:
       APP_NAME: ICMS Backend
