@@ -100,7 +100,7 @@ const EquipmentFormPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="max-w-4xl mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <button
@@ -126,11 +126,11 @@ const EquipmentFormPage: React.FC = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Basic Information */}
           <div>
             <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Basic Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Equipment Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -223,7 +223,7 @@ const EquipmentFormPage: React.FC = () => {
           {/* Equipment Details */}
           <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Equipment Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Manufacturer */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -297,7 +297,7 @@ const EquipmentFormPage: React.FC = () => {
           {/* Additional Information */}
           <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Additional Information</h2>
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Specifications */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -330,7 +330,7 @@ const EquipmentFormPage: React.FC = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-1 gap-3 sm:flex sm:justify-end sm:gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
           <button
             type="button"
             onClick={() => navigate('/equipment')}

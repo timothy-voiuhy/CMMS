@@ -227,10 +227,10 @@ const InventoryGridPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/inventory')}

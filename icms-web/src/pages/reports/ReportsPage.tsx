@@ -147,11 +147,11 @@ const ReportsPage = () => {
   ]
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
+          <div className="flex items-start gap-3">
             <BarChart3 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             <div>
               <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Reports & Analytics</h1>
@@ -163,7 +163,7 @@ const ReportsPage = () => {
 
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30"
+            className="flex w-full items-center justify-center gap-2 px-4 py-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 sm:w-auto"
           >
             <Download className="w-4 h-4" />
             Export Report
@@ -171,25 +171,28 @@ const ReportsPage = () => {
         </div>
 
         {/* Date Range Filter */}
-        <div className="flex items-center gap-4 bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-4">
-          <Calendar className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-          <div className="flex items-center gap-3">
-            <div>
+        <div className="flex flex-col gap-3 bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-4 sm:flex-row sm:items-center sm:gap-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 sm:w-auto">
+            <Calendar className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+            Date range
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="min-w-0">
               <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Start Date</label>
               <input
                 type="date"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">End Date</label>
               <input
                 type="date"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -204,15 +207,15 @@ const ReportsPage = () => {
       </div>
 
       {/* Category Tabs */}
-      <div className="mb-6 overflow-x-auto">
-        <div className="flex gap-2 min-w-max">
+      <div className="mb-6 -mx-1 overflow-x-auto px-1">
+        <div className="flex min-w-max gap-2 pb-1">
           {categories.map((cat) => {
             const Icon = cat.icon
             return (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id as ReportCategory)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg font-medium transition-colors sm:px-4 ${
                   activeCategory === cat.id
                     ? 'bg-blue-600 dark:bg-blue-500 text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'

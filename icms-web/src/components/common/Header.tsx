@@ -53,8 +53,21 @@ const Header = ({ onMenuClick }: HeaderProps) => {
   const loadNotifications = async () => {
     try {
       const data = await notificationService.getNotifications({ limit: 10 })
-      setNotifications(data.data)
-      setUnreadCount(data.unread_count)
+      const userPermissions = user?.permissions || []
+      const isAdmin = user?.role === 'admin'
+
+      const filtered = data.data.filter((n) => {
+        if (isAdmin) return true
+        if (n.type === 'work_order') return userPermissions.includes('work_orders.view') || userPermissions.includes('*')
+        if (n.type === 'inventory') return userPermissions.includes('inventory.view') || userPermissions.includes('*')
+        if (n.type === 'maintenance') return userPermissions.includes('maintenance.view') || userPermissions.includes('*')
+        if (n.type === 'quality') return userPermissions.includes('quality.view') || userPermissions.includes('*')
+        if (['info', 'success', 'warning', 'error'].includes(n.type)) return true
+        return false
+      })
+
+      setNotifications(filtered)
+      setUnreadCount(filtered.filter((n) => !n.read).length)
     } catch (error) {
       console.error('Failed to load notifications:', error)
     }
@@ -151,9 +164,9 @@ const Header = ({ onMenuClick }: HeaderProps) => {
   }
 
   return (
-    <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
+    <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-3 sm:px-4 lg:px-6">
       {/* Left Section */}
-      <div className="flex items-center space-x-4 flex-1">
+      <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
         <button
           onClick={onMenuClick}
           className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -175,7 +188,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1 sm:space-x-2">
         {/* Theme Toggle */}
         <div className="relative" ref={themeMenuRef}>
           <button

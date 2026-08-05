@@ -52,7 +52,7 @@ fi
 mkdir -p logs uploads
 
 # Run the server
-echo "🌐 Server starting at http://localhost:8000"
+echo "🌐 Server starting at http://0.0.0.0:8000"
 echo "📚 API Docs available at http://localhost:8000/docs"
 echo ""
-python -m uvicorn core.main:app --host 127.0.0.1 --port 8000 --reload
+python -m uvicorn core.main:app --host 0.0.0.0 --port 8000 --reload

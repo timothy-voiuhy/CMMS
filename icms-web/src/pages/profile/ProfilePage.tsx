@@ -101,7 +101,7 @@ const ProfilePage = () => {
 
   if (!authUser) {
     return (
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="text-center">
           <p className="text-gray-600 dark:text-gray-400">Please log in to view your profile</p>
         </div>
@@ -110,7 +110,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-4">
@@ -135,7 +135,7 @@ const ProfilePage = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Profile Card */}
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-6">
@@ -210,7 +210,7 @@ const ProfilePage = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {activeTab === 'profile' && (
                 <div className="space-y-6">
                   <div>

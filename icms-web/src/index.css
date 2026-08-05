@@ -93,3 +93,107 @@ body {
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
 }
+
+.app-content > .p-6,
+.app-content > .p-8,
+.app-content > .px-6 {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .app-content > .p-6,
+  .app-content > .p-8,
+  .app-content > .py-6 {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .app-content {
+    font-size: 0.9375rem;
+  }
+
+  .app-content h1 {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+
+  .app-content h2 {
+    font-size: 1.075rem;
+    line-height: 1.35;
+  }
+
+  .app-content .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem !important;
+  }
+
+  .app-content .gap-6 {
+    gap: 1rem !important;
+  }
+
+  .app-content .gap-4 {
+    gap: 0.75rem !important;
+  }
+
+  .app-content .p-8,
+  .app-content .p-6,
+  .app-content .p-5 {
+    padding: 1rem !important;
+  }
+
+  .app-content .px-6 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .app-content .py-4 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  .app-content th.px-6,
+  .app-content td.px-6 {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+  }
+
+  .app-content input,
+  .app-content select,
+  .app-content textarea {
+    min-height: 2.625rem;
+    font-size: 1rem;
+  }
+
+  .app-content button,
+  .app-content a[role="button"] {
+    min-height: 2.5rem;
+  }
+
+  .app-content .overflow-x-auto {
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+
+  .app-content [class*="grid-cols-1"][class*="md:grid-cols-3"],
+  .app-content [class*="grid-cols-1"][class*="md:grid-cols-4"],
+  .app-content [class*="grid-cols-1"][class*="md:grid-cols-5"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-content [class*="max-w-4xl"],
+  .app-content [class*="max-w-xl"],
+  .app-content [class*="max-w-md"] {
+    max-width: 100%;
+  }
+
+  .app-content [class*="overflow-hidden"] > .flex[class*="border-b"] {
+    overflow-x: auto;
+  }
+
+  .app-content [class*="overflow-hidden"] > .flex[class*="border-b"] button,
+  .app-content [class*="border-b"] > .flex button {
+    white-space: nowrap;
+  }
+}

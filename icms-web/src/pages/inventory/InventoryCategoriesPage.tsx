@@ -155,7 +155,7 @@ const InventoryCategoriesPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -172,7 +172,7 @@ const InventoryCategoriesPage: React.FC = () => {
       </div>
 
       {/* Category Tree */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
         {categoryTree.length === 0 ? (
           <div className="text-center py-12">
             <FolderTree className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
@@ -194,7 +194,7 @@ const InventoryCategoriesPage: React.FC = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
               {editingCategory ? 'Edit Category' : 'Add Category'}
             </h2>
@@ -266,7 +266,7 @@ const InventoryCategoriesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="grid grid-cols-1 gap-3 sm:flex sm:justify-end mt-6">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}

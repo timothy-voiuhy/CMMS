@@ -4,6 +4,7 @@ import { Settings, Building, Globe, Clock, Plus, Edit, Trash2, Save, Shield, Zap
 import { companyService } from '../../services/company.service'
 import { permissionsService } from '../../services/permissions.service'
 import { useAuthStore } from '../../store/authStore'
+import { useCompanyStore } from '../../store/companyStore'
 import PermissionEditor from '../../components/settings/PermissionEditor'
 import type {
   Company,
@@ -21,6 +22,7 @@ const VALID_TABS: TabType[] = ['company', 'business', 'operational', 'facilities
 
 const SettingsPage = () => {
   const { user } = useAuthStore()
+  const { setCompany: setStoredCompany } = useCompanyStore()
   const isSystemAdmin = user?.role?.toLowerCase() === 'admin'
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -135,6 +137,7 @@ const SettingsPage = () => {
       setLoading(true)
       const data = await companyService.getCompany()
       setCompany(data)
+      setStoredCompany(data)
       setError(null)
     } catch (err: any) {
       if (err.response?.status !== 404) {
@@ -177,10 +180,11 @@ const SettingsPage = () => {
 
     try {
       setLoading(true)
-      await companyService.updateCompany(company.id, companyForm)
+      const updatedCompany = await companyService.updateCompany(company.id, companyForm)
+      setCompany(updatedCompany)
+      setStoredCompany(updatedCompany)
       setSuccess('Company information updated successfully')
       setTimeout(() => setSuccess(null), 3000)
-      loadCompany()
     } catch (err) {
       setError('Failed to update company information')
       setTimeout(() => setError(null), 3000)
@@ -432,10 +436,10 @@ const SettingsPage = () => {
 
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-start gap-3 mb-4">
           <Settings className="w-8 h-8 text-blue-600 dark:text-blue-400" />
           <div>
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Company Settings</h1>
@@ -459,11 +463,11 @@ const SettingsPage = () => {
 
       {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex">
+        <div className="overflow-x-auto border-b border-gray-200 dark:border-gray-700">
+          <nav className="flex min-w-max">
             <button
               onClick={() => setActiveTab('company')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'company'
+              className={`px-4 sm:px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'company'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
@@ -475,7 +479,7 @@ const SettingsPage = () => {
             </button>
             <button
               onClick={() => setActiveTab('business')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'business'
+              className={`px-4 sm:px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'business'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
@@ -487,7 +491,7 @@ const SettingsPage = () => {
             </button>
             <button
               onClick={() => setActiveTab('operational')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'operational'
+              className={`px-4 sm:px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'operational'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
@@ -499,7 +503,7 @@ const SettingsPage = () => {
             </button>
             <button
               onClick={() => setActiveTab('facilities')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'facilities'
+              className={`px-4 sm:px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'facilities'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
@@ -511,7 +515,7 @@ const SettingsPage = () => {
             </button>
             <button
               onClick={() => setActiveTab('departments')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'departments'
+              className={`px-4 sm:px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'departments'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
@@ -523,7 +527,7 @@ const SettingsPage = () => {
             </button>
             <button
               onClick={() => setActiveTab('roles')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'roles'
+              className={`px-4 sm:px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'roles'
                   ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
@@ -537,7 +541,7 @@ const SettingsPage = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Company Information Tab */}
           {activeTab === 'company' && (
             <div className="space-y-6">
@@ -645,7 +649,7 @@ const SettingsPage = () => {
               <button
                 onClick={handleSaveCompany}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 sm:w-auto"
               >
                 <Save className="w-4 h-4" />
                 Save Company Information
@@ -704,7 +708,7 @@ const SettingsPage = () => {
               <button
                 onClick={handleSaveCompany}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 sm:w-auto"
               >
                 <Save className="w-4 h-4" />
                 Save Business Settings
@@ -760,7 +764,7 @@ const SettingsPage = () => {
               <button
                 onClick={handleSaveCompany}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 sm:w-auto"
               >
                 <Save className="w-4 h-4" />
                 Save Operational Settings
@@ -774,13 +778,13 @@ const SettingsPage = () => {
               <button
                 onClick={() => handleOpenFacilityDialog()}
                 disabled={!company}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 sm:w-auto"
               >
                 <Plus className="w-4 h-4" />
                 Add Facility
               </button>
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
@@ -839,13 +843,13 @@ const SettingsPage = () => {
               <button
                 onClick={() => handleOpenDepartmentDialog()}
                 disabled={facilities.length === 0}
-                className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 sm:w-auto"
               >
                 <Plus className="w-4 h-4" />
                 Add Department
               </button>
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
@@ -899,21 +903,21 @@ const SettingsPage = () => {
           {/* Roles Tab */}
           {activeTab === 'roles' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Manage roles, permissions, and hierarchy. System roles cannot be modified or deleted.
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
                   <button
                     onClick={() => setTemplateDialog(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
+                    className="flex items-center justify-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
                   >
                     <Zap className="w-4 h-4" />
                     From Template
                   </button>
                   <button
                     onClick={() => handleOpenRoleDialog()}
-                    className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
+                    className="flex items-center justify-center gap-2 px-4 py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
                   >
                     <Plus className="w-4 h-4" />
                     Add Role
@@ -921,7 +925,7 @@ const SettingsPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
@@ -1010,14 +1014,14 @@ const SettingsPage = () => {
 
       {/* Facility Dialog */}
       {facilityDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl mx-4">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 {editingFacility ? 'Edit Facility' : 'Add Facility'}
               </h3>
             </div>
-            <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+            <div className="px-4 sm:px-6 py-4 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
@@ -1105,7 +1109,7 @@ const SettingsPage = () => {
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 gap-3 sm:flex sm:justify-end">
               <button
                 onClick={() => setFacilityDialog(false)}
                 className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -1125,14 +1129,14 @@ const SettingsPage = () => {
 
       {/* Department Dialog */}
       {departmentDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 {editingDepartment ? 'Edit Department' : 'Add Department'}
               </h3>
             </div>
-            <div className="px-6 py-4">
+            <div className="px-4 sm:px-6 py-4">
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Facility</label>
@@ -1197,7 +1201,7 @@ const SettingsPage = () => {
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 gap-3 sm:flex sm:justify-end">
               <button
                 onClick={() => setDepartmentDialog(false)}
                 className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -1217,9 +1221,9 @@ const SettingsPage = () => {
 
       {/* Role Dialog — Enhanced with Permission Editor */}
       {roleDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Shield className="w-5 h-5 text-blue-500" />
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
@@ -1233,7 +1237,7 @@ const SettingsPage = () => {
                 <span className="text-gray-400 text-xl">&times;</span>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
               {/* Role Details Section */}
               <div className="mb-6">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-3">Role Details</h4>
@@ -1251,7 +1255,7 @@ const SettingsPage = () => {
                       placeholder="e.g., Senior Technician"
                     />
                   </div>
-                  <div className="flex gap-4">
+                  <div className="flex flex-col gap-4 sm:flex-row">
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Level <span className="text-red-500">*</span>
@@ -1330,7 +1334,7 @@ const SettingsPage = () => {
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 gap-3 sm:flex sm:justify-end">
               <button
                 onClick={() => setRoleDialog(false)}
                 className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -1352,15 +1356,15 @@ const SettingsPage = () => {
 
       {/* Template Dialog */}
       {templateDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                 <Zap className="w-5 h-5 text-yellow-500" />
                 Create Role from Template
               </h3>
             </div>
-            <div className="px-6 py-4 space-y-4">
+            <div className="px-4 sm:px-6 py-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Template <span className="text-red-500">*</span>
@@ -1414,7 +1418,7 @@ const SettingsPage = () => {
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 gap-3 sm:flex sm:justify-end">
               <button
                 onClick={() => setTemplateDialog(false)}
                 className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"

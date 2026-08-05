@@ -111,7 +111,7 @@ const WorkOrderFormPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
         <button
@@ -137,11 +137,11 @@ const WorkOrderFormPage: React.FC = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Basic Information */}
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Basic Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Title <span className="text-red-500">*</span>
@@ -241,7 +241,7 @@ const WorkOrderFormPage: React.FC = () => {
           {/* Schedule */}
           <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Schedule</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Scheduled Date</label>
                 <input
@@ -278,7 +278,7 @@ const WorkOrderFormPage: React.FC = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-1 gap-3 sm:flex sm:justify-end sm:gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
           <button
             type="button"
             onClick={() => navigate('/maintenance/work-orders')}

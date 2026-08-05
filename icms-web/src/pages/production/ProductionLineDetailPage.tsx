@@ -329,7 +329,7 @@ const ProductionLineDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <button
@@ -339,12 +339,12 @@ const ProductionLineDetailPage: React.FC = () => {
           <ArrowLeft className="w-4 h-4" />
           Back to Production Lines
         </button>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{line.name}</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">{line.line_code}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
             <button
               onClick={() => navigate(`/production/lines/${line.id}/edit`)}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -364,11 +364,11 @@ const ProductionLineDetailPage: React.FC = () => {
       </div>
 
       {/* Line Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Line Information</h2>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Status</p>
                 <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-1 ${getStatusColor(line.status)}`}>
@@ -465,10 +465,10 @@ const ProductionLineDetailPage: React.FC = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {activeTab === 'equipment' && (
             <div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Production Line Equipment</h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -687,7 +687,7 @@ const ProductionLineDetailPage: React.FC = () => {
 
           {activeTab === 'shifts' && (
             <div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Shifts</h2>
                 <button
                   onClick={() => setShowShiftModal(true)}
@@ -755,7 +755,7 @@ const ProductionLineDetailPage: React.FC = () => {
       {showEquipmentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
                 {editingStation ? 'Edit Equipment Station' : 'Add Equipment Station'}
               </h2>
@@ -874,7 +874,7 @@ const ProductionLineDetailPage: React.FC = () => {
       {showShiftModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Add Shift</h2>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

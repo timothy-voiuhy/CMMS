@@ -6,7 +6,7 @@ from core.security import get_current_active_user
 from models.user import User
 from schemas.craftsman import (
     CraftsmanCreate, CraftsmanUpdate, CraftsmanResponse, CraftsmanWithUser,
-    SkillCreate, SkillResponse
+    SkillCreate, SkillResponse, CraftsmanWithUserCreate
 )
 from schemas.common import PaginatedResponse
 from services import craftsman_service
@@ -72,8 +72,43 @@ async def create_craftsman(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Create a new craftsman."""
+    """Create a new craftsman (requires existing user)."""
     return craftsman_service.create_craftsman(db, craftsman)
+
+
+@router.post("/with-user", response_model=CraftsmanWithUser, status_code=status.HTTP_201_CREATED)
+async def create_craftsman_with_user(
+    data: CraftsmanWithUserCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Create a new user and craftsman profile together."""
+    craftsman = craftsman_service.create_craftsman_with_user(
+        db=db,
+        full_name=data.full_name,
+        username=data.username,
+        email=data.email,
+        password=data.password,
+        phone=data.phone,
+        employee_id=data.employee_id,
+        department=data.department,
+        position=data.position,
+        role_id=data.role_id,
+        hire_date=data.hire_date,
+        certification_level=data.certification_level,
+        hourly_rate=data.hourly_rate,
+        notes=data.notes
+    )
+    
+    role_name = craftsman.role.name if craftsman.role else None
+    return CraftsmanWithUser(
+        **craftsman.__dict__,
+        username=craftsman.user.username,
+        email=craftsman.user.email,
+        full_name=craftsman.user.full_name,
+        phone=craftsman.user.phone,
+        role_name=role_name
+    )
 
 
 @router.get("/{craftsman_id}", response_model=CraftsmanWithUser)
@@ -87,12 +122,14 @@ async def get_craftsman(
     if not craftsman:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Craftsman not found")
     
+    role_name = craftsman.role.name if craftsman.role else None
     return CraftsmanWithUser(
         **craftsman.__dict__,
         username=craftsman.user.username,
         email=craftsman.user.email,
         full_name=craftsman.user.full_name,
-        phone=craftsman.user.phone
+        phone=craftsman.user.phone,
+        role_name=role_name
     )
 
 
@@ -138,7 +175,7 @@ async def get_craftsman_work_orders(
     return craftsman_service.get_craftsman_work_orders(db, craftsman_id)
 
 
-@router.put("/{craftsman_id}", response_model=CraftsmanResponse)
+@router.put("/{craftsman_id}", response_model=CraftsmanWithUser)
 async def update_craftsman(
     craftsman_id: int,
     craftsman: CraftsmanUpdate,
@@ -149,7 +186,16 @@ async def update_craftsman(
     updated = craftsman_service.update_craftsman(db, craftsman_id, craftsman)
     if not updated:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Craftsman not found")
-    return updated
+    
+    role_name = updated.role.name if updated.role else None
+    return CraftsmanWithUser(
+        **updated.__dict__,
+        username=updated.user.username,
+        email=updated.user.email,
+        full_name=updated.user.full_name,
+        phone=updated.user.phone,
+        role_name=role_name
+    )
 
 
 @router.delete("/{craftsman_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -212,3 +258,22 @@ async def create_skill(
 ):
     """Create a new skill."""
     return craftsman_service.create_skill(db, skill.name, skill.description, skill.category)
+
+
+
+@router.get("/metadata/departments", response_model=List[str])
+async def get_departments(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get list of unique departments from existing craftsmen."""
+    return craftsman_service.get_distinct_departments(db)
+
+
+@router.get("/metadata/positions", response_model=List[str])
+async def get_positions(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get list of unique positions from existing craftsmen."""
+    return craftsman_service.get_distinct_positions(db)

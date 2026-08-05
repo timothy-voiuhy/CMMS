@@ -11,7 +11,9 @@ import {
   Wrench,
   ClipboardList,
   TrendingUp,
+  Trash2,
 } from 'lucide-react'
+import ConfirmDialog from '../../components/common/ConfirmDialog'
 import { craftsmanService, type CraftsmanWithUser } from '../../services/craftsman.service'
 
 const CraftsmenDetailPage: React.FC = () => {
@@ -19,6 +21,7 @@ const CraftsmenDetailPage: React.FC = () => {
   const navigate = useNavigate()
   const [craftsman, setCraftsman] = useState<CraftsmanWithUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [deleteDialog, setDeleteDialog] = useState(false)
   const [stats, setStats] = useState({
     totalWorkOrders: 0,
     completedWorkOrders: 0,
@@ -68,6 +71,22 @@ const CraftsmenDetailPage: React.FC = () => {
     }
   }
 
+  const handleDelete = () => {
+    setDeleteDialog(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!id || !craftsman) return
+
+    try {
+      await craftsmanService.delete(parseInt(id))
+      navigate('/craftsmen')
+    } catch (error) {
+      console.error('Failed to delete craftsman:', error)
+      alert('Failed to delete craftsman. They may have assigned work orders or equipment.')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -93,7 +112,7 @@ const CraftsmenDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <button
@@ -103,8 +122,8 @@ const CraftsmenDetailPage: React.FC = () => {
           <ArrowLeft className="w-4 h-4" />
           Back to Craftsmen
         </button>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4">
             <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
               <span className="text-blue-600 dark:text-blue-400 font-bold text-2xl">
                 {craftsman.full_name.charAt(0).toUpperCase()}
@@ -115,16 +134,25 @@ const CraftsmenDetailPage: React.FC = () => {
               <p className="text-gray-600 dark:text-gray-400">{craftsman.position || 'Craftsman'}</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate(`/craftsmen/${id}/edit`)}
-            className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
-          >
-            Edit Profile
-          </button>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2 text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+            <button
+              onClick={() => navigate(`/craftsmen/${id}/edit`)}
+              className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
+            >
+              Edit Profile
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column - Personal Info */}
         <div className="lg:col-span-1 space-y-6">
           {/* Basic Info Card */}
@@ -185,6 +213,15 @@ const CraftsmenDetailPage: React.FC = () => {
                   </div>
                 </div>
               )}
+              <div className="flex items-start gap-3">
+                <Briefcase className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Assigned Role</p>
+                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400 font-semibold">
+                    {craftsman.role_name || 'No Role Assigned'}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -211,7 +248,7 @@ const CraftsmenDetailPage: React.FC = () => {
         {/* Right Column - Stats and Activity */}
         <div className="lg:col-span-2 space-y-6">
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -332,6 +369,19 @@ const CraftsmenDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialog}
+        onClose={() => setDeleteDialog(false)}
+        onConfirm={confirmDelete}
+        title="Delete Craftsman"
+        message="Are you sure you want to delete this craftsman? This will permanently remove their profile and all associated data."
+        confirmText="Delete Craftsman"
+        cancelText="Cancel"
+        type="danger"
+        itemName={craftsman ? `${craftsman.full_name} (${craftsman.employee_id})` : ''}
+      />
     </div>
   )
 }

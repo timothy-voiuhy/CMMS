@@ -13,6 +13,25 @@ export interface CreateCraftsmanRequest {
   notes?: string
 }
 
+export interface CreateCraftsmanWithUserRequest {
+  // User fields
+  full_name: string
+  username: string
+  email: string
+  password: string
+  phone?: string
+  
+  // Craftsman fields
+  employee_id: string
+  department?: string
+  position?: string
+  role_id?: number
+  hire_date?: string
+  certification_level?: string
+  hourly_rate?: number
+  notes?: string
+}
+
 export interface UpdateCraftsmanRequest extends Partial<CreateCraftsmanRequest> {}
 
 export interface CraftsmanFilters {
@@ -78,6 +97,13 @@ export const craftsmanService = {
    */
   async create(data: CreateCraftsmanRequest): Promise<CraftsmanWithUser> {
     return apiClient.post<CraftsmanWithUser>('/api/v1/craftsmen/', data)
+  },
+
+  /**
+   * Create new craftsman with user account
+   */
+  async createWithUser(data: CreateCraftsmanWithUserRequest): Promise<CraftsmanWithUser> {
+    return apiClient.post<CraftsmanWithUser>('/api/v1/craftsmen/with-user', data)
   },
 
   /**
@@ -151,6 +177,20 @@ export const craftsmanService = {
     averageCompletionTime: number
   }> {
     return apiClient.get(`/api/v1/craftsmen/${craftsmanId}/statistics`)
+  },
+
+  /**
+   * Get list of unique departments from existing craftsmen
+   */
+  async getDepartments(): Promise<string[]> {
+    return apiClient.get<string[]>('/api/v1/craftsmen/metadata/departments')
+  },
+
+  /**
+   * Get list of unique positions from existing craftsmen
+   */
+  async getPositions(): Promise<string[]> {
+    return apiClient.get<string[]>('/api/v1/craftsmen/metadata/positions')
   },
 }
 

@@ -107,7 +107,7 @@ const MaintenanceDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <button
@@ -119,8 +119,8 @@ const MaintenanceDetailPage: React.FC = () => {
         </button>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3 sm:gap-4">
               <div className="flex-shrink-0 h-16 w-16 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                 <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               </div>
@@ -128,7 +128,7 @@ const MaintenanceDetailPage: React.FC = () => {
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   Maintenance Report {report.report_number}
                 </h1>
-                <div className="flex items-center gap-4 mt-2">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2">
                   {report.reviewed_by ? (
                     <span className="px-3 py-1 text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full flex items-center gap-1">
                       <CheckCircle className="w-4 h-4" />
@@ -156,7 +156,7 @@ const MaintenanceDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               {!report.reviewed_by && (
                 <button
                   onClick={handleReview}
@@ -187,9 +187,9 @@ const MaintenanceDetailPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column - Info Cards */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Basic Info */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Basic Information</h2>

@@ -13,6 +13,7 @@ import {
   Plus,
   X,
 } from 'lucide-react'
+import ConfirmDialog from '../../components/common/ConfirmDialog'
 import type { Equipment } from '../../types'
 import {
   equipmentService,
@@ -26,6 +27,7 @@ const EquipmentDetailPage: React.FC = () => {
   const [equipment, setEquipment] = useState<Equipment | null>(null)
   const [operators, setOperators] = useState<EquipmentOperator[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [deleteDialog, setDeleteDialog] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'operators' | 'maintenance' | 'history'>(
     'overview'
   )
@@ -116,23 +118,25 @@ const EquipmentDetailPage: React.FC = () => {
   }
 
   // Handle delete equipment
-  const handleDelete = async () => {
-    if (!id || !equipment) return
+  const handleDelete = () => {
+    setDeleteDialog(true)
+  }
 
-    if (!confirm(`Are you sure you want to delete ${equipment.name}?`)) return
+  const confirmDelete = async () => {
+    if (!id || !equipment) return
 
     try {
       await equipmentService.delete(parseInt(id))
       navigate('/equipment')
     } catch (error) {
       console.error('Failed to delete equipment:', error)
-      alert('Failed to delete equipment')
+      alert('Failed to delete equipment. It may be in use.')
     }
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading equipment details...</p>
@@ -143,7 +147,7 @@ const EquipmentDetailPage: React.FC = () => {
 
   if (!equipment) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <p className="text-gray-600 dark:text-gray-400">Equipment not found</p>
           <button
@@ -168,7 +172,7 @@ const EquipmentDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="mb-6">
         <button
@@ -180,14 +184,14 @@ const EquipmentDetailPage: React.FC = () => {
         </button>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3 sm:gap-4">
               <div className="flex-shrink-0 h-16 w-16 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                 <Wrench className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{equipment.name}</h1>
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
                   <span>ID: {equipment.equipment_id}</span>
                   {equipment.category && <span>• {equipment.category}</span>}
                   {equipment.location && (
@@ -205,7 +209,7 @@ const EquipmentDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <button
                 onClick={() => navigate(`/equipment/${id}/edit`)}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -259,7 +263,7 @@ const EquipmentDetailPage: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-3">Basic Information</h3>
               <dl className="space-y-3">
@@ -297,7 +301,7 @@ const EquipmentDetailPage: React.FC = () => {
         {/* Operators Tab */}
         {activeTab === 'operators' && (
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Assigned Operators</h3>
               <button
                 onClick={() => {
@@ -323,7 +327,7 @@ const EquipmentDetailPage: React.FC = () => {
                     <option value="">Select craftsman...</option>
                     {availableCraftsmen.map((craftsman) => (
                       <option key={craftsman.id} value={craftsman.id}>
-                        {craftsman.user.full_name} ({craftsman.employee_id})
+                        {craftsman.full_name} ({craftsman.employee_id})
                       </option>
                     ))}
                   </select>
@@ -393,6 +397,19 @@ const EquipmentDetailPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialog}
+        onClose={() => setDeleteDialog(false)}
+        onConfirm={confirmDelete}
+        title="Delete Equipment"
+        message="Are you sure you want to delete this equipment? This will permanently remove all associated data."
+        confirmText="Delete Equipment"
+        cancelText="Cancel"
+        type="danger"
+        itemName={equipment ? `${equipment.name} (${equipment.equipment_id})` : ''}
+      />
     </div>
   )
 }

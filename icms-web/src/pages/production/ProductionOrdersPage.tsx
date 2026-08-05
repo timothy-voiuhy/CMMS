@@ -95,28 +95,28 @@ const ProductionOrdersPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Production Orders</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">Manage and track production orders</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
             <button
               onClick={() => {
                 loadOrders()
                 loadStatistics()
               }}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
             </button>
             <button
               onClick={() => navigate('/production/orders/new')}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
             >
               <Plus className="w-4 h-4" />
               New Production Order
@@ -126,7 +126,7 @@ const ProductionOrdersPage: React.FC = () => {
 
         {/* Statistics Cards */}
         {statistics && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -168,7 +168,7 @@ const ProductionOrdersPage: React.FC = () => {
 
         {/* Additional Statistics */}
         {statistics && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -352,7 +352,7 @@ const ProductionOrdersPage: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Page {filters.page} of {totalPages}
               </div>

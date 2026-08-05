@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
+    ALLOWED_ORIGIN_REGEX: str = r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?"
     
     # File Upload
     MAX_UPLOAD_SIZE: int = 10485760  # 10MB

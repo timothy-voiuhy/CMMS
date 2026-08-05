@@ -76,6 +76,8 @@ class ApiClient {
             }
 
             // Retry original request with new token
+            this.client.defaults.headers.common.Authorization = `Bearer ${newToken}`
+            originalRequest.headers = originalRequest.headers || {}
             originalRequest.headers.Authorization = `Bearer ${newToken}`
             return this.client(originalRequest)
           } catch (refreshError) {

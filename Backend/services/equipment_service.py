@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from fastapi import HTTPException, status
 from models.equipment import Equipment, EquipmentStatus
+from models.craftsman import Craftsman
 from schemas.equipment import EquipmentCreate, EquipmentUpdate
 
 
@@ -173,3 +174,83 @@ def get_equipment_statistics(db: Session) -> dict:
         "breakdown": breakdown,
         "retired": retired
     }
+
+
+# ==================== EQUIPMENT OPERATORS ====================
+
+def get_equipment_operators(db: Session, equipment_id: int) -> List[dict]:
+    """Get all operators (craftsmen) assigned to equipment."""
+    equipment = get_equipment(db, equipment_id)
+    if not equipment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Equipment not found"
+        )
+    
+    operators = []
+    for craftsman in equipment.operators:
+        operators.append({
+            "craftsman_id": craftsman.id,
+            "employee_id": craftsman.employee_id,
+            "craftsman_name": craftsman.user.full_name if craftsman.user else "Unknown",
+            "position": craftsman.position,
+            "department": craftsman.department
+        })
+    
+    return operators
+
+
+def assign_operator(db: Session, equipment_id: int, craftsman_id: int) -> bool:
+    """Assign a craftsman as an operator to equipment."""
+    equipment = get_equipment(db, equipment_id)
+    if not equipment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Equipment not found"
+        )
+    
+    craftsman = db.query(Craftsman).filter(Craftsman.id == craftsman_id).first()
+    if not craftsman:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Craftsman not found"
+        )
+    
+    # Check if already assigned
+    if craftsman in equipment.operators:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Craftsman is already assigned to this equipment"
+        )
+    
+    equipment.operators.append(craftsman)
+    db.commit()
+    return True
+
+
+def remove_operator(db: Session, equipment_id: int, craftsman_id: int) -> bool:
+    """Remove a craftsman operator from equipment."""
+    equipment = get_equipment(db, equipment_id)
+    if not equipment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Equipment not found"
+        )
+    
+    craftsman = db.query(Craftsman).filter(Craftsman.id == craftsman_id).first()
+    if not craftsman:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Craftsman not found"
+        )
+    
+    # Check if assigned
+    if craftsman not in equipment.operators:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Craftsman is not assigned to this equipment"
+        )
+    
+    equipment.operators.remove(craftsman)
+    db.commit()
+    return True

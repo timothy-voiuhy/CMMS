@@ -14,6 +14,7 @@ import {
   TrendingDown,
   Grid,
 } from 'lucide-react'
+import ConfirmDialog from '../../components/common/ConfirmDialog'
 import {
   inventoryService,
   type InventoryItem,
@@ -26,6 +27,10 @@ const InventoryListPage: React.FC = () => {
   const [items, setItems] = useState<InventoryItem[]>([])
   const [categories, setCategories] = useState<InventoryCategory[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; item: InventoryItem | null }>({
+    isOpen: false,
+    item: null,
+  })
   const [statistics, setStatistics] = useState<InventoryStatistics | null>(null)
   const [filters, setFilters] = useState({
     page: 1,
@@ -76,16 +81,20 @@ const InventoryListPage: React.FC = () => {
     }
   }
 
-  const handleDelete = async (item: InventoryItem) => {
-    if (!confirm(`Are you sure you want to delete ${item.name}?`)) return
+  const handleDelete = (item: InventoryItem) => {
+    setDeleteDialog({ isOpen: true, item })
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteDialog.item) return
 
     try {
-      await inventoryService.delete(item.id)
+      await inventoryService.delete(deleteDialog.item.id)
       loadItems()
       loadStatistics()
     } catch (error) {
       console.error('Failed to delete item:', error)
-      alert('Failed to delete item')
+      alert('Failed to delete item. It may be in use.')
     }
   }
 
@@ -111,25 +120,25 @@ const InventoryListPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Inventory Management</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">Track and manage inventory items</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
             <button
               onClick={() => navigate('/inventory/grid')}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <Grid className="w-4 h-4" />
               Grid View
             </button>
             <button
               onClick={() => navigate('/inventory/categories')}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <Filter className="w-4 h-4" />
               Manage Categories
@@ -139,14 +148,14 @@ const InventoryListPage: React.FC = () => {
                 loadItems()
                 loadStatistics()
               }}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
             </button>
             <button
               onClick={() => navigate('/inventory/new')}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
+              className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600"
             >
               <Plus className="w-4 h-4" />
               Add Item
@@ -156,7 +165,7 @@ const InventoryListPage: React.FC = () => {
 
         {/* Statistics Cards */}
         {statistics && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -359,11 +368,11 @@ const InventoryListPage: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-gray-800">
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 Page {filters.page} of {totalPages}
               </div>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex">
                 <button
                   onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
                   disabled={filters.page === 1}
@@ -383,6 +392,19 @@ const InventoryListPage: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ isOpen: false, item: null })}
+        onConfirm={confirmDelete}
+        title="Delete Inventory Item"
+        message="Are you sure you want to delete this inventory item? This action cannot be undone and will remove all associated data."
+        confirmText="Delete Item"
+        cancelText="Cancel"
+        type="danger"
+        itemName={deleteDialog.item ? `${deleteDialog.item.name} (${deleteDialog.item.item_code})` : ''}
+      />
     </div>
   )
 }

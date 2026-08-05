@@ -68,6 +68,83 @@ async def create_equipment(
     return equipment_service.create_equipment(db, equipment)
 
 
+@router.get("/export")
+async def export_equipment(
+    category: Optional[str] = None,
+    status: Optional[EquipmentStatus] = None,
+    location: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Export equipment to CSV."""
+    from fastapi.responses import StreamingResponse
+    import io
+    import csv
+    
+    # Get all equipment with filters (no pagination for export)
+    equipment_list = equipment_service.get_equipment_list(
+        db, skip=0, limit=10000,
+        status_filter=status,
+        category=category
+    )
+    
+    # Filter by location if specified
+    if location:
+        equipment_list = [e for e in equipment_list if e.location and location.lower() in e.location.lower()]
+    
+    # Create CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow([
+        'ID',
+        'Equipment ID',
+        'Name',
+        'Category',
+        'Manufacturer',
+        'Model',
+        'Serial Number',
+        'Location',
+        'Status',
+        'Purchase Date',
+        'Warranty Expiry',
+        'Specifications',
+        'Notes',
+        'Created At',
+        'Updated At'
+    ])
+    
+    # Write data
+    for equipment in equipment_list:
+        status_val = equipment.status.value if hasattr(equipment.status, 'value') else str(equipment.status)
+        writer.writerow([
+            equipment.id,
+            equipment.equipment_id,
+            equipment.name,
+            equipment.category or '',
+            equipment.manufacturer or '',
+            equipment.model or '',
+            equipment.serial_number or '',
+            equipment.location or '',
+            status_val,
+            equipment.purchase_date or '',
+            equipment.warranty_expiry or '',
+            equipment.specifications or '',
+            equipment.notes or '',
+            equipment.created_at.isoformat() if equipment.created_at else '',
+            equipment.updated_at.isoformat() if equipment.updated_at else ''
+        ])
+    
+    # Prepare response
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=equipment-export.csv"}
+    )
+
+
 @router.get("/{equipment_id}", response_model=EquipmentResponse)
 async def get_equipment(
     equipment_id: int,
@@ -132,3 +209,44 @@ async def get_equipment_by_code(
     if not equipment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Equipment not found")
     return equipment
+
+
+
+# ==================== EQUIPMENT OPERATORS ====================
+
+@router.get("/{equipment_id}/operators")
+async def get_equipment_operators(
+    equipment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get all operators (craftsmen) assigned to equipment."""
+    equipment = equipment_service.get_equipment(db, equipment_id)
+    if not equipment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Equipment not found")
+    
+    return equipment_service.get_equipment_operators(db, equipment_id)
+
+
+@router.post("/{equipment_id}/operators/{craftsman_id}", status_code=status.HTTP_201_CREATED)
+async def assign_operator(
+    equipment_id: int,
+    craftsman_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Assign a craftsman as an operator to equipment."""
+    equipment_service.assign_operator(db, equipment_id, craftsman_id)
+    return {"message": "Operator assigned successfully"}
+
+
+@router.delete("/{equipment_id}/operators/{craftsman_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_operator(
+    equipment_id: int,
+    craftsman_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Remove a craftsman operator from equipment."""
+    equipment_service.remove_operator(db, equipment_id, craftsman_id)
+

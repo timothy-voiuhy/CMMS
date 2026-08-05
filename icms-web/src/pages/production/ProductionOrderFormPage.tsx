@@ -126,7 +126,7 @@ const ProductionOrderFormPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <button
@@ -142,7 +142,7 @@ const ProductionOrderFormPage: React.FC = () => {
       </div>
 
       {/* Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div>

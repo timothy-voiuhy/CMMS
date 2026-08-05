@@ -17,6 +17,7 @@ import {
   UserCog,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
+import { useCompanyStore } from '../../store/companyStore'
 import { useState, useMemo } from 'react'
 
 interface SidebarProps {
@@ -67,12 +68,27 @@ const navItems: NavItem[] = [
 
 const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const { user, hasPermission } = useAuthStore()
+  const { company } = useCompanyStore()
   const [expandedItems, setExpandedItems] = useState<string[]>(['/maintenance', '/production'])
+
+  const companyInitials = useMemo(() => {
+    if (company?.short_name) return company.short_name.substring(0, 2).toUpperCase()
+    if (company?.name) return company.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
+    return 'IC'
+  }, [company])
+
+  const companyDisplayName = company?.short_name || company?.name || 'ICMS'
 
   const toggleExpanded = (path: string) => {
     setExpandedItems((prev) =>
       prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
     )
+  }
+
+  const closeOnMobileNavigation = () => {
+    if (window.matchMedia('(max-width: 1023px)').matches && isOpen) {
+      onToggle()
+    }
   }
 
   // Filter nav items based on permissions
@@ -104,22 +120,28 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       {/* Sidebar */}
       <aside
         className={`${
-          isOpen ? 'w-64' : 'w-20'
-        } bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out flex flex-col`}
+          isOpen ? 'translate-x-0 w-64 lg:w-60' : '-translate-x-full w-64 lg:translate-x-0 lg:w-20'
+        } fixed inset-y-0 left-0 z-40 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out flex flex-col lg:static lg:z-auto lg:flex-shrink-0`}
       >
-        {/* Logo */}
+        {/* Logo / Company Name */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
-          {isOpen && (
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-500 dark:bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">IC</span>
+          {isOpen ? (
+            <div className="flex items-center space-x-2 min-w-0">
+              <div className="w-8 h-8 bg-primary-500 dark:bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-xs">{companyInitials}</span>
               </div>
-              <span className="font-bold text-gray-800 dark:text-gray-100">ICMS</span>
+              <span className="font-bold text-gray-800 dark:text-gray-100 truncate" title={company?.name || 'ICMS'}>
+                {companyDisplayName}
+              </span>
+            </div>
+          ) : (
+            <div className="w-8 h-8 bg-primary-500 dark:bg-primary-600 rounded-lg flex items-center justify-center mx-auto" title={company?.name || 'ICMS'}>
+              <span className="text-white font-bold text-xs">{companyInitials}</span>
             </div>
           )}
           <button
             onClick={onToggle}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
           >
             <ChevronLeft
               className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform ${
@@ -131,7 +153,7 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-3">
+          <ul className="space-y-1 px-2 lg:px-3">
             {filteredNavItems.map((item) => (
               <li key={item.path}>
                 {item.children ? (
@@ -143,7 +165,7 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                           toggleExpanded(item.path)
                         }
                       }}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-all"
+                      className="w-full flex items-center justify-between px-2.5 py-2.5 lg:px-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-all"
                     >
                       <div className="flex items-center space-x-3">
                         <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -159,13 +181,14 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                     </button>
                     {/* Sub-menu */}
                     {isOpen && expandedItems.includes(item.path) && (
-                      <ul className="mt-1 space-y-1 ml-4">
+                      <ul className="mt-1 space-y-1 ml-2 lg:ml-4">
                         {item.children.map((child) => (
                           <li key={child.path}>
                             <NavLink
                               to={child.path}
+                              onClick={closeOnMobileNavigation}
                               className={({ isActive }) =>
-                                `flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-all ${
+                                `flex items-center space-x-3 px-2.5 py-2 lg:px-3 rounded-lg text-sm transition-all ${
                                   isActive
                                     ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
@@ -184,8 +207,9 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                   // Regular item
                   <NavLink
                     to={item.path}
+                    onClick={closeOnMobileNavigation}
                     className={({ isActive }) =>
-                      `flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all ${
+                      `flex items-center space-x-3 px-2.5 py-2.5 lg:px-3 rounded-lg transition-all ${
                         isActive
                           ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
                           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'

@@ -194,15 +194,16 @@ export interface UpdateRoleRequest {
 
 class CompanyService {
   private baseUrl = '/api/v1/company'
+  private rootUrl = '/api/v1/company/'
 
   // ==================== COMPANY METHODS ====================
 
   async getCompany() {
-    return apiClient.get<Company>(this.baseUrl)
+    return apiClient.get<Company>(this.rootUrl)
   }
 
   async createCompany(data: CreateCompanyRequest) {
-    return apiClient.post<Company>(this.baseUrl, data)
+    return apiClient.post<Company>(this.rootUrl, data)
   }
 
   async updateCompany(id: number, data: UpdateCompanyRequest) {

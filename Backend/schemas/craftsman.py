@@ -63,3 +63,23 @@ class CraftsmanWithUser(CraftsmanResponse):
     full_name: str
     phone: Optional[str] = None
     role_name: Optional[str] = None  # Role name for display
+
+
+
+class CraftsmanWithUserCreate(BaseModel):
+    # User fields
+    full_name: str = Field(..., max_length=200)
+    username: str = Field(..., max_length=50)
+    email: str = Field(..., max_length=100)
+    password: str = Field(..., min_length=8)
+    phone: Optional[str] = None
+    
+    # Craftsman fields
+    employee_id: str = Field(..., max_length=50)
+    department: Optional[str] = None
+    position: Optional[str] = None
+    role_id: Optional[int] = None
+    hire_date: Optional[str] = None
+    certification_level: Optional[str] = None
+    hourly_rate: Optional[float] = None
+    notes: Optional[str] = None

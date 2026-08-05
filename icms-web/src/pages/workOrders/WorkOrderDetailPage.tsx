@@ -165,7 +165,7 @@ const WorkOrderDetailPage: React.FC = () => {
   const StatusIcon = statusBadge.icon
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <button
@@ -177,14 +177,14 @@ const WorkOrderDetailPage: React.FC = () => {
         </button>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3 sm:gap-4">
               <div className="flex-shrink-0 h-16 w-16 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                 <ClipboardList className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{workOrder.title}</h1>
-                <div className="flex items-center gap-4 mt-2">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">WO: {workOrder.work_order_number}</span>
                   <span
                     className={`px-3 py-1 text-sm font-medium rounded-full ${statusBadge.bg} ${statusBadge.text} flex items-center gap-1`}
@@ -199,7 +199,7 @@ const WorkOrderDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               {workOrder.status !== 'completed' && workOrder.status !== 'cancelled' && (
                 <div className="relative">
                   <select
@@ -249,9 +249,9 @@ const WorkOrderDetailPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column - Info Cards */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Basic Info */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Work Order Details</h2>
@@ -339,7 +339,7 @@ const WorkOrderDetailPage: React.FC = () => {
         </div>
 
         {/* Right Column - Description & Notes */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Description */}
           {workOrder.description && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -391,7 +391,7 @@ const WorkOrderDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="grid grid-cols-1 gap-3 sm:flex sm:justify-end mt-6">
               <button
                 onClick={() => {
                   setShowAssignModal(false)

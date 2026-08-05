@@ -204,23 +204,20 @@ def get_individual_craftsman_statistics(db: Session, craftsman_id: int) -> dict:
 
 def get_craftsman_equipment(db: Session, craftsman_id: int) -> List:
     """Get equipment operated by a craftsman."""
-    from models.equipment import Equipment, EquipmentOperator
-    
-    operators = db.query(EquipmentOperator).filter(
-        EquipmentOperator.craftsman_id == craftsman_id
-    ).all()
+    craftsman = db.query(Craftsman).filter(Craftsman.id == craftsman_id).first()
+    if not craftsman:
+        return []
     
     equipment_list = []
-    for op in operators:
-        equipment = db.query(Equipment).filter(Equipment.id == op.equipment_id).first()
-        if equipment:
-            equipment_list.append({
-                "id": equipment.id,
-                "name": equipment.name,
-                "equipment_id": equipment.equipment_id,
-                "category": equipment.category,
-                "status": equipment.status.value
-            })
+    for equipment in craftsman.operated_equipment:
+        status_val = equipment.status.value if hasattr(equipment.status, 'value') else str(equipment.status)
+        equipment_list.append({
+            "id": equipment.id,
+            "name": equipment.name,
+            "equipment_id": equipment.equipment_id,
+            "category": equipment.category,
+            "status": status_val
+        })
     
     return equipment_list
 
@@ -235,14 +232,110 @@ def get_craftsman_work_orders(db: Session, craftsman_id: int) -> List:
     
     result = []
     for wo in work_orders:
+        priority_val = wo.priority.value if hasattr(wo.priority, 'value') else str(wo.priority)
+        status_val = wo.status.value if hasattr(wo.status, 'value') else str(wo.status)
+        created_at_str = wo.created_at.isoformat() if hasattr(wo.created_at, 'isoformat') else str(wo.created_at or "")
+        due_date_str = wo.due_date.isoformat() if hasattr(wo.due_date, 'isoformat') else (str(wo.due_date) if wo.due_date else None)
+        
         result.append({
             "id": wo.id,
             "work_order_number": wo.work_order_number,
             "title": wo.title,
-            "priority": wo.priority.value,
-            "status": wo.status.value,
-            "created_at": wo.created_at.isoformat(),
-            "due_date": wo.due_date.isoformat() if wo.due_date else None
+            "priority": priority_val,
+            "status": status_val,
+            "created_at": created_at_str,
+            "due_date": due_date_str
         })
     
     return result
+
+
+
+def get_distinct_departments(db: Session) -> List[str]:
+    """Get list of unique departments from craftsmen."""
+    departments = db.query(Craftsman.department)\
+        .filter(Craftsman.department.isnot(None))\
+        .filter(Craftsman.department != '')\
+        .distinct()\
+        .order_by(Craftsman.department)\
+        .all()
+    return [dept[0] for dept in departments if dept[0]]
+
+
+def get_distinct_positions(db: Session) -> List[str]:
+    """Get list of unique positions from craftsmen."""
+    positions = db.query(Craftsman.position)\
+        .filter(Craftsman.position.isnot(None))\
+        .filter(Craftsman.position != '')\
+        .distinct()\
+        .order_by(Craftsman.position)\
+        .all()
+    return [pos[0] for pos in positions if pos[0]]
+
+
+
+def create_craftsman_with_user(
+    db: Session,
+    full_name: str,
+    username: str,
+    email: str,
+    password: str,
+    phone: Optional[str],
+    employee_id: str,
+    department: Optional[str],
+    position: Optional[str],
+    role_id: Optional[int],
+    hire_date: Optional[str],
+    certification_level: Optional[str],
+    hourly_rate: Optional[float],
+    notes: Optional[str]
+) -> Craftsman:
+    """Create a new user and craftsman profile together."""
+    from core.security import get_password_hash
+    from models.user import UserRole
+    
+    # Check if username already exists
+    existing_user = db.query(User).filter(User.username == username).first()
+    if existing_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists")
+    
+    # Check if email already exists
+    existing_email = db.query(User).filter(User.email == email).first()
+    if existing_email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+    
+    # Check if employee_id is unique
+    existing_emp = db.query(Craftsman).filter(Craftsman.employee_id == employee_id).first()
+    if existing_emp:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Employee ID already exists")
+    
+    # Create user
+    hashed_password = get_password_hash(password)
+    db_user = User(
+        username=username,
+        email=email,
+        full_name=full_name,
+        hashed_password=hashed_password,
+        phone=phone,
+        role=UserRole.CRAFTSMAN,
+        is_active=True
+    )
+    db.add(db_user)
+    db.flush()  # Get the user ID without committing
+    
+    # Create craftsman
+    db_craftsman = Craftsman(
+        user_id=db_user.id,
+        employee_id=employee_id,
+        department=department,
+        position=position,
+        role_id=role_id,
+        hire_date=hire_date,
+        certification_level=certification_level,
+        hourly_rate=hourly_rate,
+        notes=notes
+    )
+    db.add(db_craftsman)
+    db.commit()
+    db.refresh(db_craftsman)
+    return db_craftsman

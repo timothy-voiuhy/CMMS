@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
 import { useThemeStore } from './store/themeStore'
+import { useCompanyStore } from './store/companyStore'
 import { PermissionRoute } from './components/auth/PermissionGuard'
 
 // Layouts
@@ -45,6 +46,9 @@ import NCRFormPage from './pages/quality/NCRFormPage'
 import ReportsPage from './pages/reports/ReportsPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import ProfilePage from './pages/profile/ProfilePage'
+import NotificationsPage from './pages/notifications/NotificationsPage'
+
+import authService from './services/auth.service'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -59,6 +63,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   const { actualTheme } = useThemeStore()
+  const { isAuthenticated, updateUser, logout } = useAuthStore()
+  const { loadCompany } = useCompanyStore()
   
   // Initialize theme on mount
   useEffect(() => {
@@ -68,6 +74,32 @@ function App() {
       document.documentElement.classList.remove('dark')
     }
   }, [actualTheme])
+
+  // Sync user profile and permissions from backend on session mount/refresh
+  useEffect(() => {
+    if (isAuthenticated) {
+      authService.getCurrentUser().then((userData: any) => {
+        updateUser({
+          id: userData.id.toString(),
+          username: userData.username,
+          full_name: userData.full_name,
+          email: userData.email,
+          role: (userData.role || 'readonly').toLowerCase() as any,
+          is_active: userData.is_active,
+          phone: userData.phone,
+          created_at: userData.created_at || '',
+          updated_at: userData.updated_at || '',
+          permissions: userData.permissions || [],
+        })
+        loadCompany()
+      }).catch((err) => {
+        console.error('Failed to sync current user session:', err)
+        if (err?.response?.status === 401) {
+          logout()
+        }
+      })
+    }
+  }, [isAuthenticated, loadCompany, logout, updateUser])
   
   return (
     <Router>
@@ -155,6 +187,9 @@ function App() {
           
           {/* Profile Routes */}
           <Route path="/profile" element={<ProfilePage />} />
+
+          {/* Notifications Route */}
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
 
         {/* 404 */}

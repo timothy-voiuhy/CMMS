@@ -184,7 +184,7 @@ const InventoryDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <button
@@ -267,10 +267,10 @@ const InventoryDetailPage: React.FC = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
         {activeTab === 'overview' && (
           <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
               {/* Stock Information */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-500 uppercase mb-3">Stock Information</h3>
@@ -365,7 +365,7 @@ const InventoryDetailPage: React.FC = () => {
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">
                     Batch Information
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {item.batch_number && (
                       <div>
                         <span className="text-sm text-gray-600 dark:text-gray-400">Batch Number: </span>
@@ -502,7 +502,7 @@ const InventoryDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="grid grid-cols-1 gap-3 sm:flex sm:justify-end mt-6">
               <button
                 onClick={() => {
                   setShowAdjustModal(false)

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Download, RefreshCw, Users } from 'lucide-react'
+import ConfirmDialog from '../../components/common/ConfirmDialog'
 import type { CraftsmanWithUser } from '../../services/craftsman.service'
 import { craftsmanService, type CraftsmanFilters } from '../../services/craftsman.service'
 
@@ -8,6 +9,16 @@ const CraftsmenListPage: React.FC = () => {
   const navigate = useNavigate()
   const [craftsmen, setCraftsmen] = useState<CraftsmanWithUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; craftsman: CraftsmanWithUser | null }>({
+    isOpen: false,
+    craftsman: null,
+  })
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    pageSize: 20,
+    totalPages: 0
+  })
   const [filters, setFilters] = useState<CraftsmanFilters>({
     page: 1,
     limit: 20,
@@ -26,6 +37,12 @@ const CraftsmenListPage: React.FC = () => {
       setIsLoading(true)
       const response = await craftsmanService.getAll(filters)
       setCraftsmen(response.data)
+      setPagination({
+        total: response.total,
+        page: response.page,
+        pageSize: response.pageSize,
+        totalPages: response.totalPages
+      })
     } catch (error) {
       console.error('Failed to load craftsmen:', error)
     } finally {
@@ -62,25 +79,25 @@ const CraftsmenListPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Craftsmen Management</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your workforce and their skills</p>
           </div>
-          <div className="flex gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
             <button
               onClick={handleRefresh}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
             </button>
             <button
               onClick={() => navigate('/craftsmen/new')}
-              className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />
               Add Craftsman
@@ -90,7 +107,7 @@ const CraftsmenListPage: React.FC = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -139,7 +156,7 @@ const CraftsmenListPage: React.FC = () => {
 
       {/* Search and Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 mb-6 p-4">
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
           <div className="flex-1">
             <input
               type="text"
@@ -274,6 +291,49 @@ const CraftsmenListPage: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Pagination */}
+      {!isLoading && pagination.totalPages > 1 && (
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-gray-800 px-4 sm:px-6 py-3 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+          <div className="text-sm text-gray-700 dark:text-gray-300">
+            Showing <span className="font-medium">{((pagination.page - 1) * pagination.pageSize) + 1}</span> to{' '}
+            <span className="font-medium">{Math.min(pagination.page * pagination.pageSize, pagination.total)}</span> of{' '}
+            <span className="font-medium">{pagination.total}</span> results
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilters({ ...filters, page: filters.page! - 1 })}
+              disabled={pagination.page === 1}
+              className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
+            >
+              Previous
+            </button>
+            
+            {/* Page numbers */}
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pageNum) => (
+              <button
+                key={pageNum}
+                onClick={() => setFilters({ ...filters, page: pageNum })}
+                className={`px-3 py-1 text-sm border rounded ${
+                  pageNum === pagination.page
+                    ? 'bg-blue-600 dark:bg-blue-500 text-white border-blue-600 dark:border-blue-500'
+                    : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                {pageNum}
+              </button>
+            ))}
+            
+            <button
+              onClick={() => setFilters({ ...filters, page: filters.page! + 1 })}
+              disabled={pagination.page === pagination.totalPages}
+              className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

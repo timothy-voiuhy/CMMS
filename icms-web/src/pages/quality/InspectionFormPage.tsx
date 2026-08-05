@@ -159,7 +159,7 @@ const InspectionFormPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <button
@@ -175,7 +175,7 @@ const InspectionFormPage: React.FC = () => {
       </div>
 
       {/* Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div>
@@ -324,7 +324,7 @@ const InspectionFormPage: React.FC = () => {
 
           {/* Inspection Items */}
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Inspection Checkpoints</h2>
               <button
                 type="button"
@@ -343,7 +343,7 @@ const InspectionFormPage: React.FC = () => {
               <div className="space-y-4">
                 {formData.inspection_items.map((item, index) => (
                   <div key={index} className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50">
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
                       <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Checkpoint {index + 1}</h3>
                       <button
                         type="button"
