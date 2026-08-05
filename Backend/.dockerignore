@@ -1,0 +1,12 @@
+.env
+.pytest_cache
+__pycache__
+*.py[cod]
+*.db
+*.db-*
+logs
+uploads
+venv
+.venv
+dist
+build

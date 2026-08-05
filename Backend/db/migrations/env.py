@@ -8,21 +8,23 @@ from sqlalchemy import pool
 from alembic import context
 
 # Add Backend to path
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 # Import Base first
-from Backend.db.base import Base
+from db.base import Base
 
 # Import all models for Alembic to detect them
-from Backend.models import (
+from models import (
     User, Company, Facility, Department, Craftsman, Skill,
     Equipment, InventoryItem, InventoryTransaction,
     WorkOrder, MaintenanceReport
 )
+from core.config import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

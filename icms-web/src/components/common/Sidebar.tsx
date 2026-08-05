@@ -38,7 +38,18 @@ const navItems: NavItem[] = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', permission: 'dashboard.view' },
   { path: '/equipment', icon: Wrench, label: 'Equipment', permission: 'equipment.view' },
   { path: '/craftsmen', icon: Users, label: 'Craftsmen', permission: 'craftsmen.view' },
-  { path: '/inventory', icon: Package, label: 'Inventory', permission: 'inventory.view' },
+  {
+    path: '/inventory',
+    icon: Package,
+    label: 'Inventory',
+    permission: 'inventory.view',
+    children: [
+      { path: '/inventory', icon: Package, label: 'Items', permission: 'inventory.view' },
+      { path: '/inventory/grid', icon: PackageCheck, label: 'Spreadsheet', permission: 'inventory.view' },
+      { path: '/inventory/requisitions', icon: ClipboardList, label: 'Requisitions', permission: 'inventory.view' },
+      { path: '/inventory/categories', icon: Settings, label: 'Categories', permission: 'inventory.categories' },
+    ],
+  },
   {
     path: '/maintenance',
     icon: History,
@@ -69,7 +80,7 @@ const navItems: NavItem[] = [
 const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const { user, hasPermission } = useAuthStore()
   const { company } = useCompanyStore()
-  const [expandedItems, setExpandedItems] = useState<string[]>(['/maintenance', '/production'])
+  const [expandedItems, setExpandedItems] = useState<string[]>(['/inventory', '/maintenance', '/production'])
 
   const companyInitials = useMemo(() => {
     if (company?.short_name) return company.short_name.substring(0, 2).toUpperCase()

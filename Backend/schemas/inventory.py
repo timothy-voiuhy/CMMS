@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
+from models.inventory import RequisitionStatus, RequisitionLineStatus, RequisitionPriority
 
 
 # ==================== CATEGORY SCHEMAS ====================
@@ -117,3 +118,123 @@ class InventoryTransactionResponse(InventoryTransactionBase):
     
     class Config:
         from_attributes = True
+
+
+# ==================== REQUISITION SCHEMAS ====================
+
+class InventoryItemSummary(BaseModel):
+    id: int
+    item_code: str
+    name: str
+    unit_of_measure: str
+    quantity: float
+    location: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class InventoryRequisitionItemCreate(BaseModel):
+    item_id: int
+    requested_quantity: float = Field(..., gt=0)
+    notes: Optional[str] = None
+
+
+class InventoryRequisitionItemUpdate(BaseModel):
+    item_id: Optional[int] = None
+    requested_quantity: Optional[float] = Field(None, gt=0)
+    notes: Optional[str] = None
+
+
+class InventoryRequisitionItemResponse(BaseModel):
+    id: int
+    requisition_id: int
+    item_id: int
+    requested_quantity: float
+    approved_quantity: Optional[float] = None
+    fulfilled_quantity: float
+    unit_of_measure: str
+    notes: Optional[str] = None
+    status: RequisitionLineStatus
+    item: Optional[InventoryItemSummary] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class InventoryRequisitionBase(BaseModel):
+    title: str = Field(..., max_length=200)
+    description: Optional[str] = None
+    priority: RequisitionPriority = RequisitionPriority.MEDIUM
+    needed_by: Optional[str] = None
+    department: Optional[str] = Field(None, max_length=100)
+    work_order_id: Optional[int] = None
+    production_order_id: Optional[int] = None
+    notes: Optional[str] = None
+
+
+class InventoryRequisitionCreate(InventoryRequisitionBase):
+    items: List[InventoryRequisitionItemCreate] = Field(..., min_length=1)
+
+
+class InventoryRequisitionUpdate(BaseModel):
+    title: Optional[str] = Field(None, max_length=200)
+    description: Optional[str] = None
+    priority: Optional[RequisitionPriority] = None
+    needed_by: Optional[str] = None
+    department: Optional[str] = Field(None, max_length=100)
+    work_order_id: Optional[int] = None
+    production_order_id: Optional[int] = None
+    notes: Optional[str] = None
+    items: Optional[List[InventoryRequisitionItemCreate]] = None
+
+
+class InventoryRequisitionListResponse(InventoryRequisitionBase):
+    id: int
+    requisition_number: str
+    status: RequisitionStatus
+    requested_by: int
+    approved_by: Optional[int] = None
+    approved_at: Optional[datetime] = None
+    fulfilled_by: Optional[int] = None
+    fulfilled_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    line_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class InventoryRequisitionResponse(InventoryRequisitionListResponse):
+    items: List[InventoryRequisitionItemResponse] = Field(default_factory=list)
+
+    class Config:
+        from_attributes = True
+
+
+class InventoryRequisitionApprovalLine(BaseModel):
+    line_id: int
+    approved_quantity: float = Field(..., ge=0)
+
+
+class InventoryRequisitionApprovalRequest(BaseModel):
+    items: Optional[List[InventoryRequisitionApprovalLine]] = None
+    notes: Optional[str] = None
+
+
+class InventoryRequisitionRejectRequest(BaseModel):
+    reason: str = Field(..., min_length=1)
+
+
+class InventoryRequisitionFulfillmentLine(BaseModel):
+    line_id: int
+    quantity: float = Field(..., gt=0)
+
+
+class InventoryRequisitionFulfillmentRequest(BaseModel):
+    items: List[InventoryRequisitionFulfillmentLine] = Field(..., min_length=1)
+    notes: Optional[str] = None

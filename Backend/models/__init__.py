@@ -2,7 +2,11 @@ from models.user import User, UserRole
 from models.company import Company, Facility, Department, Role
 from models.craftsman import Craftsman, Skill
 from models.equipment import Equipment, EquipmentStatus
-from models.inventory import InventoryItem, InventoryTransaction, InventoryCategory, TransactionType
+from models.inventory import (
+    InventoryItem, InventoryTransaction, InventoryCategory, TransactionType,
+    InventoryRequisition, InventoryRequisitionItem, RequisitionStatus,
+    RequisitionLineStatus, RequisitionPriority
+)
 from models.work_order import WorkOrder, WorkOrderType, WorkOrderPriority, WorkOrderStatus
 from models.maintenance import MaintenanceReport
 from models.production import (
@@ -29,6 +33,11 @@ __all__ = [
     "InventoryTransaction",
     "InventoryCategory",
     "TransactionType",
+    "InventoryRequisition",
+    "InventoryRequisitionItem",
+    "RequisitionStatus",
+    "RequisitionLineStatus",
+    "RequisitionPriority",
     "WorkOrder",
     "WorkOrderType",
     "WorkOrderPriority",

@@ -50,6 +50,47 @@ API Documentation: `http://localhost:8000/docs`
 
 ---
 
+## 🐳 Docker
+
+From the project root:
+
+```bash
+docker compose up --build backend
+```
+
+The API will be available at:
+
+- `http://localhost:8000`
+- `http://localhost:8000/docs`
+
+The compose setup keeps local runtime data outside the image:
+
+- `postgres_data` -> PostgreSQL database volume
+- `Backend/uploads` -> uploaded files
+- `Backend/logs` -> backend logs
+
+Default local database settings are:
+
+- database: `icms`
+- user: `icms`
+- password: `icms_password`
+- internal URL: `postgresql+psycopg2://icms:icms_password@db:5432/icms`
+
+For stronger local secrets, start it like this:
+
+```bash
+SECRET_KEY="$(openssl rand -hex 32)" POSTGRES_PASSWORD="change-me" docker compose up --build backend
+```
+
+When testing from a phone, keep the frontend running with host exposure:
+
+```bash
+cd icms-web
+npm run dev:host
+```
+
+---
+
 ## 📂 Project Structure
 
 ```

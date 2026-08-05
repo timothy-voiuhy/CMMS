@@ -123,6 +123,128 @@ export interface AdjustQuantityRequest {
   reference?: string
 }
 
+// ==================== REQUISITION TYPES ====================
+
+export type RequisitionStatus =
+  | 'draft'
+  | 'submitted'
+  | 'approved'
+  | 'rejected'
+  | 'partially_fulfilled'
+  | 'fulfilled'
+  | 'cancelled'
+
+export type RequisitionLineStatus =
+  | 'pending'
+  | 'approved'
+  | 'partially_fulfilled'
+  | 'fulfilled'
+  | 'rejected'
+  | 'cancelled'
+
+export type RequisitionPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+export interface InventoryItemSummary {
+  id: number
+  item_code: string
+  name: string
+  unit_of_measure: string
+  quantity: number
+  location?: string
+}
+
+export interface InventoryRequisitionItem {
+  id: number
+  requisition_id: number
+  item_id: number
+  requested_quantity: number
+  approved_quantity?: number
+  fulfilled_quantity: number
+  unit_of_measure: string
+  notes?: string
+  status: RequisitionLineStatus
+  item?: InventoryItemSummary
+  created_at: string
+  updated_at: string
+}
+
+export interface InventoryRequisition {
+  id: number
+  requisition_number: string
+  title: string
+  description?: string
+  status: RequisitionStatus
+  priority: RequisitionPriority
+  needed_by?: string
+  department?: string
+  work_order_id?: number
+  production_order_id?: number
+  requested_by: number
+  approved_by?: number
+  approved_at?: string
+  fulfilled_by?: number
+  fulfilled_at?: string
+  rejection_reason?: string
+  notes?: string
+  line_count: number
+  items?: InventoryRequisitionItem[]
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateInventoryRequisitionLine {
+  item_id: number
+  requested_quantity: number
+  notes?: string
+}
+
+export interface CreateInventoryRequisitionRequest {
+  title: string
+  description?: string
+  priority: RequisitionPriority
+  needed_by?: string
+  department?: string
+  work_order_id?: number
+  production_order_id?: number
+  notes?: string
+  items: CreateInventoryRequisitionLine[]
+}
+
+export type UpdateInventoryRequisitionRequest = Partial<Omit<CreateInventoryRequisitionRequest, 'items'>> & {
+  items?: CreateInventoryRequisitionLine[]
+}
+
+export interface InventoryRequisitionFilters {
+  page?: number
+  limit?: number
+  search?: string
+  status?: RequisitionStatus
+  priority?: RequisitionPriority
+  requested_by?: number
+  work_order_id?: number
+  production_order_id?: number
+}
+
+export interface ApproveRequisitionRequest {
+  items?: {
+    line_id: number
+    approved_quantity: number
+  }[]
+  notes?: string
+}
+
+export interface RejectRequisitionRequest {
+  reason: string
+}
+
+export interface FulfillRequisitionRequest {
+  items: {
+    line_id: number
+    quantity: number
+  }[]
+  notes?: string
+}
+
 class InventoryService {
   private baseUrl = '/api/v1/inventory'
 
@@ -207,6 +329,61 @@ class InventoryService {
 
   async getLowStockItems() {
     return apiClient.get<InventoryItem[]>(`${this.baseUrl}/low-stock`)
+  }
+
+  // ==================== REQUISITION METHODS ====================
+
+  async getRequisitions(filters: InventoryRequisitionFilters = {}) {
+    const params = new URLSearchParams()
+    if (filters.page) params.append('page', filters.page.toString())
+    if (filters.limit) params.append('limit', filters.limit.toString())
+    if (filters.search) params.append('search', filters.search)
+    if (filters.status) params.append('status', filters.status)
+    if (filters.priority) params.append('priority', filters.priority)
+    if (filters.requested_by) params.append('requested_by', filters.requested_by.toString())
+    if (filters.work_order_id) params.append('work_order_id', filters.work_order_id.toString())
+    if (filters.production_order_id) params.append('production_order_id', filters.production_order_id.toString())
+
+    return apiClient.get<{
+      success: boolean
+      data: InventoryRequisition[]
+      total: number
+      page: number
+      pageSize: number
+      totalPages: number
+    }>(`${this.baseUrl}/requisitions?${params.toString()}`)
+  }
+
+  async getRequisitionById(id: number) {
+    return apiClient.get<InventoryRequisition>(`${this.baseUrl}/requisitions/${id}`)
+  }
+
+  async createRequisition(data: CreateInventoryRequisitionRequest) {
+    return apiClient.post<InventoryRequisition>(`${this.baseUrl}/requisitions`, data)
+  }
+
+  async updateRequisition(id: number, data: UpdateInventoryRequisitionRequest) {
+    return apiClient.put<InventoryRequisition>(`${this.baseUrl}/requisitions/${id}`, data)
+  }
+
+  async submitRequisition(id: number) {
+    return apiClient.post<InventoryRequisition>(`${this.baseUrl}/requisitions/${id}/submit`)
+  }
+
+  async approveRequisition(id: number, data: ApproveRequisitionRequest) {
+    return apiClient.post<InventoryRequisition>(`${this.baseUrl}/requisitions/${id}/approve`, data)
+  }
+
+  async rejectRequisition(id: number, data: RejectRequisitionRequest) {
+    return apiClient.post<InventoryRequisition>(`${this.baseUrl}/requisitions/${id}/reject`, data)
+  }
+
+  async fulfillRequisition(id: number, data: FulfillRequisitionRequest) {
+    return apiClient.post<InventoryRequisition>(`${this.baseUrl}/requisitions/${id}/fulfill`, data)
+  }
+
+  async cancelRequisition(id: number) {
+    return apiClient.post<InventoryRequisition>(`${this.baseUrl}/requisitions/${id}/cancel`)
   }
 }
 

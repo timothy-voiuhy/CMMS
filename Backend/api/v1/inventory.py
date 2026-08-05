@@ -4,16 +4,35 @@ from sqlalchemy.orm import Session
 from db.session import get_db
 from core.security import get_current_active_user
 from models.user import User
-from models.inventory import TransactionType
+from models.inventory import TransactionType, RequisitionStatus, RequisitionPriority
 from schemas.inventory import (
     InventoryItemCreate, InventoryItemUpdate, InventoryItemResponse, InventoryItemWithCategory,
     InventoryTransactionCreate, InventoryTransactionResponse,
-    InventoryCategoryCreate, InventoryCategoryUpdate, InventoryCategoryResponse, InventoryCategoryTree
+    InventoryCategoryCreate, InventoryCategoryUpdate, InventoryCategoryResponse, InventoryCategoryTree,
+    InventoryRequisitionCreate, InventoryRequisitionUpdate, InventoryRequisitionResponse,
+    InventoryRequisitionListResponse, InventoryRequisitionApprovalRequest,
+    InventoryRequisitionRejectRequest, InventoryRequisitionFulfillmentRequest
 )
 from schemas.common import PaginatedResponse
 from services import inventory_service
+from services.company_service import get_user_permissions
 
 router = APIRouter()
+
+
+def require_any_permission(db: Session, current_user: User, permissions: List[str]) -> None:
+    """Require any matching resolved permission for sensitive inventory actions."""
+    user_permissions = set(get_user_permissions(db, current_user.id))
+    if (
+        "*" in user_permissions
+        or "admin.full_access" in user_permissions
+        or any(permission in user_permissions for permission in permissions)
+    ):
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Not enough permissions"
+    )
 
 
 # ==================== CATEGORY ENDPOINTS ====================
@@ -144,6 +163,168 @@ async def get_low_stock_items(
 ):
     """Get items below reorder point."""
     return inventory_service.get_low_stock_items(db)
+
+
+# ==================== REQUISITION ENDPOINTS ====================
+
+@router.get("/requisitions", response_model=PaginatedResponse[InventoryRequisitionListResponse])
+async def list_requisitions(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    search: Optional[str] = None,
+    status_filter: Optional[RequisitionStatus] = Query(None, alias="status"),
+    priority: Optional[RequisitionPriority] = None,
+    requested_by: Optional[int] = None,
+    work_order_id: Optional[int] = None,
+    production_order_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get all inventory requisitions with optional filters."""
+    require_any_permission(db, current_user, ["inventory.requisitions.view", "inventory.view"])
+    skip = (page - 1) * limit
+    requisitions = inventory_service.get_requisitions(
+        db,
+        skip=skip,
+        limit=limit,
+        search=search,
+        status_filter=status_filter,
+        priority=priority,
+        requested_by=requested_by,
+        work_order_id=work_order_id,
+        production_order_id=production_order_id
+    )
+    total = inventory_service.get_requisition_count(
+        db,
+        search=search,
+        status_filter=status_filter,
+        priority=priority,
+        requested_by=requested_by,
+        work_order_id=work_order_id,
+        production_order_id=production_order_id
+    )
+
+    return PaginatedResponse(
+        success=True,
+        data=requisitions,
+        total=total,
+        page=page,
+        pageSize=limit,
+        totalPages=(total + limit - 1) // limit
+    )
+
+
+@router.post("/requisitions", response_model=InventoryRequisitionResponse, status_code=status.HTTP_201_CREATED)
+async def create_requisition(
+    requisition: InventoryRequisitionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Create a draft inventory requisition."""
+    require_any_permission(db, current_user, ["inventory.requisitions.create", "inventory.create"])
+    return inventory_service.create_requisition(db, requisition, current_user.id)
+
+
+@router.get("/requisitions/{requisition_id}", response_model=InventoryRequisitionResponse)
+async def get_requisition(
+    requisition_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get inventory requisition details."""
+    require_any_permission(db, current_user, ["inventory.requisitions.view", "inventory.view"])
+    requisition = inventory_service.get_requisition(db, requisition_id)
+    if not requisition:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")
+    return requisition
+
+
+@router.put("/requisitions/{requisition_id}", response_model=InventoryRequisitionResponse)
+async def update_requisition(
+    requisition_id: int,
+    requisition: InventoryRequisitionUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update a draft inventory requisition."""
+    require_any_permission(db, current_user, ["inventory.requisitions.edit", "inventory.edit"])
+    updated = inventory_service.update_requisition(db, requisition_id, requisition)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")
+    return updated
+
+
+@router.post("/requisitions/{requisition_id}/submit", response_model=InventoryRequisitionResponse)
+async def submit_requisition(
+    requisition_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Submit a draft inventory requisition."""
+    require_any_permission(db, current_user, ["inventory.requisitions.submit", "inventory.create"])
+    requisition = inventory_service.submit_requisition(db, requisition_id)
+    if not requisition:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")
+    return requisition
+
+
+@router.post("/requisitions/{requisition_id}/approve", response_model=InventoryRequisitionResponse)
+async def approve_requisition(
+    requisition_id: int,
+    approval: InventoryRequisitionApprovalRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Approve a submitted inventory requisition."""
+    require_any_permission(db, current_user, ["inventory.requisitions.approve", "inventory.edit"])
+    requisition = inventory_service.approve_requisition(db, requisition_id, approval, current_user.id)
+    if not requisition:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")
+    return requisition
+
+
+@router.post("/requisitions/{requisition_id}/reject", response_model=InventoryRequisitionResponse)
+async def reject_requisition(
+    requisition_id: int,
+    rejection: InventoryRequisitionRejectRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Reject a submitted inventory requisition."""
+    require_any_permission(db, current_user, ["inventory.requisitions.approve", "inventory.edit"])
+    requisition = inventory_service.reject_requisition(db, requisition_id, rejection, current_user.id)
+    if not requisition:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")
+    return requisition
+
+
+@router.post("/requisitions/{requisition_id}/fulfill", response_model=InventoryRequisitionResponse)
+async def fulfill_requisition(
+    requisition_id: int,
+    fulfillment: InventoryRequisitionFulfillmentRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Fulfill an approved inventory requisition and issue stock."""
+    require_any_permission(db, current_user, ["inventory.requisitions.fulfill", "inventory.transaction", "inventory.adjust"])
+    requisition = inventory_service.fulfill_requisition(db, requisition_id, fulfillment, current_user.id)
+    if not requisition:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")
+    return requisition
+
+
+@router.post("/requisitions/{requisition_id}/cancel", response_model=InventoryRequisitionResponse)
+async def cancel_requisition(
+    requisition_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Cancel an inventory requisition before fulfillment starts."""
+    require_any_permission(db, current_user, ["inventory.requisitions.cancel", "inventory.edit"])
+    requisition = inventory_service.cancel_requisition(db, requisition_id)
+    if not requisition:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")
+    return requisition
 
 
 @router.get("/{item_id}", response_model=InventoryItemWithCategory)

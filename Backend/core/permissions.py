@@ -94,6 +94,48 @@ PERMISSION_REGISTRY: Dict[str, Dict] = {
         "category": "Inventory",
         "implies": ["inventory.view"]
     },
+    "inventory.requisitions.view": {
+        "name": "View Requisitions",
+        "description": "View inventory requisitions and request status",
+        "category": "Inventory",
+        "implies": ["inventory.view"]
+    },
+    "inventory.requisitions.create": {
+        "name": "Create Requisitions",
+        "description": "Create inventory material requests",
+        "category": "Inventory",
+        "implies": ["inventory.requisitions.view"]
+    },
+    "inventory.requisitions.edit": {
+        "name": "Edit Requisitions",
+        "description": "Modify draft inventory requisitions",
+        "category": "Inventory",
+        "implies": ["inventory.requisitions.view"]
+    },
+    "inventory.requisitions.submit": {
+        "name": "Submit Requisitions",
+        "description": "Submit draft requisitions for approval",
+        "category": "Inventory",
+        "implies": ["inventory.requisitions.view"]
+    },
+    "inventory.requisitions.approve": {
+        "name": "Approve Requisitions",
+        "description": "Approve or reject submitted inventory requisitions",
+        "category": "Inventory",
+        "implies": ["inventory.requisitions.view"]
+    },
+    "inventory.requisitions.fulfill": {
+        "name": "Fulfill Requisitions",
+        "description": "Issue stock against approved inventory requisitions",
+        "category": "Inventory",
+        "implies": ["inventory.requisitions.view", "inventory.transaction"]
+    },
+    "inventory.requisitions.cancel": {
+        "name": "Cancel Requisitions",
+        "description": "Cancel inventory requisitions before fulfillment",
+        "category": "Inventory",
+        "implies": ["inventory.requisitions.view"]
+    },
 
     # ---- Production ----
     "production.view": {
@@ -409,6 +451,8 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "production.*",
             "equipment.view", "equipment.assign",
             "inventory.view", "inventory.transaction",
+            "inventory.requisitions.view", "inventory.requisitions.create",
+            "inventory.requisitions.submit", "inventory.requisitions.approve",
             "quality.view",
             "maintenance.view",
             "work_orders.view", "work_orders.assign",
@@ -426,6 +470,8 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "quality.*",
             "production.view",
             "inventory.view",
+            "inventory.requisitions.view", "inventory.requisitions.create",
+            "inventory.requisitions.submit",
             "reports.view", "reports.quality", "reports.production", "reports.export",
             "craftsmen.view"
         ]
@@ -441,6 +487,8 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "work_orders.*",
             "equipment.*",
             "inventory.view", "inventory.transaction",
+            "inventory.requisitions.view", "inventory.requisitions.create",
+            "inventory.requisitions.submit", "inventory.requisitions.approve",
             "craftsmen.view",
             "reports.view", "reports.maintenance", "reports.equipment", "reports.export"
         ]
@@ -455,6 +503,8 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "production.view", "production.start", "production.complete", "production.packaging",
             "equipment.view",
             "inventory.view", "inventory.transaction",
+            "inventory.requisitions.view", "inventory.requisitions.create",
+            "inventory.requisitions.submit", "inventory.requisitions.approve",
             "quality.view",
             "work_orders.view",
             "craftsmen.view",
@@ -472,6 +522,8 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "work_orders.view", "work_orders.complete",
             "equipment.view", "equipment.edit",
             "inventory.view", "inventory.transaction",
+            "inventory.requisitions.view", "inventory.requisitions.create",
+            "inventory.requisitions.submit", "inventory.requisitions.approve",
             "craftsmen.view",
             "reports.view", "reports.maintenance"
         ]
@@ -485,7 +537,8 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "dashboard.view",
             "quality.view", "quality.inspect", "quality.ncr_create",
             "production.view",
-            "inventory.view",
+            "inventory.view", "inventory.requisitions.view", "inventory.requisitions.create",
+            "inventory.requisitions.submit",
             "reports.view", "reports.quality"
         ]
     },
@@ -499,7 +552,9 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "maintenance.view", "maintenance.complete",
             "work_orders.view", "work_orders.complete",
             "equipment.view",
-            "inventory.view", "inventory.transaction"
+            "inventory.view", "inventory.transaction",
+            "inventory.requisitions.view", "inventory.requisitions.create",
+            "inventory.requisitions.submit"
         ]
     },
     "machine_operator": {
@@ -511,7 +566,8 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "dashboard.view",
             "production.view", "production.start", "production.complete",
             "equipment.view",
-            "inventory.view",
+            "inventory.view", "inventory.requisitions.view", "inventory.requisitions.create",
+            "inventory.requisitions.submit",
             "quality.view",
             "work_orders.view"
         ]
@@ -537,7 +593,8 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "dashboard.view",
             "production.view",
             "equipment.view",
-            "inventory.view",
+            "inventory.view", "inventory.requisitions.view", "inventory.requisitions.create",
+            "inventory.requisitions.submit",
             "work_orders.view"
         ]
     },

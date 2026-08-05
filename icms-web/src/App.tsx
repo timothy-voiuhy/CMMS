@@ -24,6 +24,9 @@ import InventoryDetailPage from './pages/inventory/InventoryDetailPage'
 import InventoryFormPage from './pages/inventory/InventoryFormPage'
 import InventoryCategoriesPage from './pages/inventory/InventoryCategoriesPage'
 import InventoryGridPage from './pages/inventory/InventoryGridPage'
+import InventoryRequisitionsPage from './pages/inventory/InventoryRequisitionsPage'
+import InventoryRequisitionFormPage from './pages/inventory/InventoryRequisitionFormPage'
+import InventoryRequisitionDetailPage from './pages/inventory/InventoryRequisitionDetailPage'
 import WorkOrdersListPage from './pages/workOrders/WorkOrdersListPage'
 import WorkOrderDetailPage from './pages/workOrders/WorkOrderDetailPage'
 import WorkOrderFormPage from './pages/workOrders/WorkOrderFormPage'
@@ -137,6 +140,10 @@ function App() {
           <Route path="/inventory" element={<PermissionRoute permission="inventory.view"><InventoryListPage /></PermissionRoute>} />
           <Route path="/inventory/grid" element={<PermissionRoute permission="inventory.view"><InventoryGridPage /></PermissionRoute>} />
           <Route path="/inventory/categories" element={<PermissionRoute permission="inventory.categories"><InventoryCategoriesPage /></PermissionRoute>} />
+          <Route path="/inventory/requisitions" element={<PermissionRoute anyOf={["inventory.requisitions.view", "inventory.view"]}><InventoryRequisitionsPage /></PermissionRoute>} />
+          <Route path="/inventory/requisitions/new" element={<PermissionRoute anyOf={["inventory.requisitions.create", "inventory.create"]}><InventoryRequisitionFormPage /></PermissionRoute>} />
+          <Route path="/inventory/requisitions/:id/edit" element={<PermissionRoute anyOf={["inventory.requisitions.edit", "inventory.edit"]}><InventoryRequisitionFormPage /></PermissionRoute>} />
+          <Route path="/inventory/requisitions/:id" element={<PermissionRoute anyOf={["inventory.requisitions.view", "inventory.view"]}><InventoryRequisitionDetailPage /></PermissionRoute>} />
           <Route path="/inventory/new" element={<PermissionRoute permission="inventory.create"><InventoryFormPage /></PermissionRoute>} />
           <Route path="/inventory/:id/edit" element={<PermissionRoute permission="inventory.edit"><InventoryFormPage /></PermissionRoute>} />
           <Route path="/inventory/:id" element={<PermissionRoute permission="inventory.view"><InventoryDetailPage /></PermissionRoute>} />
