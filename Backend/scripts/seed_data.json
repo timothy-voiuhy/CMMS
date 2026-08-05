@@ -85,6 +85,46 @@
       "password": "inv123",
       "role": "inventory",
       "phone": "+256-XXX-XXXXXX"
+    },
+    {
+      "username": "nnamutebi",
+      "email": "nancy.namutebi@psalmsfood.com",
+      "full_name": "Nancy Namutebi",
+      "password": "craft123",
+      "role": "craftsman",
+      "phone": "+256-XXX-XXXXXX"
+    },
+    {
+      "username": "okello",
+      "email": "isaac.okello@psalmsfood.com",
+      "full_name": "Isaac Okello",
+      "password": "craft123",
+      "role": "craftsman",
+      "phone": "+256-XXX-XXXXXX"
+    },
+    {
+      "username": "akello",
+      "email": "agnes.akello@psalmsfood.com",
+      "full_name": "Agnes Akello",
+      "password": "craft123",
+      "role": "craftsman",
+      "phone": "+256-XXX-XXXXXX"
+    },
+    {
+      "username": "mwesigwa",
+      "email": "samuel.mwesigwa@psalmsfood.com",
+      "full_name": "Samuel Mwesigwa",
+      "password": "craft123",
+      "role": "craftsman",
+      "phone": "+256-XXX-XXXXXX"
+    },
+    {
+      "username": "namara",
+      "email": "grace.namara@psalmsfood.com",
+      "full_name": "Grace Namara",
+      "password": "craft123",
+      "role": "craftsman",
+      "phone": "+256-XXX-XXXXXX"
     }
   ],
   "skills": [
@@ -112,6 +152,26 @@
       "name": "Conveyor Systems",
       "description": "Conveyor belt maintenance and repair",
       "category": "Mechanical"
+    },
+    {
+      "name": "PLC Troubleshooting",
+      "description": "PLC diagnostics, I/O checks, and basic control fault isolation",
+      "category": "Electrical"
+    },
+    {
+      "name": "Welding and Fabrication",
+      "description": "Food-grade stainless repair and light fabrication",
+      "category": "Mechanical"
+    },
+    {
+      "name": "Utilities Maintenance",
+      "description": "Generator, pump, tank, and compressed utility maintenance",
+      "category": "Utilities"
+    },
+    {
+      "name": "Packaging Equipment",
+      "description": "Packaging line setup, sealing, and film feed troubleshooting",
+      "category": "Packaging"
     }
   ],
   "craftsmen": [
@@ -120,6 +180,7 @@
       "employee_id": "EMP-001",
       "department": "Maintenance",
       "position": "Senior Maintenance Technician",
+      "role_name": "Senior Technician",
       "hire_date": "2020-01-15",
       "certification_level": "Level 3",
       "hourly_rate": 25000,
@@ -130,10 +191,66 @@
       "employee_id": "EMP-002",
       "department": "Maintenance",
       "position": "Hydraulic Specialist",
+      "role_name": "Maintenance Technician",
       "hire_date": "2021-03-10",
       "certification_level": "Level 2",
       "hourly_rate": 22000,
       "skills": ["Hydraulic Systems", "Mechanical Maintenance"]
+    },
+    {
+      "user_username": "nnamutebi",
+      "employee_id": "EMP-003",
+      "department": "Maintenance",
+      "position": "Maintenance Team Leader",
+      "role_name": "Maintenance Team Leader",
+      "hire_date": "2019-08-01",
+      "certification_level": "Level 4",
+      "hourly_rate": 30000,
+      "skills": ["Electrical Maintenance", "Mechanical Maintenance", "PLC Troubleshooting", "Food Processing Equipment"]
+    },
+    {
+      "user_username": "okello",
+      "employee_id": "EMP-004",
+      "department": "Utilities",
+      "position": "Utilities Technician",
+      "role_name": "Technician",
+      "hire_date": "2022-02-20",
+      "certification_level": "Level 2",
+      "hourly_rate": 21000,
+      "skills": ["Utilities Maintenance", "Electrical Maintenance", "Hydraulic Systems"]
+    },
+    {
+      "user_username": "akello",
+      "employee_id": "EMP-005",
+      "department": "Production",
+      "position": "Machine Operator",
+      "role_name": "Machine Operator",
+      "hire_date": "2023-04-12",
+      "certification_level": "Level 1",
+      "hourly_rate": 16000,
+      "skills": ["Food Processing Equipment", "Conveyor Systems"]
+    },
+    {
+      "user_username": "mwesigwa",
+      "employee_id": "EMP-006",
+      "department": "Workshop",
+      "position": "Fabricator",
+      "role_name": "Technician",
+      "hire_date": "2021-11-05",
+      "certification_level": "Level 2",
+      "hourly_rate": 20000,
+      "skills": ["Welding and Fabrication", "Mechanical Maintenance"]
+    },
+    {
+      "user_username": "namara",
+      "employee_id": "EMP-007",
+      "department": "Packaging",
+      "position": "Packaging Technician",
+      "role_name": "Packaging Operator",
+      "hire_date": "2023-09-18",
+      "certification_level": "Level 1",
+      "hourly_rate": 15000,
+      "skills": ["Packaging Equipment", "Conveyor Systems"]
     }
   ],
   "equipment": [
@@ -372,6 +489,10 @@
       "description": "Equipment spare parts and components"
     },
     {
+      "name": "Tools",
+      "description": "Maintenance tools and workshop equipment"
+    },
+    {
       "name": "Finished Goods",
       "description": "Ready for sale products"
     },
@@ -503,6 +624,316 @@
       "reorder_point": 10000,
       "unit_cost": 80,
       "location": "Packaging Store"
+    },
+    {
+      "item_code": "SP-BEAR-001",
+      "name": "Fryer Shaft Bearing",
+      "description": "High-temperature bearing for fryer drive shaft",
+      "category_name": "Spare Parts",
+      "unit_of_measure": "pcs",
+      "quantity": 8,
+      "min_quantity": 2,
+      "reorder_point": 3,
+      "unit_cost": 185000,
+      "location": "Spare Parts Store",
+      "supplier": "Kampala Industrial Supplies"
+    },
+    {
+      "item_code": "SP-SENSOR-001",
+      "name": "Temperature Probe",
+      "description": "Food-grade fryer temperature probe",
+      "category_name": "Spare Parts",
+      "unit_of_measure": "pcs",
+      "quantity": 6,
+      "min_quantity": 2,
+      "reorder_point": 3,
+      "unit_cost": 145000,
+      "location": "Electrical Store",
+      "supplier": "Process Controls Uganda"
+    },
+    {
+      "item_code": "TL-TORQUE-001",
+      "name": "Torque Wrench Set",
+      "description": "Adjustable torque wrench set for mechanical maintenance",
+      "category_name": "Tools",
+      "unit_of_measure": "set",
+      "quantity": 3,
+      "min_quantity": 1,
+      "reorder_point": 1,
+      "unit_cost": 420000,
+      "location": "Workshop Tool Cage",
+      "supplier": "Kampala Industrial Supplies"
+    },
+    {
+      "item_code": "TL-METER-001",
+      "name": "Digital Multimeter",
+      "description": "True RMS multimeter for electrical diagnostics",
+      "category_name": "Tools",
+      "unit_of_measure": "pcs",
+      "quantity": 4,
+      "min_quantity": 1,
+      "reorder_point": 2,
+      "unit_cost": 210000,
+      "location": "Electrical Tool Cabinet",
+      "supplier": "Process Controls Uganda"
+    },
+    {
+      "item_code": "FG-CRISP-ORG-50",
+      "name": "SUMZ Original Potato Crisps 50g",
+      "description": "Finished product, original flavor 50g pack",
+      "category_name": "Finished Goods",
+      "unit_of_measure": "carton",
+      "quantity": 320,
+      "min_quantity": 80,
+      "reorder_point": 120,
+      "unit_cost": 28500,
+      "location": "Finished Goods Store"
+    },
+    {
+      "item_code": "FG-CRISP-BBQ-50",
+      "name": "SUMZ BBQ Potato Crisps 50g",
+      "description": "Finished product, BBQ flavor 50g pack",
+      "category_name": "Finished Goods",
+      "unit_of_measure": "carton",
+      "quantity": 180,
+      "min_quantity": 60,
+      "reorder_point": 90,
+      "unit_cost": 30000,
+      "location": "Finished Goods Store"
+    },
+    {
+      "item_code": "FG-CRISP-SV-100",
+      "name": "SUMZ Salt and Vinegar Potato Crisps 100g",
+      "description": "Finished product, salt and vinegar flavor 100g pack",
+      "category_name": "Finished Goods",
+      "unit_of_measure": "carton",
+      "quantity": 140,
+      "min_quantity": 50,
+      "reorder_point": 75,
+      "unit_cost": 45000,
+      "location": "Finished Goods Store"
+    }
+  ],
+  "maintenance_catalogue_items": [
+    {
+      "item_code": "SP-0001",
+      "item_type": "spare_part",
+      "name": "Conveyor Belt 600mm",
+      "description": "Food-grade replacement belt for potato crisps and fried corn conveyors.",
+      "category": "Conveyors",
+      "image_url": "https://placehold.co/640x480?text=Conveyor+Belt",
+      "manufacturer": "Industrial Food Equipment Ltd",
+      "model_number": "BELT-600-FG",
+      "supplier": "Kampala Industrial Supplies",
+      "unit_of_measure": "m",
+      "unit_cost": 50000,
+      "location": "Spare Parts Store",
+      "compatible_equipment": "Conveyor Belt 1, Conveyor Belt 2, Conveyor Belt 3",
+      "inventory_item_code": "SP-BELT-001",
+      "notes": "Keep at least one full replacement length available."
+    },
+    {
+      "item_code": "SP-0002",
+      "item_type": "spare_part",
+      "name": "Fryer Oil Filter Cartridge",
+      "description": "Replacement cartridge for fryer oil filtration assemblies.",
+      "category": "Fryers",
+      "image_url": "https://placehold.co/640x480?text=Oil+Filter",
+      "manufacturer": "CleanFry Systems",
+      "model_number": "CF-OF-20",
+      "supplier": "Kampala Industrial Supplies",
+      "unit_of_measure": "pcs",
+      "unit_cost": 25000,
+      "location": "Spare Parts Store",
+      "compatible_equipment": "Frying Machine - Potato, Circular Fryer, Rectangular Fryer",
+      "inventory_item_code": "SP-FILTER-001"
+    },
+    {
+      "item_code": "SP-0003",
+      "item_type": "spare_part",
+      "name": "High Temperature Shaft Bearing",
+      "description": "Bearing for fryer drive shaft and high-temperature rotating assemblies.",
+      "category": "Fryers",
+      "image_url": "https://placehold.co/640x480?text=Shaft+Bearing",
+      "manufacturer": "SKF",
+      "model_number": "HTB-6205",
+      "supplier": "Kampala Industrial Supplies",
+      "unit_of_measure": "pcs",
+      "unit_cost": 185000,
+      "location": "Spare Parts Store",
+      "compatible_equipment": "Frying Machine - Potato, Rolling Flavouring Drum",
+      "inventory_item_code": "SP-BEAR-001"
+    },
+    {
+      "item_code": "SP-0004",
+      "item_type": "spare_part",
+      "name": "Food Grade Temperature Probe",
+      "description": "Stainless temperature probe for fryer temperature control.",
+      "category": "Electrical",
+      "image_url": "https://placehold.co/640x480?text=Temperature+Probe",
+      "manufacturer": "Process Controls Uganda",
+      "model_number": "PT100-FG",
+      "supplier": "Process Controls Uganda",
+      "unit_of_measure": "pcs",
+      "unit_cost": 145000,
+      "location": "Electrical Store",
+      "compatible_equipment": "Frying Machine - Potato, Circular Fryer, Rectangular Fryer",
+      "inventory_item_code": "SP-SENSOR-001"
+    },
+    {
+      "item_code": "TL-0001",
+      "item_type": "tool",
+      "name": "Torque Wrench Set",
+      "description": "Workshop torque wrench set for bearing housings, motor mounts, and guards.",
+      "category": "Mechanical Tools",
+      "image_url": "https://placehold.co/640x480?text=Torque+Wrench",
+      "manufacturer": "Stanley",
+      "model_number": "TW-SET-200",
+      "supplier": "Kampala Industrial Supplies",
+      "unit_of_measure": "set",
+      "unit_cost": 420000,
+      "location": "Workshop Tool Cage",
+      "inventory_item_code": "TL-TORQUE-001",
+      "notes": "Calibrate every six months."
+    },
+    {
+      "item_code": "TL-0002",
+      "item_type": "tool",
+      "name": "Digital Multimeter",
+      "description": "True RMS meter for electrical fault finding and control panel diagnostics.",
+      "category": "Electrical Tools",
+      "image_url": "https://placehold.co/640x480?text=Digital+Multimeter",
+      "manufacturer": "Fluke",
+      "model_number": "117",
+      "supplier": "Process Controls Uganda",
+      "unit_of_measure": "pcs",
+      "unit_cost": 210000,
+      "location": "Electrical Tool Cabinet",
+      "inventory_item_code": "TL-METER-001"
+    }
+  ],
+  "customers": [
+    {
+      "customer_code": "CUST-0001",
+      "name": "Capital Supermarkets Ltd",
+      "contact_person": "Sarah Kiyingi",
+      "email": "procurement@capitalsupermarkets.ug",
+      "phone": "+256-700-100100",
+      "billing_address": "Plot 41 Kampala Road, Kampala",
+      "shipping_address": "Capital Supermarkets DC, Nakawa",
+      "tax_id": "TIN-100204001",
+      "payment_terms": "Net 30",
+      "credit_limit": 25000000,
+      "notes": "Weekly consolidated delivery to distribution center."
+    },
+    {
+      "customer_code": "CUST-0002",
+      "name": "Lake Victoria Wholesale Traders",
+      "contact_person": "James Mugisha",
+      "email": "orders@lvwholesale.ug",
+      "phone": "+256-701-222333",
+      "billing_address": "Industrial Area, Jinja",
+      "shipping_address": "Main warehouse, Jinja",
+      "tax_id": "TIN-100302901",
+      "payment_terms": "Net 14",
+      "credit_limit": 18000000
+    },
+    {
+      "customer_code": "CUST-0003",
+      "name": "Pearl Mini Marts",
+      "contact_person": "Aisha Nsubuga",
+      "email": "buying@pearlminimarts.ug",
+      "phone": "+256-702-444555",
+      "billing_address": "Ntinda Complex, Kampala",
+      "shipping_address": "Ntinda Complex, Kampala",
+      "payment_terms": "Cash on delivery",
+      "credit_limit": 5000000
+    }
+  ],
+  "sales_orders": [
+    {
+      "order_number": "SO-202608-0001",
+      "customer_code": "CUST-0001",
+      "status": "confirmed",
+      "priority": "high",
+      "order_date": "2026-08-01",
+      "requested_delivery_date": "2026-08-06",
+      "currency": "UGX",
+      "created_by_username": "admin",
+      "confirmed_by_username": "admin",
+      "notes": "Priority replenishment for supermarket branches.",
+      "items": [
+        {
+          "item_code": "FG-CRISP-ORG-50",
+          "ordered_quantity": 80,
+          "unit_price": 42000,
+          "tax_rate": 18
+        },
+        {
+          "item_code": "FG-CRISP-BBQ-50",
+          "ordered_quantity": 45,
+          "unit_price": 44000,
+          "tax_rate": 18
+        }
+      ]
+    },
+    {
+      "order_number": "SO-202608-0002",
+      "customer_code": "CUST-0002",
+      "status": "partially_fulfilled",
+      "priority": "medium",
+      "order_date": "2026-08-02",
+      "requested_delivery_date": "2026-08-05",
+      "currency": "UGX",
+      "created_by_username": "admin",
+      "confirmed_by_username": "admin",
+      "fulfilled_by_username": "pkato",
+      "notes": "Partial dispatch completed; remaining BBQ cartons pending production.",
+      "items": [
+        {
+          "item_code": "FG-CRISP-BBQ-50",
+          "ordered_quantity": 60,
+          "fulfilled_quantity": 35,
+          "unit_price": 44000,
+          "tax_rate": 18
+        },
+        {
+          "item_code": "FG-CRISP-SV-100",
+          "ordered_quantity": 30,
+          "fulfilled_quantity": 30,
+          "unit_price": 65000,
+          "tax_rate": 18
+        }
+      ]
+    },
+    {
+      "order_number": "SO-202608-0003",
+      "customer_code": "CUST-0003",
+      "status": "fulfilled",
+      "priority": "low",
+      "order_date": "2026-07-31",
+      "requested_delivery_date": "2026-08-03",
+      "currency": "UGX",
+      "created_by_username": "admin",
+      "confirmed_by_username": "admin",
+      "fulfilled_by_username": "pkato",
+      "notes": "Delivered to Ntinda branch.",
+      "items": [
+        {
+          "item_code": "FG-CRISP-ORG-50",
+          "ordered_quantity": 25,
+          "fulfilled_quantity": 25,
+          "unit_price": 42000,
+          "tax_rate": 18
+        },
+        {
+          "item_code": "FG-CRISP-SV-100",
+          "ordered_quantity": 15,
+          "fulfilled_quantity": 15,
+          "unit_price": 65000,
+          "tax_rate": 18
+        }
+      ]
     }
   ],
   "production_lines": [

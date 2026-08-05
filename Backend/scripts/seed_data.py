@@ -19,7 +19,10 @@ from models import (
     ProductionLine, ProductionLineEquipment, Shift, ProductionOrder, PackagingOrder,
     ProductionLineStatus, ShiftType, ProductionOrderStatus,
     QualityInspection, QualityInspectionItem, NonConformanceReport,
-    InspectionStatus, InspectionResult, NCRStatus, NCRSeverity, Role
+    InspectionStatus, InspectionResult, NCRStatus, NCRSeverity, Role,
+    MaintenanceCatalogueItem, SalesOrder, SalesOrderItem, Customer,
+    SalesOrderStatus, SalesOrderLineStatus, SalesOrderPriority,
+    InventoryTransaction, TransactionType
 )
 from core.security import get_password_hash
 from datetime import datetime
@@ -249,18 +252,27 @@ def seed_skills(db: Session, skills_data: list):
     return skills
 
 
-def seed_craftsmen(db: Session, users: dict, skills: dict, craftsmen_data: list):
+def seed_craftsmen(db: Session, users: dict, skills: dict, craftsmen_data: list, roles: list = None):
     """Seed craftsmen data."""
     print("\nCreating craftsmen...")
     craftsmen = []
+    roles_by_name = {role.name: role for role in roles or []}
     for craft_data in craftsmen_data:
         username = craft_data.pop('user_username')
         skill_names = craft_data.pop('skills', [])
+        role_name = craft_data.pop('role_name', None)
         
         user = users.get(username)
         if not user:
             print(f"✗ User {username} not found, skipping craftsman")
             continue
+
+        if role_name:
+            role = roles_by_name.get(role_name)
+            if role:
+                craft_data["role_id"] = role.id
+            else:
+                print(f"✗ Role {role_name} not found for {username}, leaving role empty")
         
         craftsman = Craftsman(
             user_id=user.id,
@@ -277,7 +289,8 @@ def seed_craftsmen(db: Session, users: dict, skills: dict, craftsmen_data: list)
         db.commit()
         db.refresh(craftsman)
         craftsmen.append(craftsman)
-        print(f"✓ Created craftsman: {user.full_name} with {len(skill_names)} skills")
+        role_label = role_name or "No role"
+        print(f"✓ Created craftsman: {user.full_name} ({role_label}) with {len(skill_names)} skills")
     
     return craftsmen
 
@@ -353,6 +366,169 @@ def seed_inventory(db: Session, categories: dict, inventory_data: list):
         print(f"✓ Created inventory item: {item.name} ({item.item_code})")
     
     return items
+
+
+def seed_maintenance_catalogue(db: Session, inventory_items: list, catalogue_data: list):
+    """Seed maintenance spare parts and tools catalogue."""
+    print("\nCreating maintenance parts and tools catalogue...")
+    inventory_lookup = {item.item_code: item for item in inventory_items}
+    catalogue_items = []
+
+    for item_data in catalogue_data:
+        inventory_item_code = item_data.pop("inventory_item_code", None)
+        if inventory_item_code:
+            inventory_item = inventory_lookup.get(inventory_item_code)
+            if inventory_item:
+                item_data["inventory_item_id"] = inventory_item.id
+            else:
+                print(f"✗ Inventory item {inventory_item_code} not found, leaving catalogue item unlinked")
+
+        item = MaintenanceCatalogueItem(**item_data)
+        db.add(item)
+        db.commit()
+        db.refresh(item)
+        catalogue_items.append(item)
+        print(f"✓ Created catalogue item: {item.name} ({item.item_code})")
+
+    return catalogue_items
+
+
+def seed_customers(db: Session, customers_data: list):
+    """Seed sales customers."""
+    print("\nCreating customers...")
+    customers = {}
+
+    for customer_data in customers_data:
+        customer = Customer(**customer_data)
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+        customers[customer.customer_code] = customer
+        print(f"✓ Created customer: {customer.name} ({customer.customer_code})")
+
+    return customers
+
+
+def _calculate_sales_line_total(quantity: float, unit_price: float, tax_rate: float, discount_amount: float) -> float:
+    subtotal = quantity * unit_price
+    tax_amount = subtotal * (tax_rate / 100)
+    return round(max(0, subtotal + tax_amount - discount_amount), 2)
+
+
+def seed_sales_orders(db: Session, users: dict, customers: dict, inventory_items: list, orders_data: list):
+    """Seed sales orders and line items."""
+    print("\nCreating sales orders...")
+    orders = []
+    inventory_lookup = {item.item_code: item for item in inventory_items}
+    default_user = users.get("admin") or next(iter(users.values()))
+
+    for order_data in orders_data:
+        items_data = order_data.pop("items", [])
+        customer_code = order_data.pop("customer_code")
+        created_by_username = order_data.pop("created_by_username", None)
+        confirmed_by_username = order_data.pop("confirmed_by_username", None)
+        fulfilled_by_username = order_data.pop("fulfilled_by_username", None)
+
+        customer = customers.get(customer_code)
+        if not customer:
+            print(f"✗ Customer {customer_code} not found, skipping sales order")
+            continue
+
+        created_by = users.get(created_by_username) if created_by_username else default_user
+        status_value = order_data.pop("status", SalesOrderStatus.DRAFT.value)
+        priority_value = order_data.pop("priority", SalesOrderPriority.MEDIUM.value)
+
+        order = SalesOrder(
+            customer_id=customer.id,
+            created_by=created_by.id,
+            status=SalesOrderStatus(status_value),
+            priority=SalesOrderPriority(priority_value),
+            **order_data
+        )
+        db.add(order)
+        db.flush()
+
+        subtotal = 0.0
+        tax_amount = 0.0
+        discount_amount = 0.0
+        for line_data in items_data:
+            item_code = line_data.pop("item_code")
+            item = inventory_lookup.get(item_code)
+            if not item:
+                print(f"✗ Inventory item {item_code} not found, skipping sales order line")
+                continue
+
+            ordered_quantity = float(line_data["ordered_quantity"])
+            fulfilled_quantity = float(line_data.get("fulfilled_quantity", 0))
+            unit_price = float(line_data["unit_price"])
+            tax_rate = float(line_data.get("tax_rate", 0))
+            line_discount = float(line_data.get("discount_amount", 0))
+            line_total = _calculate_sales_line_total(
+                ordered_quantity,
+                unit_price,
+                tax_rate,
+                line_discount,
+            )
+
+            line_status = SalesOrderLineStatus.PENDING
+            if fulfilled_quantity >= ordered_quantity:
+                line_status = SalesOrderLineStatus.FULFILLED
+            elif fulfilled_quantity > 0:
+                line_status = SalesOrderLineStatus.PARTIALLY_FULFILLED
+
+            db.add(SalesOrderItem(
+                sales_order_id=order.id,
+                item_id=item.id,
+                item_code=item.item_code,
+                item_name=item.name,
+                ordered_quantity=ordered_quantity,
+                fulfilled_quantity=fulfilled_quantity,
+                unit_of_measure=item.unit_of_measure,
+                unit_price=unit_price,
+                tax_rate=tax_rate,
+                discount_amount=line_discount,
+                line_total=line_total,
+                notes=line_data.get("notes"),
+                status=line_status,
+            ))
+
+            if fulfilled_quantity > 0:
+                item.quantity -= fulfilled_quantity
+                db.add(InventoryTransaction(
+                    item_id=item.id,
+                    transaction_type=TransactionType.ISSUE,
+                    quantity=-abs(fulfilled_quantity),
+                    unit_cost=item.unit_cost,
+                    reference_number=order.order_number,
+                    notes=f"Seeded fulfillment for sales order {order.order_number}",
+                    performed_by=created_by.id,
+                ))
+
+            line_subtotal = ordered_quantity * unit_price
+            subtotal += line_subtotal
+            tax_amount += line_subtotal * (tax_rate / 100)
+            discount_amount += line_discount
+
+        order.subtotal = round(subtotal, 2)
+        order.tax_amount = round(tax_amount, 2)
+        order.discount_amount = round(discount_amount, 2)
+        order.total_amount = round(max(0, order.subtotal + order.tax_amount - order.discount_amount), 2)
+
+        if order.status in [SalesOrderStatus.CONFIRMED, SalesOrderStatus.PARTIALLY_FULFILLED, SalesOrderStatus.FULFILLED]:
+            confirmed_by = users.get(confirmed_by_username) if confirmed_by_username else created_by
+            order.confirmed_by = confirmed_by.id
+            order.confirmed_at = datetime.utcnow()
+        if order.status in [SalesOrderStatus.PARTIALLY_FULFILLED, SalesOrderStatus.FULFILLED]:
+            fulfilled_by = users.get(fulfilled_by_username) if fulfilled_by_username else created_by
+            order.fulfilled_by = fulfilled_by.id
+            order.fulfilled_at = datetime.utcnow()
+
+        db.commit()
+        db.refresh(order)
+        orders.append(order)
+        print(f"✓ Created sales order: {order.order_number} ({order.status.value})")
+
+    return orders
 
 
 def seed_production_lines(db: Session, production_lines_data: list):
@@ -634,12 +810,19 @@ def main():
         
         users = seed_users(db, data['users'])
         skills = seed_skills(db, data['skills'])
-        craftsmen = seed_craftsmen(db, users, skills, data['craftsmen'])
+        craftsmen = seed_craftsmen(db, users, skills, data['craftsmen'], roles)
         equipment = seed_equipment(db, data['equipment'])
         
         # Seed inventory categories first, then items
         categories = seed_inventory_categories(db, data.get('inventory_categories', []))
         inventory = seed_inventory(db, categories, data['inventory_items'])
+        catalogue_items = seed_maintenance_catalogue(
+            db, inventory, data.get('maintenance_catalogue_items', [])
+        )
+        customers = seed_customers(db, data.get('customers', []))
+        sales_orders = seed_sales_orders(
+            db, users, customers, inventory, data.get('sales_orders', [])
+        )
         
         # Seed production data if available
         production_lines = []
@@ -683,6 +866,9 @@ def main():
         print(f"  - Equipment: {len(equipment)}")
         print(f"  - Inventory Categories: {len(categories)}")
         print(f"  - Inventory Items: {len(inventory)}")
+        print(f"  - Maintenance Catalogue Items: {len(catalogue_items)}")
+        print(f"  - Customers: {len(customers)}")
+        print(f"  - Sales Orders: {len(sales_orders)}")
         if production_lines:
             print(f"  - Production Lines: {len(production_lines)}")
             print(f"  - Equipment Stations: {len(equipment_stations)}")
