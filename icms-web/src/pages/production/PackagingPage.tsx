@@ -41,7 +41,10 @@ const PackagingPage: React.FC = () => {
   const loadOrders = async () => {
     try {
       setIsLoading(true)
-      const response = await packagingOrderService.getAll(filters)
+      const response = await packagingOrderService.getAll({
+        ...filters,
+        status: filters.status || undefined,
+      })
       setOrders(response.data)
       setTotalPages(response.totalPages)
     } catch (error) {

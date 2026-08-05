@@ -44,6 +44,19 @@ export const PERMISSION_REGISTRY: Record<string, Omit<PermissionDefinition, 'key
   'production.lines': { name: 'Manage Production Lines', description: 'Create and configure production lines', category: 'Production', implies: ['production.view'] },
   'production.packaging': { name: 'Manage Packaging', description: 'Access and manage packaging operations', category: 'Production', implies: ['production.view'] },
 
+  // Sales
+  'sales.view': { name: 'View Sales', description: 'View sales customers, orders, and summary metrics', category: 'Sales', implies: [] },
+  'sales.customers.view': { name: 'View Customers', description: 'View customer records', category: 'Sales', implies: ['sales.view'] },
+  'sales.customers.create': { name: 'Create Customers', description: 'Add new customers', category: 'Sales', implies: ['sales.customers.view'] },
+  'sales.customers.edit': { name: 'Edit Customers', description: 'Modify customer records', category: 'Sales', implies: ['sales.customers.view'] },
+  'sales.customers.delete': { name: 'Delete Customers', description: 'Delete or deactivate customer records', category: 'Sales', implies: ['sales.customers.view'] },
+  'sales.orders.view': { name: 'View Sales Orders', description: 'View sales orders and fulfillment status', category: 'Sales', implies: ['sales.view'] },
+  'sales.orders.create': { name: 'Create Sales Orders', description: 'Create draft sales orders', category: 'Sales', implies: ['sales.orders.view', 'sales.customers.view', 'inventory.view'] },
+  'sales.orders.edit': { name: 'Edit Sales Orders', description: 'Modify draft sales orders', category: 'Sales', implies: ['sales.orders.view', 'sales.customers.view', 'inventory.view'] },
+  'sales.orders.confirm': { name: 'Confirm Sales Orders', description: 'Confirm draft sales orders for fulfillment', category: 'Sales', implies: ['sales.orders.view'] },
+  'sales.orders.fulfill': { name: 'Fulfill Sales Orders', description: 'Dispatch sales orders and issue inventory stock', category: 'Sales', implies: ['sales.orders.view', 'inventory.view', 'inventory.transaction'] },
+  'sales.orders.cancel': { name: 'Cancel Sales Orders', description: 'Cancel sales orders before fulfillment', category: 'Sales', implies: ['sales.orders.view'] },
+
   // Quality
   'quality.view': { name: 'View Quality Records', description: 'View quality inspections and NCRs', category: 'Quality', implies: [] },
   'quality.inspect': { name: 'Perform Inspections', description: 'Create and complete quality inspections', category: 'Quality', implies: ['quality.view'] },
@@ -57,6 +70,10 @@ export const PERMISSION_REGISTRY: Record<string, Omit<PermissionDefinition, 'key
   'maintenance.edit': { name: 'Edit Maintenance Records', description: 'Modify maintenance records', category: 'Maintenance', implies: ['maintenance.view'] },
   'maintenance.complete': { name: 'Complete Maintenance', description: 'Mark maintenance tasks as completed', category: 'Maintenance', implies: ['maintenance.view'] },
   'maintenance.schedule': { name: 'Schedule Maintenance', description: 'Create and modify maintenance schedules', category: 'Maintenance', implies: ['maintenance.view', 'maintenance.create'] },
+  'maintenance.catalogue.view': { name: 'View Parts & Tools Catalogue', description: 'View maintenance spare parts and tools catalogue', category: 'Maintenance', implies: ['maintenance.view'] },
+  'maintenance.catalogue.create': { name: 'Create Catalogue Items', description: 'Add spare parts and tools to the maintenance catalogue', category: 'Maintenance', implies: ['maintenance.catalogue.view'] },
+  'maintenance.catalogue.edit': { name: 'Edit Catalogue Items', description: 'Modify spare parts and tools in the maintenance catalogue', category: 'Maintenance', implies: ['maintenance.catalogue.view'] },
+  'maintenance.catalogue.delete': { name: 'Delete Catalogue Items', description: 'Deactivate spare parts and tools in the maintenance catalogue', category: 'Maintenance', implies: ['maintenance.catalogue.view'] },
 
   // Work Orders
   'work_orders.view': { name: 'View Work Orders', description: 'View work order list and details', category: 'Work Orders', implies: [] },
@@ -79,6 +96,7 @@ export const PERMISSION_REGISTRY: Record<string, Omit<PermissionDefinition, 'key
   'reports.maintenance': { name: 'Maintenance Reports', description: 'View maintenance reports', category: 'Reports', implies: ['reports.view', 'maintenance.view'] },
   'reports.inventory': { name: 'Inventory Reports', description: 'View inventory reports', category: 'Reports', implies: ['reports.view', 'inventory.view'] },
   'reports.production': { name: 'Production Reports', description: 'View production reports', category: 'Reports', implies: ['reports.view', 'production.view'] },
+  'reports.sales': { name: 'Sales Reports', description: 'View sales reports and revenue metrics', category: 'Reports', implies: ['reports.view', 'sales.view'] },
   'reports.quality': { name: 'Quality Reports', description: 'View quality reports', category: 'Reports', implies: ['reports.view', 'quality.view'] },
   'reports.financial': { name: 'Financial Reports', description: 'View financial and cost reports', category: 'Reports', implies: ['reports.view'] },
   'reports.export': { name: 'Export Reports', description: 'Export reports to PDF/Excel', category: 'Reports', implies: ['reports.view'] },
@@ -102,14 +120,17 @@ export const PERMISSION_REGISTRY: Record<string, Omit<PermissionDefinition, 'key
 export const ROLE_TEMPLATES: Record<string, { name: string; description: string; level: number; category: string; permissions: string[] }> = {
   general_manager: { name: 'General Manager', description: 'Complete system access for top management', level: 10, category: 'Management', permissions: ['admin.full_access'] },
   production_manager: { name: 'Production Manager', description: 'Manages production operations', level: 9, category: 'Management', permissions: ['dashboard.view', 'production.*', 'equipment.view', 'equipment.assign', 'inventory.view', 'inventory.transaction', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit', 'inventory.requisitions.approve', 'quality.view', 'maintenance.view', 'work_orders.view', 'work_orders.assign', 'craftsmen.view', 'reports.view', 'reports.production', 'reports.equipment', 'reports.export'] },
+  sales_manager: { name: 'Sales Manager', description: 'Manages customers, sales orders, dispatch coordination, and sales reporting', level: 9, category: 'Management', permissions: ['dashboard.view', 'sales.*', 'inventory.view', 'inventory.transaction', 'production.view', 'reports.view', 'reports.sales', 'reports.financial', 'reports.export'] },
+  sales_representative: { name: 'Sales Representative', description: 'Creates customer records and draft sales orders', level: 4, category: 'Operations', permissions: ['dashboard.view', 'sales.view', 'sales.customers.view', 'sales.customers.create', 'sales.customers.edit', 'sales.orders.view', 'sales.orders.create', 'sales.orders.edit', 'inventory.view', 'reports.view', 'reports.sales'] },
   quality_manager: { name: 'Quality Manager', description: 'Manages quality assurance operations', level: 9, category: 'Management', permissions: ['dashboard.view', 'quality.*', 'production.view', 'inventory.view', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit', 'reports.view', 'reports.quality', 'reports.production', 'reports.export', 'craftsmen.view'] },
   maintenance_manager: { name: 'Maintenance Manager', description: 'Manages maintenance operations', level: 8, category: 'Management', permissions: ['dashboard.view', 'maintenance.*', 'work_orders.*', 'equipment.*', 'inventory.view', 'inventory.transaction', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit', 'inventory.requisitions.approve', 'craftsmen.view', 'reports.view', 'reports.maintenance', 'reports.equipment', 'reports.export'] },
   production_team_leader: { name: 'Production Team Leader', description: 'Supervises production team', level: 6, category: 'Supervision', permissions: ['dashboard.view', 'production.view', 'production.start', 'production.complete', 'production.packaging', 'equipment.view', 'inventory.view', 'inventory.transaction', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit', 'inventory.requisitions.approve', 'quality.view', 'work_orders.view', 'craftsmen.view', 'reports.view', 'reports.production'] },
-  maintenance_team_leader: { name: 'Maintenance Team Leader', description: 'Supervises maintenance team', level: 6, category: 'Supervision', permissions: ['dashboard.view', 'maintenance.view', 'maintenance.complete', 'work_orders.view', 'work_orders.complete', 'equipment.view', 'equipment.edit', 'inventory.view', 'inventory.transaction', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit', 'inventory.requisitions.approve', 'craftsmen.view', 'reports.view', 'reports.maintenance'] },
+  maintenance_team_leader: { name: 'Maintenance Team Leader', description: 'Supervises maintenance team', level: 6, category: 'Supervision', permissions: ['dashboard.view', 'maintenance.view', 'maintenance.complete', 'maintenance.catalogue.view', 'maintenance.catalogue.create', 'maintenance.catalogue.edit', 'work_orders.view', 'work_orders.complete', 'equipment.view', 'equipment.edit', 'inventory.view', 'inventory.transaction', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit', 'inventory.requisitions.approve', 'craftsmen.view', 'reports.view', 'reports.maintenance'] },
   quality_inspector: { name: 'Quality Inspector', description: 'Performs quality inspections', level: 4, category: 'Technical', permissions: ['dashboard.view', 'quality.view', 'quality.inspect', 'quality.ncr_create', 'production.view', 'inventory.view', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit', 'reports.view', 'reports.quality'] },
-  maintenance_technician: { name: 'Maintenance Technician', description: 'Performs maintenance work', level: 4, category: 'Technical', permissions: ['dashboard.view', 'maintenance.view', 'maintenance.complete', 'work_orders.view', 'work_orders.complete', 'equipment.view', 'inventory.view', 'inventory.transaction', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit'] },
+  maintenance_technician: { name: 'Maintenance Technician', description: 'Performs maintenance work', level: 4, category: 'Technical', permissions: ['dashboard.view', 'maintenance.view', 'maintenance.complete', 'maintenance.catalogue.view', 'work_orders.view', 'work_orders.complete', 'equipment.view', 'inventory.view', 'inventory.transaction', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit'] },
   machine_operator: { name: 'Machine Operator', description: 'Operates production machinery', level: 3, category: 'Operations', permissions: ['dashboard.view', 'production.view', 'production.start', 'production.complete', 'equipment.view', 'inventory.view', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit', 'quality.view', 'work_orders.view'] },
   inventory_clerk: { name: 'Inventory Clerk', description: 'Manages inventory operations', level: 3, category: 'Operations', permissions: ['dashboard.view', 'inventory.*', 'production.view', 'reports.view', 'reports.inventory'] },
+  dispatch_clerk: { name: 'Dispatch Clerk', description: 'Fulfills confirmed sales orders and issues finished goods stock', level: 3, category: 'Operations', permissions: ['dashboard.view', 'sales.view', 'sales.orders.view', 'sales.orders.fulfill', 'inventory.view', 'inventory.transaction', 'reports.view', 'reports.sales'] },
   general_worker: { name: 'General Worker', description: 'Basic view-only access', level: 2, category: 'Operations', permissions: ['dashboard.view', 'production.view', 'equipment.view', 'inventory.view', 'inventory.requisitions.view', 'inventory.requisitions.create', 'inventory.requisitions.submit', 'work_orders.view'] },
   admin: { name: 'System Administrator', description: 'Full system and settings access', level: 10, category: 'Administration', permissions: ['admin.full_access', 'settings.*'] },
 }
@@ -121,6 +142,7 @@ export const CATEGORY_ORDER = [
   'Equipment',
   'Inventory',
   'Production',
+  'Sales',
   'Quality',
   'Maintenance',
   'Work Orders',

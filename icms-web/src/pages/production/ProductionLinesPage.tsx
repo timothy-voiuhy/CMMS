@@ -40,7 +40,10 @@ const ProductionLinesPage: React.FC = () => {
   const loadLines = async () => {
     try {
       setIsLoading(true)
-      const response = await productionLineService.getAll(filters)
+      const response = await productionLineService.getAll({
+        ...filters,
+        status: filters.status || undefined,
+      })
       setLines(response.data)
       setTotalPages(response.totalPages)
     } catch (error) {

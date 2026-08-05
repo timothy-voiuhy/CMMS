@@ -45,6 +45,8 @@ services:
       LOG_LEVEL: INFO
       LOG_FILE: ./logs/icms.log
       RUN_MIGRATIONS: "true"
+      RUN_SEED_DATA: ${RUN_SEED_DATA:-false}
+      SEED_DATA_RESEED: ${SEED_DATA_RESEED:-false}
     ports:
       - "8000:8000"
     volumes:

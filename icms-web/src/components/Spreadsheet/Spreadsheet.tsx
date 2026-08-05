@@ -46,7 +46,7 @@ function Spreadsheet<T = any>({
   columns,
   onCellChange,
   onRowsChange,
-  rowKey = 'id',
+  rowKey = 'id' as keyof T,
   height,
   maxHeight = '600px',
   enableSelection = true,

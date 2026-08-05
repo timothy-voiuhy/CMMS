@@ -11,7 +11,7 @@ import { craftsmanService } from '../../services/craftsman.service'
 const MaintenanceFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const isEditMode = id && id !== 'new'
+  const isEditMode = Boolean(id && id !== 'new')
 
   const [formData, setFormData] = useState<CreateMaintenanceReportRequest>({
     work_order_id: 0,
@@ -102,7 +102,7 @@ const MaintenanceFormPage: React.FC = () => {
     try {
       if (isEditMode) {
         const { work_order_id, equipment_id, craftsman_id, ...updateData } = formData
-        await maintenanceService.update(parseInt(id), updateData)
+        await maintenanceService.update(parseInt(id!), updateData)
       } else {
         await maintenanceService.create(formData)
       }

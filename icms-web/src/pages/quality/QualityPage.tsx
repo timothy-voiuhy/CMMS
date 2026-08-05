@@ -20,6 +20,8 @@ import {
   type QualityInspection,
   type NonConformanceReport,
   type QualityStatistics,
+  type InspectionStatus,
+  type NCRStatus,
 } from '../../services/quality.service'
 
 type TabType = 'inspections' | 'ncrs'
@@ -48,14 +50,14 @@ const QualityPage: React.FC = () => {
         const response = await qualityService.getInspections({
           limit: 50,
           search: searchTerm || undefined,
-          status: statusFilter || undefined,
+          status: (statusFilter || undefined) as InspectionStatus | undefined,
         })
         setInspections(response.data)
       } else {
         const response = await qualityService.getNCRs({
           limit: 50,
           search: searchTerm || undefined,
-          status: statusFilter || undefined,
+          status: (statusFilter || undefined) as NCRStatus | undefined,
         })
         setNCRs(response.data)
       }

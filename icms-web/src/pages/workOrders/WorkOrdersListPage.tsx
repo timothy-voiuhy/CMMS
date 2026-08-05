@@ -42,7 +42,11 @@ const WorkOrdersListPage: React.FC = () => {
   const loadWorkOrders = async () => {
     try {
       setIsLoading(true)
-      const response = await workOrderService.getAll(filters)
+      const response = await workOrderService.getAll({
+        ...filters,
+        status: filters.status || undefined,
+        priority: filters.priority || undefined,
+      })
       setWorkOrders(response.data)
       setTotalPages(response.totalPages)
     } catch (error) {

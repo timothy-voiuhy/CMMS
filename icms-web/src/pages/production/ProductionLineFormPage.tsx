@@ -12,7 +12,7 @@ import {
 const ProductionLineFormPage: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const isEdit = id && id !== 'new'
+  const isEdit = Boolean(id && id !== 'new')
   
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)

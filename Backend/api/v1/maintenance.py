@@ -4,11 +4,31 @@ from sqlalchemy.orm import Session
 from db.session import get_db
 from core.security import get_current_active_user
 from models.user import User
-from schemas.maintenance import MaintenanceReportCreate, MaintenanceReportUpdate, MaintenanceReportResponse
+from models.maintenance import MaintenanceCatalogueItemType
+from schemas.maintenance import (
+    MaintenanceReportCreate, MaintenanceReportUpdate, MaintenanceReportResponse,
+    MaintenanceCatalogueItemCreate, MaintenanceCatalogueItemUpdate, MaintenanceCatalogueItemResponse
+)
 from schemas.common import PaginatedResponse
 from services import maintenance_service
+from services.company_service import get_user_permissions
 
 router = APIRouter()
+
+
+def require_any_permission(db: Session, current_user: User, permissions: List[str]) -> None:
+    """Require any matching resolved permission for sensitive maintenance actions."""
+    user_permissions = set(get_user_permissions(db, current_user.id))
+    if (
+        "*" in user_permissions
+        or "admin.full_access" in user_permissions
+        or any(permission in user_permissions for permission in permissions)
+    ):
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Not enough permissions"
+    )
 
 
 @router.get("/statistics")
@@ -140,3 +160,109 @@ async def get_craftsman_reports(
 ):
     """Get maintenance reports by a craftsman."""
     return maintenance_service.get_craftsman_reports(db, craftsman_id)
+
+
+# ==================== PARTS AND TOOLS CATALOGUE ENDPOINTS ====================
+
+@router.get("/catalogue/categories", response_model=List[str])
+async def list_catalogue_categories(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get catalogue categories used for spare parts and tools."""
+    require_any_permission(db, current_user, ["maintenance.catalogue.view", "maintenance.spare_parts.view", "maintenance.view"])
+    return maintenance_service.get_catalogue_categories(db)
+
+
+@router.get("/catalogue", response_model=PaginatedResponse[MaintenanceCatalogueItemResponse])
+async def list_catalogue_items(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    search: Optional[str] = None,
+    category: Optional[str] = None,
+    item_type: Optional[MaintenanceCatalogueItemType] = None,
+    include_inactive: bool = False,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get spare parts and tools with optional filters."""
+    require_any_permission(db, current_user, ["maintenance.catalogue.view", "maintenance.spare_parts.view", "maintenance.view"])
+    skip = (page - 1) * limit
+    items = maintenance_service.get_catalogue_items(
+        db,
+        skip=skip,
+        limit=limit,
+        search=search,
+        category=category,
+        item_type=item_type,
+        include_inactive=include_inactive
+    )
+    total = maintenance_service.get_catalogue_items_count(
+        db,
+        search=search,
+        category=category,
+        item_type=item_type,
+        include_inactive=include_inactive
+    )
+
+    return PaginatedResponse(
+        success=True,
+        data=items,
+        total=total,
+        page=page,
+        pageSize=limit,
+        totalPages=(total + limit - 1) // limit
+    )
+
+
+@router.post("/catalogue", response_model=MaintenanceCatalogueItemResponse, status_code=status.HTTP_201_CREATED)
+async def create_catalogue_item(
+    item: MaintenanceCatalogueItemCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Create a spare part or tool catalogue item."""
+    require_any_permission(db, current_user, ["maintenance.catalogue.create", "maintenance.spare_parts.create"])
+    return maintenance_service.create_catalogue_item(db, item)
+
+
+@router.get("/catalogue/{item_id}", response_model=MaintenanceCatalogueItemResponse)
+async def get_catalogue_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get catalogue item by ID."""
+    require_any_permission(db, current_user, ["maintenance.catalogue.view", "maintenance.spare_parts.view", "maintenance.view"])
+    item = maintenance_service.get_catalogue_item(db, item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Catalogue item not found")
+    return item
+
+
+@router.put("/catalogue/{item_id}", response_model=MaintenanceCatalogueItemResponse)
+async def update_catalogue_item(
+    item_id: int,
+    item: MaintenanceCatalogueItemUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update a spare part or tool catalogue item."""
+    require_any_permission(db, current_user, ["maintenance.catalogue.edit", "maintenance.spare_parts.edit"])
+    updated = maintenance_service.update_catalogue_item(db, item_id, item)
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Catalogue item not found")
+    return updated
+
+
+@router.delete("/catalogue/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_catalogue_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Deactivate a catalogue item."""
+    require_any_permission(db, current_user, ["maintenance.catalogue.delete", "maintenance.spare_parts.delete"])
+    deleted = maintenance_service.delete_catalogue_item(db, item_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Catalogue item not found")

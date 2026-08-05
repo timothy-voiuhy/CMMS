@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import {
   inventoryService,
+  type InventoryCategory,
   type InventoryItem,
   type InventoryTransaction,
   type TransactionType,
@@ -141,8 +142,9 @@ const InventoryDetailPage: React.FC = () => {
     )
   }
 
-  const formatCategory = (category: string) => {
-    return category
+  const formatCategory = (category?: InventoryCategory) => {
+    if (!category) return 'Uncategorized'
+    return category.name
       .split('_')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')

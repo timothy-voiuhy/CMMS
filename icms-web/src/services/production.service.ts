@@ -16,6 +16,7 @@ export interface ProductionLine {
   capacity_unit?: string
   location?: string
   floor?: string
+  equipment_config?: unknown[]
   created_at: string
   updated_at: string
 }
@@ -28,6 +29,7 @@ export interface CreateProductionLineRequest {
   capacity_unit?: string
   location?: string
   floor?: string
+  equipment_config?: unknown[]
 }
 
 export interface UpdateProductionLineRequest {
@@ -38,6 +40,7 @@ export interface UpdateProductionLineRequest {
   capacity_unit?: string
   location?: string
   floor?: string
+  equipment_config?: unknown[]
 }
 
 // Production Line Equipment Station Interfaces

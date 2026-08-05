@@ -38,6 +38,10 @@ if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
   alembic upgrade head
 fi
 
+if [ "${RUN_SEED_DATA:-false}" = "true" ]; then
+  python scripts/seed_data.py
+fi
+
 exec uvicorn core.main:app \
   --host "${HOST:-0.0.0.0}" \
   --port "${PORT:-8000}"

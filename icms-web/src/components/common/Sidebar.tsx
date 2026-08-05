@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronDown,
   FileText,
+  ShoppingCart,
   UserCog,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
@@ -58,6 +59,7 @@ const navItems: NavItem[] = [
     children: [
       { path: '/maintenance/work-orders', icon: ClipboardList, label: 'Work Orders', permission: 'work_orders.view' },
       { path: '/maintenance/reports', icon: FileText, label: 'Reports', permission: 'maintenance.view' },
+      { path: '/maintenance/catalogue', icon: Wrench, label: 'Parts & Tools', permission: 'maintenance.catalogue.view' },
       { path: '/maintenance/personnel', icon: UserCog, label: 'Personnel', permission: 'craftsmen.view' },
     ],
   },
@@ -72,6 +74,16 @@ const navItems: NavItem[] = [
       { path: '/production/packaging', icon: PackageCheck, label: 'Packaging', permission: 'production.packaging' },
     ],
   },
+  {
+    path: '/sales',
+    icon: ShoppingCart,
+    label: 'Sales',
+    permission: 'sales.view',
+    children: [
+      { path: '/sales/orders', icon: ClipboardList, label: 'Orders', permission: 'sales.orders.view' },
+      { path: '/sales/customers', icon: Users, label: 'Customers', permission: 'sales.customers.view' },
+    ],
+  },
   { path: '/quality', icon: ShieldCheck, label: 'Quality', permission: 'quality.view' },
   { path: '/reports', icon: BarChart3, label: 'Reports', permission: 'reports.view' },
   { path: '/settings', icon: Settings, label: 'Settings', permission: 'settings.view' },
@@ -80,7 +92,7 @@ const navItems: NavItem[] = [
 const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const { user, hasPermission } = useAuthStore()
   const { company } = useCompanyStore()
-  const [expandedItems, setExpandedItems] = useState<string[]>(['/inventory', '/maintenance', '/production'])
+  const [expandedItems, setExpandedItems] = useState<string[]>(['/inventory', '/maintenance', '/production', '/sales'])
 
   const companyInitials = useMemo(() => {
     if (company?.short_name) return company.short_name.substring(0, 2).toUpperCase()

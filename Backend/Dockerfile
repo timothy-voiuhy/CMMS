@@ -2,7 +2,9 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/Backend
+    PYTHONPATH=/app/Backend \
+    RUN_SEED_DATA=false \
+    SEED_DATA_RESEED=false
 
 WORKDIR /app/Backend
 

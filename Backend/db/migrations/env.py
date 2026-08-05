@@ -17,7 +17,8 @@ from db.base import Base
 from models import (
     User, Company, Facility, Department, Craftsman, Skill,
     Equipment, InventoryItem, InventoryTransaction,
-    WorkOrder, MaintenanceReport
+    WorkOrder, MaintenanceReport, MaintenanceCatalogueItem,
+    Customer, SalesOrder, SalesOrderItem
 )
 from core.config import settings
 

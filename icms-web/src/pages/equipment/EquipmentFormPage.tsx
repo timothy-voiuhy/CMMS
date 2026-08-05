@@ -6,7 +6,7 @@ import { equipmentService, type CreateEquipmentRequest } from '../../services/eq
 const EquipmentFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const isEditMode = id && id !== 'new'
+  const isEditMode = Boolean(id && id !== 'new')
   
   const [formData, setFormData] = useState<CreateEquipmentRequest>({
     name: '',
@@ -67,7 +67,7 @@ const EquipmentFormPage: React.FC = () => {
 
     try {
       if (isEditMode) {
-        await equipmentService.update(parseInt(id), formData)
+        await equipmentService.update(parseInt(id!), formData)
       } else {
         await equipmentService.create(formData)
       }

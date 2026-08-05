@@ -18,7 +18,12 @@ from schemas.work_order import (
     WorkOrderStatusUpdate, WorkOrderAssign
 )
 from schemas.maintenance import (
-    MaintenanceReportCreate, MaintenanceReportUpdate, MaintenanceReportResponse
+    MaintenanceReportCreate, MaintenanceReportUpdate, MaintenanceReportResponse,
+    MaintenanceCatalogueItemCreate, MaintenanceCatalogueItemUpdate, MaintenanceCatalogueItemResponse
+)
+from schemas.sales import (
+    CustomerCreate, CustomerUpdate, CustomerResponse,
+    SalesOrderCreate, SalesOrderUpdate, SalesOrderResponse
 )
 
 __all__ = [
@@ -32,4 +37,7 @@ __all__ = [
     "WorkOrderCreate", "WorkOrderUpdate", "WorkOrderResponse",
     "WorkOrderStatusUpdate", "WorkOrderAssign",
     "MaintenanceReportCreate", "MaintenanceReportUpdate", "MaintenanceReportResponse",
+    "MaintenanceCatalogueItemCreate", "MaintenanceCatalogueItemUpdate", "MaintenanceCatalogueItemResponse",
+    "CustomerCreate", "CustomerUpdate", "CustomerResponse",
+    "SalesOrderCreate", "SalesOrderUpdate", "SalesOrderResponse",
 ]

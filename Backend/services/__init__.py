@@ -4,6 +4,7 @@ from services import inventory_service
 from services import work_order_service
 from services import maintenance_service
 from services import user_service
+from services import sales_service
 
 __all__ = [
     "craftsman_service",
@@ -12,4 +13,5 @@ __all__ = [
     "work_order_service",
     "maintenance_service",
     "user_service",
+    "sales_service",
 ]

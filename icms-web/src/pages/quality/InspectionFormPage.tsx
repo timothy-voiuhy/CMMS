@@ -23,7 +23,7 @@ const InspectionFormPage: React.FC = () => {
     product_name: '',
     inspection_type: 'incoming',
     inspection_date: new Date().toISOString().slice(0, 16),
-    inspector_id: user?.id || 0,
+    inspector_id: Number(user?.id || 0),
     sample_size: undefined,
     batch_number: '',
     production_order_id: undefined,

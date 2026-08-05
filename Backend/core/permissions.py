@@ -187,6 +187,74 @@ PERMISSION_REGISTRY: Dict[str, Dict] = {
         "implies": ["production.view"]
     },
 
+    # ---- Sales ----
+    "sales.view": {
+        "name": "View Sales",
+        "description": "View sales customers, orders, and summary metrics",
+        "category": "Sales",
+        "implies": []
+    },
+    "sales.customers.view": {
+        "name": "View Customers",
+        "description": "View customer records",
+        "category": "Sales",
+        "implies": ["sales.view"]
+    },
+    "sales.customers.create": {
+        "name": "Create Customers",
+        "description": "Add new customers",
+        "category": "Sales",
+        "implies": ["sales.customers.view"]
+    },
+    "sales.customers.edit": {
+        "name": "Edit Customers",
+        "description": "Modify customer records",
+        "category": "Sales",
+        "implies": ["sales.customers.view"]
+    },
+    "sales.customers.delete": {
+        "name": "Delete Customers",
+        "description": "Delete or deactivate customer records",
+        "category": "Sales",
+        "implies": ["sales.customers.view"]
+    },
+    "sales.orders.view": {
+        "name": "View Sales Orders",
+        "description": "View sales orders and fulfillment status",
+        "category": "Sales",
+        "implies": ["sales.view"]
+    },
+    "sales.orders.create": {
+        "name": "Create Sales Orders",
+        "description": "Create draft sales orders",
+        "category": "Sales",
+        "implies": ["sales.orders.view", "sales.customers.view", "inventory.view"]
+    },
+    "sales.orders.edit": {
+        "name": "Edit Sales Orders",
+        "description": "Modify draft sales orders",
+        "category": "Sales",
+        "implies": ["sales.orders.view", "sales.customers.view", "inventory.view"]
+    },
+    "sales.orders.confirm": {
+        "name": "Confirm Sales Orders",
+        "description": "Confirm draft sales orders for fulfillment",
+        "category": "Sales",
+        "implies": ["sales.orders.view"]
+    },
+    "sales.orders.fulfill": {
+        "name": "Fulfill Sales Orders",
+        "description": "Dispatch sales orders and issue inventory stock",
+        "category": "Sales",
+        "implies": ["sales.orders.view", "inventory.view", "inventory.transaction"]
+    },
+    "sales.orders.cancel": {
+        "name": "Cancel Sales Orders",
+        "description": "Cancel sales orders before fulfillment",
+        "category": "Sales",
+        "implies": ["sales.orders.view"]
+    },
+
     # ---- Quality ----
     "quality.view": {
         "name": "View Quality Records",
@@ -249,6 +317,30 @@ PERMISSION_REGISTRY: Dict[str, Dict] = {
         "description": "Create and modify maintenance schedules",
         "category": "Maintenance",
         "implies": ["maintenance.view", "maintenance.create"]
+    },
+    "maintenance.catalogue.view": {
+        "name": "View Parts & Tools Catalogue",
+        "description": "View maintenance spare parts and tools catalogue",
+        "category": "Maintenance",
+        "implies": ["maintenance.view"]
+    },
+    "maintenance.catalogue.create": {
+        "name": "Create Catalogue Items",
+        "description": "Add spare parts and tools to the maintenance catalogue",
+        "category": "Maintenance",
+        "implies": ["maintenance.catalogue.view"]
+    },
+    "maintenance.catalogue.edit": {
+        "name": "Edit Catalogue Items",
+        "description": "Modify spare parts and tools in the maintenance catalogue",
+        "category": "Maintenance",
+        "implies": ["maintenance.catalogue.view"]
+    },
+    "maintenance.catalogue.delete": {
+        "name": "Delete Catalogue Items",
+        "description": "Deactivate spare parts and tools in the maintenance catalogue",
+        "category": "Maintenance",
+        "implies": ["maintenance.catalogue.view"]
     },
 
     # ---- Work Orders ----
@@ -351,6 +443,12 @@ PERMISSION_REGISTRY: Dict[str, Dict] = {
         "description": "View production reports",
         "category": "Reports",
         "implies": ["reports.view", "production.view"]
+    },
+    "reports.sales": {
+        "name": "Sales Reports",
+        "description": "View sales reports and revenue metrics",
+        "category": "Reports",
+        "implies": ["reports.view", "sales.view"]
     },
     "reports.quality": {
         "name": "Quality Reports",
@@ -460,6 +558,33 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "reports.view", "reports.production", "reports.equipment", "reports.export"
         ]
     },
+    "sales_manager": {
+        "name": "Sales Manager",
+        "description": "Manages customers, sales orders, dispatch coordination, and sales reporting",
+        "level": 9,
+        "category": "Management",
+        "permissions": [
+            "dashboard.view",
+            "sales.*",
+            "inventory.view", "inventory.transaction",
+            "production.view",
+            "reports.view", "reports.sales", "reports.financial", "reports.export"
+        ]
+    },
+    "sales_representative": {
+        "name": "Sales Representative",
+        "description": "Creates customer records and draft sales orders",
+        "level": 4,
+        "category": "Operations",
+        "permissions": [
+            "dashboard.view",
+            "sales.view",
+            "sales.customers.view", "sales.customers.create", "sales.customers.edit",
+            "sales.orders.view", "sales.orders.create", "sales.orders.edit",
+            "inventory.view",
+            "reports.view", "reports.sales"
+        ]
+    },
     "quality_manager": {
         "name": "Quality Manager",
         "description": "Manages quality assurance operations",
@@ -519,6 +644,7 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
         "permissions": [
             "dashboard.view",
             "maintenance.view", "maintenance.complete",
+            "maintenance.catalogue.view", "maintenance.catalogue.create", "maintenance.catalogue.edit",
             "work_orders.view", "work_orders.complete",
             "equipment.view", "equipment.edit",
             "inventory.view", "inventory.transaction",
@@ -550,6 +676,7 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
         "permissions": [
             "dashboard.view",
             "maintenance.view", "maintenance.complete",
+            "maintenance.catalogue.view",
             "work_orders.view", "work_orders.complete",
             "equipment.view",
             "inventory.view", "inventory.transaction",
@@ -582,6 +709,18 @@ ROLE_TEMPLATES: Dict[str, Dict] = {
             "inventory.*",
             "production.view",
             "reports.view", "reports.inventory"
+        ]
+    },
+    "dispatch_clerk": {
+        "name": "Dispatch Clerk",
+        "description": "Fulfills confirmed sales orders and issues finished goods stock",
+        "level": 3,
+        "category": "Operations",
+        "permissions": [
+            "dashboard.view",
+            "sales.view", "sales.orders.view", "sales.orders.fulfill",
+            "inventory.view", "inventory.transaction",
+            "reports.view", "reports.sales"
         ]
     },
     "general_worker": {

@@ -22,7 +22,7 @@ const NCRFormPage: React.FC = () => {
     title: '',
     description: '',
     severity: 'minor',
-    reported_by_id: user?.id || 0,
+    reported_by_id: Number(user?.id || 0),
     inspection_id: undefined,
     production_order_id: undefined,
     equipment_id: undefined,

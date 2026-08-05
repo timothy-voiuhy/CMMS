@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sqlalchemy.orm import Session
-from db.session import SessionLocal, engine
+from db.session import SessionLocal
 from db.base import Base
 from models import (
     User, Company, Facility, Department, Craftsman, Skill,
@@ -29,6 +29,20 @@ def load_seed_data():
     seed_file = Path(__file__).parent / "seed_data.json"
     with open(seed_file, 'r') as f:
         return json.load(f)
+
+
+def env_flag(name: str, default: str = "false") -> bool:
+    """Parse common truthy values from environment variables."""
+    return os.environ.get(name, default).lower() in {"1", "true", "yes", "on"}
+
+
+def clear_seed_data(db: Session):
+    """Delete existing application data without changing the schema."""
+    print("\nClearing existing data...")
+    for table in reversed(Base.metadata.sorted_tables):
+        db.execute(table.delete())
+    db.commit()
+    print("✓ Existing data cleared")
 
 
 def seed_company(db: Session, data: dict):
@@ -593,11 +607,6 @@ def main():
     print("Company: PSALMS Food Industries (SUMZ)")
     print("=" * 60)
     
-    # Create tables
-    print("\nCreating database tables...")
-    Base.metadata.create_all(bind=engine)
-    print("✓ Tables created")
-    
     # Load seed data
     data = load_seed_data()
     
@@ -609,15 +618,11 @@ def main():
         existing_company = db.query(Company).first()
         if existing_company:
             print("\n⚠ Database already contains data!")
-            response = input("Do you want to clear and reseed? (yes/no): ")
-            if response.lower() != 'yes':
-                print("Seeding cancelled.")
+            if not env_flag("SEED_DATA_RESEED"):
+                print("Skipping seed. Set SEED_DATA_RESEED=true to clear data and reseed.")
                 return
-            
-            print("\nClearing existing data...")
-            Base.metadata.drop_all(bind=engine)
-            Base.metadata.create_all(bind=engine)
-            print("✓ Database cleared")
+
+            clear_seed_data(db)
         
         # Seed data in order
         company = seed_company(db, data['company'])

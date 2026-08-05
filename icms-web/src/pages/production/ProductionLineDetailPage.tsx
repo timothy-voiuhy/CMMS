@@ -26,8 +26,9 @@ import {
   type ProductionLineEquipmentStation,
   type CreateEquipmentStationRequest,
 } from '../../services/production.service'
-import { equipmentService, type Equipment } from '../../services/equipment.service'
-import { craftsmanService, type Craftsman } from '../../services/craftsman.service'
+import { equipmentService } from '../../services/equipment.service'
+import { craftsmanService, type CraftsmanWithUser } from '../../services/craftsman.service'
+import type { Equipment } from '../../types'
 
 const ProductionLineDetailPage: React.FC = () => {
   const navigate = useNavigate()
@@ -36,7 +37,7 @@ const ProductionLineDetailPage: React.FC = () => {
   const [shifts, setShifts] = useState<Shift[]>([])
   const [equipmentStations, setEquipmentStations] = useState<ProductionLineEquipmentStation[]>([])
   const [availableEquipment, setAvailableEquipment] = useState<Equipment[]>([])
-  const [availableCraftsmen, setAvailableCraftsmen] = useState<Craftsman[]>([])
+  const [availableCraftsmen, setAvailableCraftsmen] = useState<CraftsmanWithUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showShiftModal, setShowShiftModal] = useState(false)
   const [showEquipmentModal, setShowEquipmentModal] = useState(false)
@@ -254,7 +255,7 @@ const ProductionLineDetailPage: React.FC = () => {
 
   const getCraftsmanName = (craftsmanId: number) => {
     const craftsman = availableCraftsmen.find((c) => c.id === craftsmanId)
-    return craftsman ? craftsman.user.full_name : 'Unknown'
+    return craftsman ? craftsman.user?.full_name ?? craftsman.full_name : 'Unknown'
   }
 
   const getStatusBadgeColor = (status?: string) => {

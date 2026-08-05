@@ -34,6 +34,7 @@ import MaintenanceListPage from './pages/maintenance/MaintenanceListPage'
 import MaintenanceDetailPage from './pages/maintenance/MaintenanceDetailPage'
 import MaintenanceFormPage from './pages/maintenance/MaintenanceFormPage'
 import MaintenancePersonnelPage from './pages/maintenance/MaintenancePersonnelPage'
+import MaintenanceCataloguePage from './pages/maintenance/MaintenanceCataloguePage'
 import ProductionLinesPage from './pages/production/ProductionLinesPage'
 import ProductionLineFormPage from './pages/production/ProductionLineFormPage'
 import ProductionLineDetailPage from './pages/production/ProductionLineDetailPage'
@@ -43,6 +44,10 @@ import ProductionOrderDetailPage from './pages/production/ProductionOrderDetailP
 import PackagingPage from './pages/production/PackagingPage'
 import PackagingFormPage from './pages/production/PackagingFormPage'
 import PackagingDetailPage from './pages/production/PackagingDetailPage'
+import SalesOrdersPage from './pages/sales/SalesOrdersPage'
+import SalesOrderFormPage from './pages/sales/SalesOrderFormPage'
+import SalesOrderDetailPage from './pages/sales/SalesOrderDetailPage'
+import CustomersPage from './pages/sales/CustomersPage'
 import QualityPage from './pages/quality/QualityPage'
 import InspectionFormPage from './pages/quality/InspectionFormPage'
 import NCRFormPage from './pages/quality/NCRFormPage'
@@ -162,6 +167,7 @@ function App() {
           <Route path="/maintenance/work-orders/:id/edit" element={<PermissionRoute permission="work_orders.edit"><WorkOrderFormPage /></PermissionRoute>} />
           <Route path="/maintenance/work-orders/:id" element={<PermissionRoute permission="work_orders.view"><WorkOrderDetailPage /></PermissionRoute>} />
           <Route path="/maintenance/personnel" element={<PermissionRoute permission="craftsmen.view"><MaintenancePersonnelPage /></PermissionRoute>} />
+          <Route path="/maintenance/catalogue" element={<PermissionRoute anyOf={["maintenance.catalogue.view", "maintenance.view"]}><MaintenanceCataloguePage /></PermissionRoute>} />
           
           {/* Production Routes */}
           <Route path="/production/lines" element={<PermissionRoute permission="production.view"><ProductionLinesPage /></PermissionRoute>} />
@@ -176,6 +182,14 @@ function App() {
           <Route path="/production/packaging/new" element={<PermissionRoute permission="production.packaging"><PackagingFormPage /></PermissionRoute>} />
           <Route path="/production/packaging/:id/edit" element={<PermissionRoute permission="production.packaging"><PackagingFormPage /></PermissionRoute>} />
           <Route path="/production/packaging/:id" element={<PermissionRoute permission="production.packaging"><PackagingDetailPage /></PermissionRoute>} />
+
+          {/* Sales Routes */}
+          <Route path="/sales" element={<Navigate to="/sales/orders" replace />} />
+          <Route path="/sales/orders" element={<PermissionRoute anyOf={["sales.orders.view", "sales.view"]}><SalesOrdersPage /></PermissionRoute>} />
+          <Route path="/sales/orders/new" element={<PermissionRoute permission="sales.orders.create"><SalesOrderFormPage /></PermissionRoute>} />
+          <Route path="/sales/orders/:id/edit" element={<PermissionRoute permission="sales.orders.edit"><SalesOrderFormPage /></PermissionRoute>} />
+          <Route path="/sales/orders/:id" element={<PermissionRoute anyOf={["sales.orders.view", "sales.view"]}><SalesOrderDetailPage /></PermissionRoute>} />
+          <Route path="/sales/customers" element={<PermissionRoute anyOf={["sales.customers.view", "sales.view"]}><CustomersPage /></PermissionRoute>} />
           
           {/* Quality Routes */}
           <Route path="/quality" element={<PermissionRoute permission="quality.view"><QualityPage /></PermissionRoute>} />

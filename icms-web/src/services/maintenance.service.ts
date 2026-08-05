@@ -67,6 +67,60 @@ export interface MaintenanceStatistics {
   total_labor_hours: number
 }
 
+export type MaintenanceCatalogueItemType = 'spare_part' | 'tool'
+
+export interface MaintenanceCatalogueItem {
+  id: number
+  item_code: string
+  item_type: MaintenanceCatalogueItemType
+  name: string
+  description?: string
+  category?: string
+  image_url?: string
+  manufacturer?: string
+  model_number?: string
+  supplier?: string
+  unit_of_measure?: string
+  unit_cost?: number
+  location?: string
+  compatible_equipment?: string
+  inventory_item_id?: number
+  is_active: boolean
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateMaintenanceCatalogueItemRequest {
+  item_code?: string
+  item_type: MaintenanceCatalogueItemType
+  name: string
+  description?: string
+  category?: string
+  image_url?: string
+  manufacturer?: string
+  model_number?: string
+  supplier?: string
+  unit_of_measure?: string
+  unit_cost?: number
+  location?: string
+  compatible_equipment?: string
+  inventory_item_id?: number
+  is_active?: boolean
+  notes?: string
+}
+
+export type UpdateMaintenanceCatalogueItemRequest = Partial<CreateMaintenanceCatalogueItemRequest>
+
+export interface MaintenanceCatalogueFilters {
+  page?: number
+  limit?: number
+  search?: string
+  category?: string
+  item_type?: MaintenanceCatalogueItemType
+  include_inactive?: boolean
+}
+
 class MaintenanceService {
   private baseUrl = '/api/v1/maintenance'
 
@@ -129,6 +183,45 @@ class MaintenanceService {
     return apiClient.get<MaintenanceReport[]>(
       `${this.baseUrl}/reports/by-craftsman/${craftsmanId}`
     )
+  }
+
+  async getCatalogue(filters: MaintenanceCatalogueFilters = {}) {
+    const params = new URLSearchParams()
+    if (filters.page) params.append('page', filters.page.toString())
+    if (filters.limit) params.append('limit', filters.limit.toString())
+    if (filters.search) params.append('search', filters.search)
+    if (filters.category) params.append('category', filters.category)
+    if (filters.item_type) params.append('item_type', filters.item_type)
+    if (filters.include_inactive) params.append('include_inactive', 'true')
+
+    return apiClient.get<{
+      success: boolean
+      data: MaintenanceCatalogueItem[]
+      total: number
+      page: number
+      pageSize: number
+      totalPages: number
+    }>(`${this.baseUrl}/catalogue?${params.toString()}`)
+  }
+
+  async getCatalogueCategories() {
+    return apiClient.get<string[]>(`${this.baseUrl}/catalogue/categories`)
+  }
+
+  async getCatalogueItemById(id: number) {
+    return apiClient.get<MaintenanceCatalogueItem>(`${this.baseUrl}/catalogue/${id}`)
+  }
+
+  async createCatalogueItem(data: CreateMaintenanceCatalogueItemRequest) {
+    return apiClient.post<MaintenanceCatalogueItem>(`${this.baseUrl}/catalogue`, data)
+  }
+
+  async updateCatalogueItem(id: number, data: UpdateMaintenanceCatalogueItemRequest) {
+    return apiClient.put<MaintenanceCatalogueItem>(`${this.baseUrl}/catalogue/${id}`, data)
+  }
+
+  async deleteCatalogueItem(id: number) {
+    return apiClient.delete(`${this.baseUrl}/catalogue/${id}`)
   }
 }
 

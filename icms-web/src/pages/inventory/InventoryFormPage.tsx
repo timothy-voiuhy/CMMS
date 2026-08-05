@@ -11,7 +11,7 @@ import {
 const InventoryFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const isEditMode = id && id !== 'new'
+  const isEditMode = Boolean(id && id !== 'new')
 
   const [formData, setFormData] = useState<CreateInventoryItemRequest>({
     item_code: '',
@@ -100,7 +100,7 @@ const InventoryFormPage: React.FC = () => {
     try {
       if (isEditMode) {
         const { item_code, quantity, ...updateData } = formData
-        await inventoryService.update(parseInt(id), updateData)
+        await inventoryService.update(parseInt(id!), updateData)
       } else {
         await inventoryService.create(formData)
       }

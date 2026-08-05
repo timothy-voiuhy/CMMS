@@ -8,7 +8,7 @@ from models.inventory import (
     RequisitionLineStatus, RequisitionPriority
 )
 from models.work_order import WorkOrder, WorkOrderType, WorkOrderPriority, WorkOrderStatus
-from models.maintenance import MaintenanceReport
+from models.maintenance import MaintenanceReport, MaintenanceCatalogueItem, MaintenanceCatalogueItemType
 from models.production import (
     ProductionLine, ProductionLineEquipment, Shift, ProductionOrder, PackagingOrder,
     ShiftType, ProductionLineStatus, ProductionOrderStatus
@@ -16,6 +16,10 @@ from models.production import (
 from models.quality import (
     QualityInspection, QualityInspectionItem, NonConformanceReport, QualityMetric,
     InspectionStatus, InspectionResult, NCRStatus, NCRSeverity
+)
+from models.sales import (
+    Customer, SalesOrder, SalesOrderItem,
+    SalesOrderStatus, SalesOrderLineStatus, SalesOrderPriority
 )
 
 __all__ = [
@@ -43,6 +47,8 @@ __all__ = [
     "WorkOrderPriority",
     "WorkOrderStatus",
     "MaintenanceReport",
+    "MaintenanceCatalogueItem",
+    "MaintenanceCatalogueItemType",
     "ProductionLine",
     "ProductionLineEquipment",
     "Shift",
@@ -59,4 +65,10 @@ __all__ = [
     "InspectionResult",
     "NCRStatus",
     "NCRSeverity",
+    "Customer",
+    "SalesOrder",
+    "SalesOrderItem",
+    "SalesOrderStatus",
+    "SalesOrderLineStatus",
+    "SalesOrderPriority",
 ]
