@@ -35,6 +35,7 @@ import MaintenanceDetailPage from './pages/maintenance/MaintenanceDetailPage'
 import MaintenanceFormPage from './pages/maintenance/MaintenanceFormPage'
 import MaintenancePersonnelPage from './pages/maintenance/MaintenancePersonnelPage'
 import MaintenanceCataloguePage from './pages/maintenance/MaintenanceCataloguePage'
+import MaintenanceCatalogueFormPage from './pages/maintenance/MaintenanceCatalogueFormPage'
 import ProductionLinesPage from './pages/production/ProductionLinesPage'
 import ProductionLineFormPage from './pages/production/ProductionLineFormPage'
 import ProductionLineDetailPage from './pages/production/ProductionLineDetailPage'
@@ -177,6 +178,8 @@ function App() {
           <Route path="/maintenance/work-orders/:id/edit" element={<PermissionRoute permission="work_orders.edit"><WorkOrderFormPage /></PermissionRoute>} />
           <Route path="/maintenance/work-orders/:id" element={<PermissionRoute permission="work_orders.view"><WorkOrderDetailPage /></PermissionRoute>} />
           <Route path="/maintenance/personnel" element={<PermissionRoute permission="craftsmen.view"><MaintenancePersonnelPage /></PermissionRoute>} />
+          <Route path="/maintenance/catalogue/new" element={<PermissionRoute permission="maintenance.catalogue.create"><MaintenanceCatalogueFormPage /></PermissionRoute>} />
+          <Route path="/maintenance/catalogue/:id/edit" element={<PermissionRoute permission="maintenance.catalogue.edit"><MaintenanceCatalogueFormPage /></PermissionRoute>} />
           <Route path="/maintenance/catalogue" element={<PermissionRoute anyOf={["maintenance.catalogue.view", "maintenance.view"]}><MaintenanceCataloguePage /></PermissionRoute>} />
           
           {/* Production Routes */}

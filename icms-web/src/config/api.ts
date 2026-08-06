@@ -12,7 +12,7 @@ const getDefaultApiUrl = () => {
     return ''
   }
 
-  return `https://${window.location.hostname}:8000`
+  return `http://${window.location.hostname}:8000`
 }
 
 export const API_CONFIG = {

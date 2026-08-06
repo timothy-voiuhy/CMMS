@@ -1,8 +1,11 @@
+from pathlib import Path
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from uuid import uuid4
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Query
 from sqlalchemy.orm import Session
 from db.session import get_db
 from core.security import get_current_active_user
+from core.config import settings
 from models.user import User
 from models.maintenance import MaintenanceCatalogueItemType
 from schemas.maintenance import (
@@ -14,6 +17,22 @@ from services import maintenance_service
 from services.company_service import get_user_permissions
 
 router = APIRouter()
+
+CATALOGUE_IMAGE_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+}
+
+
+def has_valid_image_signature(content: bytes, content_type: str) -> bool:
+    if content_type == "image/jpeg":
+        return content.startswith(b"\xff\xd8\xff")
+    if content_type == "image/png":
+        return content.startswith(b"\x89PNG\r\n\x1a\n")
+    if content_type == "image/webp":
+        return len(content) >= 12 and content.startswith(b"RIFF") and content[8:12] == b"WEBP"
+    return False
 
 
 def require_any_permission(db: Session, current_user: User, permissions: List[str]) -> None:
@@ -163,6 +182,42 @@ async def get_craftsman_reports(
 
 
 # ==================== PARTS AND TOOLS CATALOGUE ENDPOINTS ====================
+
+@router.post("/catalogue/images", status_code=status.HTTP_201_CREATED)
+async def upload_catalogue_image(
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Upload a validated spare-part or tool image."""
+    require_any_permission(db, current_user, ["maintenance.catalogue.create", "maintenance.catalogue.edit"])
+
+    extension = CATALOGUE_IMAGE_TYPES.get(image.content_type or "")
+    if not extension:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Only JPEG, PNG, and WebP images are supported"
+        )
+
+    content = await image.read(settings.MAX_UPLOAD_SIZE + 1)
+    await image.close()
+    if not content:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Image file is empty")
+    if len(content) > settings.MAX_UPLOAD_SIZE:
+        max_size_mb = settings.MAX_UPLOAD_SIZE // (1024 * 1024)
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Image must be no larger than {max_size_mb} MB"
+        )
+
+    if not has_valid_image_signature(content, image.content_type or ""):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File content is not a valid image")
+
+    image_directory = Path(settings.UPLOAD_DIR) / "catalogue"
+    image_directory.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid4().hex}{extension}"
+    (image_directory / filename).write_bytes(content)
+    return {"image_url": f"/uploads/catalogue/{filename}"}
 
 @router.get("/catalogue/categories", response_model=List[str])
 async def list_catalogue_categories(

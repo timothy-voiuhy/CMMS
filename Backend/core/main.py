@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from core.config import settings
 from api.v1 import auth, users, craftsmen, equipment, inventory, work_orders, maintenance, production, company, quality, reports, sales
 
@@ -8,6 +11,10 @@ app = FastAPI(
     version=settings.APP_VERSION,
     debug=settings.DEBUG
 )
+
+upload_directory = Path(settings.UPLOAD_DIR)
+upload_directory.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=upload_directory), name="uploads")
 
 # CORS middleware
 app.add_middleware(

@@ -1,4 +1,5 @@
 import apiClient from './apiClient'
+import { API_CONFIG } from '../config/api'
 
 export interface MaintenanceReport {
   id: number
@@ -76,7 +77,7 @@ export interface MaintenanceCatalogueItem {
   name: string
   description?: string
   category?: string
-  image_url?: string
+  image_url?: string | null
   manufacturer?: string
   model_number?: string
   supplier?: string
@@ -97,7 +98,7 @@ export interface CreateMaintenanceCatalogueItemRequest {
   name: string
   description?: string
   category?: string
-  image_url?: string
+  image_url?: string | null
   manufacturer?: string
   model_number?: string
   supplier?: string
@@ -119,6 +120,11 @@ export interface MaintenanceCatalogueFilters {
   category?: string
   item_type?: MaintenanceCatalogueItemType
   include_inactive?: boolean
+}
+
+export const resolveCatalogueImageUrl = (imageUrl?: string | null) => {
+  if (!imageUrl || /^(https?:|data:|blob:)/i.test(imageUrl)) return imageUrl || ""
+  return API_CONFIG.BASE_URL + (imageUrl.startsWith("/") ? imageUrl : "/" + imageUrl)
 }
 
 class MaintenanceService {
@@ -218,6 +224,12 @@ class MaintenanceService {
 
   async updateCatalogueItem(id: number, data: UpdateMaintenanceCatalogueItemRequest) {
     return apiClient.put<MaintenanceCatalogueItem>(`${this.baseUrl}/catalogue/${id}`, data)
+  }
+
+  async uploadCatalogueImage(image: File, onProgress?: (progress: number) => void) {
+    const formData = new FormData()
+    formData.append("image", image)
+    return apiClient.upload<{ image_url: string }>(this.baseUrl + "/catalogue/images", formData, onProgress)
   }
 
   async deleteCatalogueItem(id: number) {
