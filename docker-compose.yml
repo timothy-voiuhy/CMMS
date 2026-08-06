@@ -82,5 +82,25 @@ services:
       retries: 3
       start_period: 10s
 
+  frontend:
+    build:
+      context: ./icms-web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-}
+    container_name: icms-web
+    restart: unless-stopped
+    depends_on:
+      nginx:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
 volumes:
   postgres_data:
