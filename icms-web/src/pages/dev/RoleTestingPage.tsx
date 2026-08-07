@@ -7,9 +7,6 @@ import {
   KeyRound,
   Loader2,
   LogIn,
-  ShieldCheck,
-  UserCheck,
-  Users,
 } from 'lucide-react'
 import { authService } from '../../services/auth.service'
 import { useAuthStore, type User as AuthStoreUser } from '../../store/authStore'
@@ -283,36 +280,6 @@ const RoleTestingPage = () => {
             {error}
           </div>
         )}
-
-        <section className="mb-6 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">What To Check</h2>
-            </div>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              Confirm that the sidebar only shows allowed modules and restricted action buttons disappear or return permission errors.
-            </p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-            <div className="flex items-center gap-3">
-              <UserCheck className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">How Switching Works</h2>
-            </div>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              Choosing a persona replaces the current browser session with that account and opens the dashboard immediately.
-            </p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-            <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Seed Dependency</h2>
-            </div>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              These accounts are created by `scripts/seed_data.py`; reseed the database if a listed login fails.
-            </p>
-          </div>
-        </section>
 
         <div className="space-y-6">
           {Object.entries(groupedPersonas).map(([department, personas]) => (
