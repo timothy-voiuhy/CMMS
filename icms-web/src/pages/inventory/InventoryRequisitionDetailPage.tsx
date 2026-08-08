@@ -14,6 +14,7 @@ import {
   inventoryService,
   type InventoryRequisition,
   type InventoryRequisitionItem,
+  type RequisitionApprover,
   type RequisitionPriority,
   type RequisitionStatus,
 } from '../../services/inventory.service'
@@ -64,7 +65,7 @@ const remainingApproved = (line: InventoryRequisitionItem) => {
 const InventoryRequisitionDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { hasPermission } = useAuthStore()
+  const { hasPermission, user } = useAuthStore()
   const [requisition, setRequisition] = useState<InventoryRequisition | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -73,16 +74,26 @@ const InventoryRequisitionDetailPage: React.FC = () => {
   const [approvalNotes, setApprovalNotes] = useState('')
   const [fulfillmentNotes, setFulfillmentNotes] = useState('')
   const [rejectReason, setRejectReason] = useState('')
+  const [approvers, setApprovers] = useState<RequisitionApprover[]>([])
+  const [selectedApproverId, setSelectedApproverId] = useState<number | undefined>()
 
   const canEdit = hasPermission('inventory.requisitions.edit') || hasPermission('inventory.edit')
   const canSubmit = hasPermission('inventory.requisitions.submit') || hasPermission('inventory.create')
-  const canApprove = hasPermission('inventory.requisitions.approve') || hasPermission('inventory.edit')
+  const canApprove = hasPermission('inventory.requisitions.approve')
   const canFulfill = hasPermission('inventory.requisitions.fulfill') || hasPermission('inventory.transaction') || hasPermission('inventory.adjust')
   const canCancel = hasPermission('inventory.requisitions.cancel') || hasPermission('inventory.edit')
 
   useEffect(() => {
     loadRequisition()
   }, [id])
+
+  useEffect(() => {
+    if (canApprove) {
+      inventoryService.getRequisitionApprovers().then(setApprovers).catch((error) => {
+        console.error('Failed to load requisition approvers:', error)
+      })
+    }
+  }, [canApprove])
 
   const loadRequisition = async () => {
     if (!id) return
@@ -91,6 +102,7 @@ const InventoryRequisitionDetailPage: React.FC = () => {
       setIsLoading(true)
       const data = await inventoryService.getRequisitionById(parseInt(id))
       setRequisition(data)
+      setSelectedApproverId(data.approver_id)
       const nextApproval: Record<number, number> = {}
       const nextFulfillment: Record<number, number> = {}
       for (const line of data.items || []) {
@@ -134,7 +146,19 @@ const InventoryRequisitionDetailPage: React.FC = () => {
 
   const handleSubmit = () => {
     if (!requisition) return
-    runAction(() => inventoryService.submitRequisition(requisition.id))
+    if (!selectedApproverId) {
+      alert('Assign an approver before submitting')
+      return
+    }
+    runAction(() => inventoryService.submitRequisitionWithApprover(requisition.id, selectedApproverId))
+  }
+
+  const handleAssignApprover = () => {
+    if (!requisition || !selectedApproverId) {
+      alert('Select an approver')
+      return
+    }
+    runAction(() => inventoryService.assignRequisitionApprover(requisition.id, selectedApproverId))
   }
 
   const handleApprove = () => {
@@ -208,7 +232,8 @@ const InventoryRequisitionDetailPage: React.FC = () => {
   }
 
   const lines = requisition.items || []
-  const canShowApproval = requisition.status === 'submitted' && canApprove
+  const canShowApproval = requisition.status === 'submitted' && canApprove && requisition.approver_id === Number(user?.id)
+  const canManageApprover = ['draft', 'submitted'].includes(requisition.status) && canApprove && requisition.approver_id !== Number(user?.id)
   const canShowFulfillment = ['approved', 'partially_fulfilled'].includes(requisition.status) && canFulfill
 
   return (
@@ -281,6 +306,42 @@ const InventoryRequisitionDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assigned Approver</label>
+            {canManageApprover ? (
+              <select
+                value={selectedApproverId || ''}
+                onChange={(event) => setSelectedApproverId(event.target.value ? parseInt(event.target.value) : undefined)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select an authorized approver</option>
+                {approvers.map((approver) => (
+                  <option key={approver.id} value={approver.id}>{approver.full_name} ({approver.username})</option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                {requisition.assigned_approver?.full_name || 'No approver assigned'}
+              </p>
+            )}
+          </div>
+          {canManageApprover && (
+            <button
+              onClick={handleAssignApprover}
+              disabled={isSaving || !selectedApproverId}
+              className="px-4 py-2 text-sm font-medium text-white bg-slate-700 rounded-lg hover:bg-slate-800 disabled:opacity-50"
+            >
+              {requisition.status === 'submitted' ? 'Reassign Approver' : 'Assign Approver'}
+            </button>
+          )}
+        </div>
+        {requisition.status === 'submitted' && !canShowApproval && requisition.approver_id && (
+          <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">This requisition is waiting for the assigned approver.</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

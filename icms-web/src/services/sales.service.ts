@@ -3,6 +3,8 @@ import apiClient from './apiClient'
 export type SalesOrderStatus = 'draft' | 'confirmed' | 'partially_fulfilled' | 'fulfilled' | 'cancelled'
 export type SalesOrderLineStatus = 'pending' | 'partially_fulfilled' | 'fulfilled' | 'cancelled'
 export type SalesOrderPriority = 'low' | 'medium' | 'high' | 'urgent'
+export type SalesInvoiceStatus = 'issued' | 'partially_paid' | 'paid' | 'voided'
+export type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'mobile_money' | 'cheque' | 'other'
 
 export interface Customer {
   id: number
@@ -169,6 +171,70 @@ export interface CancelSalesOrderRequest {
   reason: string
 }
 
+export interface SalesInvoiceItem {
+  id: number
+  invoice_id: number
+  sales_order_item_id?: number
+  item_code: string
+  item_name: string
+  quantity: number
+  unit_of_measure: string
+  unit_price: number
+  tax_rate: number
+  discount_amount: number
+  line_total: number
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SalesReceipt {
+  id: number
+  receipt_number: string
+  invoice_id: number
+  receipt_date: string
+  amount: number
+  payment_method: PaymentMethod
+  reference?: string
+  received_by: number
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SalesInvoice {
+  id: number
+  invoice_number: string
+  sales_order_id: number
+  customer_id: number
+  status: SalesInvoiceStatus
+  invoice_date: string
+  due_date?: string
+  currency: string
+  subtotal: number
+  tax_amount: number
+  discount_amount: number
+  total_amount: number
+  amount_paid: number
+  balance_due: number
+  issued_by: number
+  issued_at: string
+  voided_by?: number
+  voided_at?: string
+  notes?: string
+  customer?: CustomerSummary
+  items: SalesInvoiceItem[]
+  receipts: SalesReceipt[]
+}
+
+export interface CreateReceiptRequest {
+  amount: number
+  payment_method: PaymentMethod
+  receipt_date?: string
+  reference?: string
+  notes?: string
+}
+
 interface PaginatedResponse<T> {
   success: boolean
   data: T[]
@@ -245,6 +311,32 @@ class SalesService {
 
   async cancelOrder(id: number, data: CancelSalesOrderRequest) {
     return apiClient.post<SalesOrder>(`${this.baseUrl}/orders/${id}/cancel`, data)
+  }
+
+  async getInvoices(filters: { page?: number; limit?: number; search?: string; status?: SalesInvoiceStatus; customer_id?: number } = {}) {
+    const params = new URLSearchParams()
+    if (filters.page) params.append('page', filters.page.toString())
+    if (filters.limit) params.append('limit', filters.limit.toString())
+    if (filters.search) params.append('search', filters.search)
+    if (filters.status) params.append('status', filters.status)
+    if (filters.customer_id) params.append('customer_id', filters.customer_id.toString())
+    return apiClient.get<PaginatedResponse<SalesInvoice>>(`${this.baseUrl}/invoices?${params.toString()}`)
+  }
+
+  async getInvoiceByOrder(orderId: number) {
+    return apiClient.get<SalesInvoice>(`${this.baseUrl}/orders/${orderId}/invoice`)
+  }
+
+  async issueInvoice(orderId: number) {
+    return apiClient.post<SalesInvoice>(`${this.baseUrl}/orders/${orderId}/invoice`)
+  }
+
+  async recordReceipt(invoiceId: number, data: CreateReceiptRequest) {
+    return apiClient.post<SalesInvoice>(`${this.baseUrl}/invoices/${invoiceId}/receipts`, data)
+  }
+
+  async voidInvoice(invoiceId: number, reason?: string) {
+    return apiClient.post<SalesInvoice>(`${this.baseUrl}/invoices/${invoiceId}/void`, { reason })
   }
 }
 

@@ -27,7 +27,7 @@ class MaintenanceReport(Base, BaseModel):
     parts_used = Column(Text, nullable=True)
     
     # Labor
-    labor_hours = Column(Integer, nullable=True)
+    labor_hours = Column(Float, nullable=True)
     
     # Status
     equipment_operational = Column(Boolean, default=True, nullable=False)

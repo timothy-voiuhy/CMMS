@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, Edit, PackageCheck, Send, ShoppingCart, XCircle } from 'lucide-react'
+import { ArrowLeft, Banknote, CheckCircle2, Edit, FileText, PackageCheck, Send, ShoppingCart, XCircle } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import {
   salesService,
@@ -8,6 +8,8 @@ import {
   type SalesOrderItem,
   type SalesOrderPriority,
   type SalesOrderStatus,
+  type SalesInvoice,
+  type PaymentMethod,
 } from '../../services/sales.service'
 
 const formatLabel = (value: string) => value.split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
@@ -50,6 +52,15 @@ const priorityClass = (priority: SalesOrderPriority) => {
 
 const remainingQuantity = (line: SalesOrderItem) => Math.max(0, line.ordered_quantity - line.fulfilled_quantity)
 
+const invoiceStatusClass = (status: SalesInvoice['status']) => {
+  switch (status) {
+    case 'paid': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+    case 'partially_paid': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+    case 'voided': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+    default: return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+  }
+}
+
 const getErrorMessage = (error: unknown, fallback: string) => {
   const response = (error as { response?: { data?: { detail?: unknown } } }).response
   return typeof response?.data?.detail === 'string' ? response.data.detail : fallback
@@ -64,11 +75,20 @@ const SalesOrderDetailPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [fulfillmentQuantities, setFulfillmentQuantities] = useState<Record<number, number>>({})
   const [fulfillmentNotes, setFulfillmentNotes] = useState('')
+  const [invoice, setInvoice] = useState<SalesInvoice | null>(null)
+  const [receiptAmount, setReceiptAmount] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+  const [receiptReference, setReceiptReference] = useState('')
+  const [receiptNotes, setReceiptNotes] = useState('')
 
   const canEdit = hasPermission('sales.orders.edit')
   const canConfirm = hasPermission('sales.orders.confirm')
   const canFulfill = hasPermission('sales.orders.fulfill') || hasPermission('inventory.transaction')
   const canCancel = hasPermission('sales.orders.cancel')
+  const canViewInvoices = hasPermission('sales.invoices.view')
+  const canIssueInvoice = hasPermission('sales.invoices.create')
+  const canRecordReceipt = hasPermission('sales.receipts.create')
+  const canVoidInvoice = hasPermission('sales.invoices.void')
 
   const loadOrder = useCallback(async () => {
     if (!id) return
@@ -76,6 +96,13 @@ const SalesOrderDetailPage: React.FC = () => {
       setIsLoading(true)
       const data = await salesService.getOrderById(parseInt(id))
       setOrder(data)
+      if (canViewInvoices) {
+        try {
+          setInvoice(await salesService.getInvoiceByOrder(data.id))
+        } catch {
+          setInvoice(null)
+        }
+      }
       const nextFulfillment: Record<number, number> = {}
       for (const line of data.items || []) {
         nextFulfillment[line.id] = Math.min(remainingQuantity(line), line.item?.quantity ?? remainingQuantity(line))
@@ -88,7 +115,7 @@ const SalesOrderDetailPage: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [id, navigate])
+  }, [canViewInvoices, id, navigate])
 
   useEffect(() => {
     void Promise.resolve().then(loadOrder)
@@ -147,6 +174,58 @@ const SalesOrderDetailPage: React.FC = () => {
     const reason = prompt(`Reason for cancelling ${order.order_number}`)
     if (!reason?.trim()) return
     runAction(() => salesService.cancelOrder(order.id, { reason }))
+  }
+
+  const handleIssueInvoice = async () => {
+    if (!order) return
+    try {
+      setIsSaving(true)
+      setInvoice(await salesService.issueInvoice(order.id))
+    } catch (error) {
+      alert(getErrorMessage(error, 'Failed to issue invoice'))
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleRecordReceipt = async () => {
+    if (!invoice) return
+    const amount = Number(receiptAmount)
+    if (!amount || amount <= 0) {
+      alert('Enter a receipt amount')
+      return
+    }
+    try {
+      setIsSaving(true)
+      const updated = await salesService.recordReceipt(invoice.id, {
+        amount,
+        payment_method: paymentMethod,
+        reference: receiptReference || undefined,
+        notes: receiptNotes || undefined,
+      })
+      setInvoice(updated)
+      setReceiptAmount('')
+      setReceiptReference('')
+      setReceiptNotes('')
+    } catch (error) {
+      alert(getErrorMessage(error, 'Failed to record receipt'))
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleVoidInvoice = async () => {
+    if (!invoice) return
+    const reason = prompt(`Reason for voiding ${invoice.invoice_number}`)
+    if (reason === null) return
+    try {
+      setIsSaving(true)
+      setInvoice(await salesService.voidInvoice(invoice.id, reason || undefined))
+    } catch (error) {
+      alert(getErrorMessage(error, 'Failed to void invoice'))
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   if (isLoading) {
@@ -208,6 +287,12 @@ const SalesOrderDetailPage: React.FC = () => {
                   Cancel
                 </button>
               )}
+              {['confirmed', 'partially_fulfilled', 'fulfilled'].includes(order.status) && canIssueInvoice && !invoice && (
+                <button onClick={handleIssueInvoice} disabled={isSaving} className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                  <FileText className="w-4 h-4" />
+                  Issue Invoice
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -231,6 +316,51 @@ const SalesOrderDetailPage: React.FC = () => {
           <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{formatMoney(order.total_amount, order.currency)}</p>
         </div>
       </div>
+
+      {canViewInvoices && ['confirmed', 'partially_fulfilled', 'fulfilled'].includes(order.status) && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Invoice & Receipts</h2>
+            </div>
+            {invoice && <span className={`px-2 py-1 text-xs font-medium rounded-full ${invoiceStatusClass(invoice.status)}`}>{formatLabel(invoice.status)}</span>}
+          </div>
+          {!invoice ? (
+            <p className="text-sm text-gray-600 dark:text-gray-400">No invoice has been issued for this order.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+                <div><p className="text-xs text-gray-500 dark:text-gray-400">Invoice</p><p className="font-medium text-gray-900 dark:text-gray-100">{invoice.invoice_number}</p></div>
+                <div><p className="text-xs text-gray-500 dark:text-gray-400">Issued</p><p className="text-sm text-gray-900 dark:text-gray-100">{new Date(invoice.invoice_date).toLocaleDateString()}</p></div>
+                <div><p className="text-xs text-gray-500 dark:text-gray-400">Due</p><p className="text-sm text-gray-900 dark:text-gray-100">{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Not specified'}</p></div>
+                <div><p className="text-xs text-gray-500 dark:text-gray-400">Paid</p><p className="font-medium text-emerald-600 dark:text-emerald-400">{formatMoney(invoice.amount_paid, invoice.currency)}</p></div>
+                <div><p className="text-xs text-gray-500 dark:text-gray-400">Balance</p><p className="font-medium text-orange-600 dark:text-orange-400">{formatMoney(invoice.balance_due, invoice.currency)}</p></div>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-5">
+                {canVoidInvoice && invoice.amount_paid === 0 && invoice.status !== 'voided' && <button onClick={handleVoidInvoice} disabled={isSaving} className="px-3 py-2 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 disabled:opacity-50">Void Invoice</button>}
+              </div>
+              {invoice.receipts.length > 0 && (
+                <div className="overflow-x-auto mb-5">
+                  <table className="min-w-full text-sm"><thead><tr className="border-b border-gray-200 dark:border-gray-700"><th className="py-2 text-left">Receipt</th><th className="py-2 text-left">Date</th><th className="py-2 text-left">Method</th><th className="py-2 text-left">Reference</th><th className="py-2 text-right">Amount</th></tr></thead><tbody>{invoice.receipts.map((receipt) => <tr key={receipt.id} className="border-b border-gray-100 dark:border-gray-700"><td className="py-2">{receipt.receipt_number}</td><td className="py-2">{new Date(receipt.receipt_date).toLocaleDateString()}</td><td className="py-2">{formatLabel(receipt.payment_method)}</td><td className="py-2">{receipt.reference || '-'}</td><td className="py-2 text-right font-medium">{formatMoney(receipt.amount, invoice.currency)}</td></tr>)}</tbody></table>
+                </div>
+              )}
+              {canRecordReceipt && invoice.balance_due > 0 && invoice.status !== 'voided' && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <div className="flex items-center gap-2 mb-3"><Banknote className="w-4 h-4 text-emerald-600" /><h3 className="font-medium text-gray-800 dark:text-gray-100">Record Payment</h3></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <input type="number" min="0.01" max={invoice.balance_due} step="0.01" value={receiptAmount} onChange={(event) => setReceiptAmount(event.target.value)} placeholder={`Amount (${invoice.balance_due.toFixed(2)} due)`} className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" />
+                    <select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)} className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"><option value="cash">Cash</option><option value="bank_transfer">Bank Transfer</option><option value="card">Card</option><option value="mobile_money">Mobile Money</option><option value="cheque">Cheque</option><option value="other">Other</option></select>
+                    <input value={receiptReference} onChange={(event) => setReceiptReference(event.target.value)} placeholder="Payment reference" className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" />
+                    <button onClick={handleRecordReceipt} disabled={isSaving} className="flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50"><Banknote className="w-4 h-4" />Record Receipt</button>
+                  </div>
+                  <textarea value={receiptNotes} onChange={(event) => setReceiptNotes(event.target.value)} rows={2} placeholder="Receipt notes (optional)" className="mt-3 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
         <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">

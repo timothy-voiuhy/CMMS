@@ -19,8 +19,10 @@ from models.quality import (
 )
 from models.sales import (
     Customer, SalesOrder, SalesOrderItem,
-    SalesOrderStatus, SalesOrderLineStatus, SalesOrderPriority
+    SalesOrderStatus, SalesOrderLineStatus, SalesOrderPriority,
+    SalesInvoice, SalesInvoiceItem, SalesReceipt, SalesInvoiceStatus, PaymentMethod
 )
+from models.notification import Notification
 
 __all__ = [
     "User",
@@ -71,4 +73,10 @@ __all__ = [
     "SalesOrderStatus",
     "SalesOrderLineStatus",
     "SalesOrderPriority",
+    "SalesInvoice",
+    "SalesInvoiceItem",
+    "SalesReceipt",
+    "SalesInvoiceStatus",
+    "PaymentMethod",
+    "Notification",
 ]

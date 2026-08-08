@@ -180,6 +180,13 @@ export interface InventoryRequisition {
   work_order_id?: number
   production_order_id?: number
   requested_by: number
+  approver_id?: number
+  assigned_approver?: {
+    id: number
+    username: string
+    full_name: string
+    email: string
+  }
   approved_by?: number
   approved_at?: string
   fulfilled_by?: number
@@ -206,6 +213,7 @@ export interface CreateInventoryRequisitionRequest {
   department?: string
   work_order_id?: number
   production_order_id?: number
+  approver_id?: number
   notes?: string
   items: CreateInventoryRequisitionLine[]
 }
@@ -231,6 +239,13 @@ export interface ApproveRequisitionRequest {
     approved_quantity: number
   }[]
   notes?: string
+}
+
+export interface RequisitionApprover {
+  id: number
+  username: string
+  full_name: string
+  email: string
 }
 
 export interface RejectRequisitionRequest {
@@ -368,6 +383,18 @@ class InventoryService {
 
   async submitRequisition(id: number) {
     return apiClient.post<InventoryRequisition>(`${this.baseUrl}/requisitions/${id}/submit`)
+  }
+
+  async submitRequisitionWithApprover(id: number, approver_id: number) {
+    return apiClient.post<InventoryRequisition>(`${this.baseUrl}/requisitions/${id}/submit`, { approver_id })
+  }
+
+  async getRequisitionApprovers() {
+    return apiClient.get<RequisitionApprover[]>(`${this.baseUrl}/requisitions/approvers`)
+  }
+
+  async assignRequisitionApprover(id: number, approver_id: number) {
+    return apiClient.patch<InventoryRequisition>(`${this.baseUrl}/requisitions/${id}/approver`, { approver_id })
   }
 
   async approveRequisition(id: number, data: ApproveRequisitionRequest) {

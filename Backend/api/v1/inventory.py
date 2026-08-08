@@ -11,7 +11,8 @@ from schemas.inventory import (
     InventoryCategoryCreate, InventoryCategoryUpdate, InventoryCategoryResponse, InventoryCategoryTree,
     InventoryRequisitionCreate, InventoryRequisitionUpdate, InventoryRequisitionResponse,
     InventoryRequisitionListResponse, InventoryRequisitionApprovalRequest,
-    InventoryRequisitionRejectRequest, InventoryRequisitionFulfillmentRequest
+    InventoryRequisitionRejectRequest, InventoryRequisitionFulfillmentRequest,
+    InventoryRequisitionApproverAssignmentRequest, InventoryRequisitionApproverResponse
 )
 from schemas.common import PaginatedResponse
 from services import inventory_service
@@ -225,6 +226,16 @@ async def create_requisition(
     return inventory_service.create_requisition(db, requisition, current_user.id)
 
 
+@router.get("/requisitions/approvers", response_model=List[InventoryRequisitionApproverResponse])
+async def list_requisition_approvers(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """List active users who can be assigned to approve requisitions."""
+    require_any_permission(db, current_user, ["inventory.requisitions.create", "inventory.requisitions.submit", "inventory.view"])
+    return inventory_service.get_requisition_approvers(db, exclude_user_id=current_user.id)
+
+
 @router.get("/requisitions/{requisition_id}", response_model=InventoryRequisitionResponse)
 async def get_requisition(
     requisition_id: int,
@@ -257,12 +268,35 @@ async def update_requisition(
 @router.post("/requisitions/{requisition_id}/submit", response_model=InventoryRequisitionResponse)
 async def submit_requisition(
     requisition_id: int,
+    assignment: Optional[InventoryRequisitionApproverAssignmentRequest] = Body(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """Submit a draft inventory requisition."""
     require_any_permission(db, current_user, ["inventory.requisitions.submit", "inventory.create"])
-    requisition = inventory_service.submit_requisition(db, requisition_id)
+    requisition = inventory_service.submit_requisition(
+        db,
+        requisition_id,
+        current_user.id,
+        assignment.approver_id if assignment else None,
+    )
+    if not requisition:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")
+    return requisition
+
+
+@router.patch("/requisitions/{requisition_id}/approver", response_model=InventoryRequisitionResponse)
+async def assign_requisition_approver(
+    requisition_id: int,
+    assignment: InventoryRequisitionApproverAssignmentRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Assign or reassign an approver for a draft or submitted requisition."""
+    require_any_permission(db, current_user, ["inventory.requisitions.approve"])
+    requisition = inventory_service.assign_requisition_approver(
+        db, requisition_id, assignment.approver_id, current_user.id
+    )
     if not requisition:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")
     return requisition
@@ -276,7 +310,7 @@ async def approve_requisition(
     current_user: User = Depends(get_current_active_user)
 ):
     """Approve a submitted inventory requisition."""
-    require_any_permission(db, current_user, ["inventory.requisitions.approve", "inventory.edit"])
+    require_any_permission(db, current_user, ["inventory.requisitions.approve"])
     requisition = inventory_service.approve_requisition(db, requisition_id, approval, current_user.id)
     if not requisition:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")
@@ -291,7 +325,7 @@ async def reject_requisition(
     current_user: User = Depends(get_current_active_user)
 ):
     """Reject a submitted inventory requisition."""
-    require_any_permission(db, current_user, ["inventory.requisitions.approve", "inventory.edit"])
+    require_any_permission(db, current_user, ["inventory.requisitions.approve"])
     requisition = inventory_service.reject_requisition(db, requisition_id, rejection, current_user.id)
     if not requisition:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Requisition not found")

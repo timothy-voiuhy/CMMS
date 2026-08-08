@@ -7,6 +7,7 @@ import {
 } from '../../services/maintenance.service'
 import { equipmentService } from '../../services/equipment.service'
 import { craftsmanService } from '../../services/craftsman.service'
+import { workOrderService, type WorkOrder } from '../../services/workOrder.service'
 
 const MaintenanceFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -27,6 +28,7 @@ const MaintenanceFormPage: React.FC = () => {
   })
   const [equipment, setEquipment] = useState<any[]>([])
   const [craftsmen, setCraftsmen] = useState<any[]>([])
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -34,6 +36,7 @@ const MaintenanceFormPage: React.FC = () => {
   useEffect(() => {
     loadEquipment()
     loadCraftsmen()
+    loadWorkOrders()
     if (isEditMode) {
       loadReport()
     }
@@ -54,6 +57,15 @@ const MaintenanceFormPage: React.FC = () => {
       setCraftsmen(response.data)
     } catch (error) {
       console.error('Failed to load craftsmen:', error)
+    }
+  }
+
+  const loadWorkOrders = async () => {
+    try {
+      const response = await workOrderService.getAll({ limit: 100 })
+      setWorkOrders(response.data)
+    } catch (error) {
+      console.error('Failed to load work orders:', error)
     }
   }
 
@@ -90,6 +102,10 @@ const MaintenanceFormPage: React.FC = () => {
     // Validation
     if (!formData.equipment_id || formData.equipment_id === 0) {
       setError('Please select an equipment')
+      return
+    }
+    if (!formData.work_order_id || formData.work_order_id === 0) {
+      setError('Please select a work order')
       return
     }
     if (!formData.craftsman_id || formData.craftsman_id === 0) {
@@ -216,15 +232,23 @@ const MaintenanceFormPage: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Work Order ID <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
+                <select
                   required
-                  value={formData.work_order_id || ''}
+                  value={formData.work_order_id || 0}
                   onChange={(e) => handleChange('work_order_id', parseInt(e.target.value) || 0)}
                   className="w-full px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter work order ID"
                   disabled={isEditMode}
-                />
+                >
+                  <option value={0}>Select work order...</option>
+                  {workOrders.map((workOrder) => (
+                    <option key={workOrder.id} value={workOrder.id}>
+                      {workOrder.work_order_number} — {workOrder.title}
+                    </option>
+                  ))}
+                </select>
+                {!isEditMode && workOrders.length === 0 && (
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">No work orders are available. Create a work order first.</p>
+                )}
                 {isEditMode && (
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Work order cannot be changed</p>
                 )}

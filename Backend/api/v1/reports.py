@@ -536,10 +536,13 @@ async def get_work_orders_summary_report(
         WorkOrder.created_at <= end_date_obj
     ).group_by(WorkOrder.priority).all()
     
+    # WorkOrder.due_date is stored as an ISO date string (not a timestamp).
+    # Compare like-for-like to avoid PostgreSQL's varchar/timestamp type error.
+    today_string = datetime.now().strftime("%Y-%m-%d")
     overdue = db.query(func.count(WorkOrder.id)).filter(
         WorkOrder.created_at >= start_date_obj,
         WorkOrder.created_at <= end_date_obj,
-        WorkOrder.due_date < datetime.now(),
+        WorkOrder.due_date < today_string,
         WorkOrder.status.in_(['pending', 'in_progress'])
     ).scalar()
     

@@ -18,8 +18,9 @@ from models import (
     User, Company, Facility, Department, Craftsman, Skill,
     Equipment, InventoryItem, InventoryTransaction,
     WorkOrder, MaintenanceReport, MaintenanceCatalogueItem,
-    Customer, SalesOrder, SalesOrderItem
+    Customer, SalesOrder, SalesOrderItem, SalesInvoice, SalesInvoiceItem, SalesReceipt
 )
+from models.notification import Notification
 from core.config import settings
 
 # this is the Alembic Config object, which provides

@@ -172,6 +172,7 @@ class InventoryRequisitionBase(BaseModel):
     department: Optional[str] = Field(None, max_length=100)
     work_order_id: Optional[int] = None
     production_order_id: Optional[int] = None
+    approver_id: Optional[int] = None
     notes: Optional[str] = None
 
 
@@ -187,8 +188,19 @@ class InventoryRequisitionUpdate(BaseModel):
     department: Optional[str] = Field(None, max_length=100)
     work_order_id: Optional[int] = None
     production_order_id: Optional[int] = None
+    approver_id: Optional[int] = None
     notes: Optional[str] = None
     items: Optional[List[InventoryRequisitionItemCreate]] = None
+
+
+class InventoryRequisitionApproverResponse(BaseModel):
+    id: int
+    username: str
+    full_name: str
+    email: str
+
+    class Config:
+        from_attributes = True
 
 
 class InventoryRequisitionListResponse(InventoryRequisitionBase):
@@ -196,6 +208,8 @@ class InventoryRequisitionListResponse(InventoryRequisitionBase):
     requisition_number: str
     status: RequisitionStatus
     requested_by: int
+    approver_id: Optional[int] = None
+    assigned_approver: Optional['InventoryRequisitionApproverResponse'] = None
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None
     fulfilled_by: Optional[int] = None
@@ -224,6 +238,10 @@ class InventoryRequisitionApprovalLine(BaseModel):
 class InventoryRequisitionApprovalRequest(BaseModel):
     items: Optional[List[InventoryRequisitionApprovalLine]] = None
     notes: Optional[str] = None
+
+
+class InventoryRequisitionApproverAssignmentRequest(BaseModel):
+    approver_id: int = Field(..., gt=0)
 
 
 class InventoryRequisitionRejectRequest(BaseModel):

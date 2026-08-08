@@ -29,3 +29,4 @@ class User(Base, BaseModel):
     # Relationships
     craftsman = relationship("Craftsman", back_populates="user", uselist=False)
     work_orders_created = relationship("WorkOrder", back_populates="creator", foreign_keys="WorkOrder.created_by")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")

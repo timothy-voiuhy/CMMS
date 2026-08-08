@@ -1,7 +1,10 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
-from models.sales import SalesOrderStatus, SalesOrderLineStatus, SalesOrderPriority
+from models.sales import (
+    SalesOrderStatus, SalesOrderLineStatus, SalesOrderPriority,
+    SalesInvoiceStatus, PaymentMethod,
+)
 
 
 # ==================== CUSTOMER SCHEMAS ====================
@@ -176,3 +179,85 @@ class SalesOrderFulfillmentRequest(BaseModel):
 
 class SalesOrderCancelRequest(BaseModel):
     reason: str = Field(..., min_length=1)
+
+
+# ==================== INVOICE & RECEIPT SCHEMAS ====================
+
+class SalesInvoiceItemResponse(BaseModel):
+    id: int
+    invoice_id: int
+    sales_order_item_id: Optional[int] = None
+    item_code: str
+    item_name: str
+    quantity: float
+    unit_of_measure: str
+    unit_price: float
+    tax_rate: float
+    discount_amount: float
+    line_total: float
+    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SalesReceiptResponse(BaseModel):
+    id: int
+    receipt_number: str
+    invoice_id: int
+    receipt_date: datetime
+    amount: float
+    payment_method: PaymentMethod
+    reference: Optional[str] = None
+    received_by: int
+    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SalesInvoiceResponse(BaseModel):
+    id: int
+    invoice_number: str
+    sales_order_id: int
+    customer_id: int
+    status: SalesInvoiceStatus
+    invoice_date: datetime
+    due_date: Optional[datetime] = None
+    currency: str
+    subtotal: float
+    tax_amount: float
+    discount_amount: float
+    total_amount: float
+    amount_paid: float
+    balance_due: float
+    issued_by: int
+    issued_at: datetime
+    voided_by: Optional[int] = None
+    voided_at: Optional[datetime] = None
+    notes: Optional[str] = None
+    sales_order: Optional[SalesOrderListResponse] = None
+    customer: Optional[CustomerSummary] = None
+    items: List[SalesInvoiceItemResponse] = Field(default_factory=list)
+    receipts: List[SalesReceiptResponse] = Field(default_factory=list)
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SalesInvoiceReceiptCreate(BaseModel):
+    amount: float = Field(..., gt=0)
+    payment_method: PaymentMethod
+    receipt_date: Optional[datetime] = None
+    reference: Optional[str] = Field(None, max_length=200)
+    notes: Optional[str] = None
+
+
+class SalesInvoiceVoidRequest(BaseModel):
+    reason: Optional[str] = Field(None, max_length=500)

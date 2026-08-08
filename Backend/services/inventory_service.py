@@ -8,6 +8,9 @@ from models.inventory import (
     InventoryRequisition, InventoryRequisitionItem, RequisitionStatus,
     RequisitionLineStatus, RequisitionPriority
 )
+from models.user import User
+from services.company_service import get_user_permissions
+from services.notification_service import create_notification
 from schemas.inventory import (
     InventoryItemCreate, InventoryItemUpdate, InventoryTransactionCreate,
     InventoryCategoryCreate, InventoryCategoryUpdate,
@@ -337,7 +340,8 @@ def generate_requisition_number(db: Session) -> str:
 
 def _get_requisition_query(db: Session):
     return db.query(InventoryRequisition).options(
-        joinedload(InventoryRequisition.items).joinedload(InventoryRequisitionItem.item)
+        joinedload(InventoryRequisition.items).joinedload(InventoryRequisitionItem.item),
+        joinedload(InventoryRequisition.assigned_approver),
     )
 
 
@@ -445,6 +449,44 @@ def _validate_requisition_items(db: Session, items: List) -> List[tuple]:
     return validated_items
 
 
+def is_requisition_approver(db: Session, user_id: int) -> bool:
+    """Return whether an active user has the dedicated approval permission."""
+    user = db.query(User).filter(User.id == user_id, User.is_active.is_(True)).first()
+    if not user:
+        return False
+    permissions = set(get_user_permissions(db, user.id))
+    return bool({"*", "admin.full_access", "inventory.requisitions.approve"} & permissions)
+
+
+def get_requisition_approvers(db: Session, exclude_user_id: Optional[int] = None) -> List[User]:
+    """Get active users who can approve requisitions, excluding the requester when needed."""
+    users = db.query(User).filter(User.is_active.is_(True)).order_by(User.full_name, User.username).all()
+    return [
+        user for user in users
+        if user.id != exclude_user_id and is_requisition_approver(db, user.id)
+    ]
+
+
+def _validate_approver(db: Session, requisition: InventoryRequisition, approver_id: Optional[int]) -> User:
+    if approver_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An approver must be assigned before submitting the requisition"
+        )
+    if approver_id == requisition.requested_by:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The requester cannot approve their own requisition"
+        )
+    approver = db.query(User).filter(User.id == approver_id, User.is_active.is_(True)).first()
+    if not approver or not is_requisition_approver(db, approver_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Selected user is not an active requisition approver"
+        )
+    return approver
+
+
 def _replace_requisition_items(db: Session, requisition: InventoryRequisition, items: List) -> None:
     validated_items = _validate_requisition_items(db, items)
     requisition.items.clear()
@@ -475,12 +517,15 @@ def create_requisition(
         department=requisition.department,
         work_order_id=requisition.work_order_id,
         production_order_id=requisition.production_order_id,
+        approver_id=requisition.approver_id,
         notes=requisition.notes,
         requested_by=requested_by,
         status=RequisitionStatus.DRAFT
     )
     db.add(db_requisition)
     _replace_requisition_items(db, db_requisition, requisition.items)
+    if db_requisition.approver_id is not None:
+        _validate_approver(db, db_requisition, db_requisition.approver_id)
     db.commit()
     db.refresh(db_requisition)
     return get_requisition(db, db_requisition.id)
@@ -513,12 +558,20 @@ def update_requisition(
             )
         _replace_requisition_items(db, db_requisition, requisition.items)
 
+    if "approver_id" in update_data and db_requisition.approver_id is not None:
+        _validate_approver(db, db_requisition, db_requisition.approver_id)
+
     db.commit()
     db.refresh(db_requisition)
     return get_requisition(db, db_requisition.id)
 
 
-def submit_requisition(db: Session, requisition_id: int) -> Optional[InventoryRequisition]:
+def submit_requisition(
+    db: Session,
+    requisition_id: int,
+    submitted_by: int,
+    approver_id: Optional[int] = None,
+) -> Optional[InventoryRequisition]:
     """Submit a draft requisition for approval."""
     db_requisition = get_requisition(db, requisition_id)
     if not db_requisition:
@@ -534,7 +587,52 @@ def submit_requisition(db: Session, requisition_id: int) -> Optional[InventoryRe
             detail="A requisition must include at least one item"
         )
 
+    if approver_id is not None:
+        db_requisition.approver_id = approver_id
+    approver = _validate_approver(db, db_requisition, db_requisition.approver_id)
+
     db_requisition.status = RequisitionStatus.SUBMITTED
+    create_notification(
+        db,
+        approver.id,
+        "inventory",
+        "Inventory requisition awaiting approval",
+        f"{db_requisition.requisition_number} — {db_requisition.title} is waiting for your approval.",
+        f"/inventory/requisitions/{db_requisition.id}",
+    )
+    db.commit()
+    db.refresh(db_requisition)
+    return get_requisition(db, db_requisition.id)
+
+
+def assign_requisition_approver(
+    db: Session,
+    requisition_id: int,
+    approver_id: int,
+    assigned_by: int,
+) -> Optional[InventoryRequisition]:
+    """Assign or reassign an approver for a draft or submitted requisition."""
+    db_requisition = get_requisition(db, requisition_id)
+    if not db_requisition:
+        return None
+    if db_requisition.status not in [RequisitionStatus.DRAFT, RequisitionStatus.SUBMITTED]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only draft or submitted requisitions can have an approver assigned"
+        )
+    _validate_approver(db, db_requisition, approver_id)
+    previous_approver_id = db_requisition.approver_id
+    db_requisition.approver_id = approver_id
+    if db_requisition.status == RequisitionStatus.SUBMITTED and previous_approver_id != approver_id:
+        approver = db.query(User).filter(User.id == approver_id).first()
+        create_notification(
+            db,
+            approver.id,
+            "inventory",
+            "Inventory requisition assigned to you",
+            f"{db_requisition.requisition_number} — {db_requisition.title} is waiting for your approval.",
+            f"/inventory/requisitions/{db_requisition.id}",
+        )
     db.commit()
     db.refresh(db_requisition)
     return get_requisition(db, db_requisition.id)
@@ -554,6 +652,21 @@ def approve_requisition(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Only submitted requisitions can be approved"
+        )
+    if db_requisition.approver_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This requisition has no assigned approver"
+        )
+    if db_requisition.approver_id != approved_by:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the assigned approver can approve this requisition"
+        )
+    if not is_requisition_approver(db, approved_by):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You no longer have permission to approve requisitions"
         )
 
     approval_by_line = {line.line_id: line.approved_quantity for line in approval.items or []}
@@ -588,6 +701,14 @@ def approve_requisition(
     db_requisition.approved_at = datetime.utcnow()
     if approval.notes:
         db_requisition.notes = approval.notes
+    create_notification(
+        db,
+        db_requisition.requested_by,
+        "inventory",
+        "Inventory requisition approved",
+        f"{db_requisition.requisition_number} — {db_requisition.title} was approved.",
+        f"/inventory/requisitions/{db_requisition.id}",
+    )
 
     db.commit()
     db.refresh(db_requisition)
@@ -609,6 +730,21 @@ def reject_requisition(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Only submitted requisitions can be rejected"
         )
+    if db_requisition.approver_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This requisition has no assigned approver"
+        )
+    if db_requisition.approver_id != rejected_by:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the assigned approver can reject this requisition"
+        )
+    if not is_requisition_approver(db, rejected_by):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You no longer have permission to approve requisitions"
+        )
 
     db_requisition.status = RequisitionStatus.REJECTED
     db_requisition.approved_by = rejected_by
@@ -617,6 +753,14 @@ def reject_requisition(
     for line in db_requisition.items:
         line.status = RequisitionLineStatus.REJECTED
         line.approved_quantity = 0
+    create_notification(
+        db,
+        db_requisition.requested_by,
+        "inventory",
+        "Inventory requisition rejected",
+        f"{db_requisition.requisition_number} — {db_requisition.title} was rejected.",
+        f"/inventory/requisitions/{db_requisition.id}",
+    )
 
     db.commit()
     db.refresh(db_requisition)

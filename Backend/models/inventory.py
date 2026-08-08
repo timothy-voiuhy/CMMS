@@ -115,6 +115,7 @@ class InventoryRequisition(Base, BaseModel):
 
     # Audit fields
     requested_by = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    approver_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     approved_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     approved_at = Column(DateTime, nullable=True)
     fulfilled_by = Column(Integer, ForeignKey("users.id"), nullable=True)
@@ -130,6 +131,7 @@ class InventoryRequisition(Base, BaseModel):
         order_by="InventoryRequisitionItem.id"
     )
     requester = relationship("User", foreign_keys=[requested_by])
+    assigned_approver = relationship("User", foreign_keys=[approver_id])
     approver = relationship("User", foreign_keys=[approved_by])
     fulfiller = relationship("User", foreign_keys=[fulfilled_by])
     work_order = relationship("WorkOrder")

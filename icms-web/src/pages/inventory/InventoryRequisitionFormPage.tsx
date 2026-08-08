@@ -6,6 +6,7 @@ import {
   type CreateInventoryRequisitionLine,
   type CreateInventoryRequisitionRequest,
   type InventoryItem,
+  type RequisitionApprover,
   type RequisitionPriority,
 } from '../../services/inventory.service'
 
@@ -22,6 +23,7 @@ const InventoryRequisitionFormPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [items, setItems] = useState<InventoryItem[]>([])
+  const [approvers, setApprovers] = useState<RequisitionApprover[]>([])
   const [formData, setFormData] = useState<CreateInventoryRequisitionRequest>({
     title: '',
     description: '',
@@ -38,6 +40,7 @@ const InventoryRequisitionFormPage: React.FC = () => {
 
   useEffect(() => {
     loadInventoryItems()
+    loadApprovers()
   }, [])
 
   useEffect(() => {
@@ -52,6 +55,14 @@ const InventoryRequisitionFormPage: React.FC = () => {
       setItems(response.data)
     } catch (error) {
       console.error('Failed to load inventory items:', error)
+    }
+  }
+
+  const loadApprovers = async () => {
+    try {
+      setApprovers(await inventoryService.getRequisitionApprovers())
+    } catch (error) {
+      console.error('Failed to load requisition approvers:', error)
     }
   }
 
@@ -74,6 +85,7 @@ const InventoryRequisitionFormPage: React.FC = () => {
         department: requisition.department || '',
         work_order_id: requisition.work_order_id,
         production_order_id: requisition.production_order_id,
+        approver_id: requisition.approver_id,
         notes: requisition.notes || '',
         items: (requisition.items || []).map((line) => ({
           item_id: line.item_id,
@@ -113,6 +125,7 @@ const InventoryRequisitionFormPage: React.FC = () => {
     notes: formData.notes || undefined,
     work_order_id: formData.work_order_id || undefined,
     production_order_id: formData.production_order_id || undefined,
+    approver_id: formData.approver_id || undefined,
     items: formData.items.map((line) => ({
       item_id: Number(line.item_id),
       requested_quantity: Number(line.requested_quantity),
@@ -175,12 +188,16 @@ const InventoryRequisitionFormPage: React.FC = () => {
   }
 
   const handleSubmit = async () => {
+    if (!formData.approver_id) {
+      alert('Select an approver before submitting')
+      return
+    }
     const requisition = await saveDraft()
     if (!requisition) return
 
     try {
       setIsSaving(true)
-      const submitted = await inventoryService.submitRequisition(requisition.id)
+      const submitted = await inventoryService.submitRequisitionWithApprover(requisition.id, formData.approver_id)
       navigate(`/inventory/requisitions/${submitted.id}`)
     } catch (error: any) {
       console.error('Failed to submit requisition:', error)
@@ -251,6 +268,22 @@ const InventoryRequisitionFormPage: React.FC = () => {
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Request title"
               />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Approver
+              </label>
+              <select
+                value={formData.approver_id || ''}
+                onChange={(event) => setFormData({ ...formData, approver_id: event.target.value ? parseInt(event.target.value) : undefined })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select an authorized approver</option>
+                {approvers.map((approver) => (
+                  <option key={approver.id} value={approver.id}>{approver.full_name} ({approver.username})</option>
+                ))}
+              </select>
+              {approvers.length === 0 && <p className="mt-1 text-sm text-red-600 dark:text-red-400">No authorized approvers are available.</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Priority</label>

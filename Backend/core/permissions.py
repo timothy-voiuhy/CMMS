@@ -254,6 +254,36 @@ PERMISSION_REGISTRY: Dict[str, Dict] = {
         "category": "Sales",
         "implies": ["sales.orders.view"]
     },
+    "sales.invoices.view": {
+        "name": "View Sales Invoices",
+        "description": "View issued sales invoices and balances",
+        "category": "Sales",
+        "implies": ["sales.view"]
+    },
+    "sales.invoices.create": {
+        "name": "Issue Sales Invoices",
+        "description": "Issue an invoice for an eligible sales order",
+        "category": "Sales",
+        "implies": ["sales.invoices.view", "sales.orders.view"]
+    },
+    "sales.invoices.void": {
+        "name": "Void Sales Invoices",
+        "description": "Void unpaid sales invoices",
+        "category": "Sales",
+        "implies": ["sales.invoices.view"]
+    },
+    "sales.receipts.view": {
+        "name": "View Payment Receipts",
+        "description": "View receipts recorded against sales invoices",
+        "category": "Sales",
+        "implies": ["sales.invoices.view"]
+    },
+    "sales.receipts.create": {
+        "name": "Record Payment Receipts",
+        "description": "Record customer payments against sales invoices",
+        "category": "Sales",
+        "implies": ["sales.receipts.view", "sales.invoices.view"]
+    },
 
     # ---- Quality ----
     "quality.view": {

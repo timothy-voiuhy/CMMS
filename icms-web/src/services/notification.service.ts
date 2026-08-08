@@ -22,38 +22,29 @@ export interface NotificationFilters {
 class NotificationService {
   private baseUrl = '/api/v1/notifications'
 
-  // Mock implementation - replace with real API calls when backend is ready
   async getNotifications(filters: NotificationFilters = {}): Promise<{
     data: Notification[]
     total: number
     unread_count: number
   }> {
-    const mockNotifications: Notification[] = []
-
-    const filteredNotifications = filters.unread_only
-      ? mockNotifications.filter((n) => !n.read)
-      : mockNotifications
-
-    return {
-      data: filteredNotifications,
-      total: filteredNotifications.length,
-      unread_count: mockNotifications.filter((n) => !n.read).length,
-    }
+    const params = new URLSearchParams()
+    if (filters.page) params.append('page', filters.page.toString())
+    if (filters.limit) params.append('limit', filters.limit.toString())
+    if (filters.unread_only) params.append('unread_only', 'true')
+    if (filters.type) params.append('type', filters.type)
+    return apiClient.get(`${this.baseUrl}?${params.toString()}`)
   }
 
   async markAsRead(id: number): Promise<void> {
-    // Mock implementation
-    return Promise.resolve()
+    await apiClient.post(`${this.baseUrl}/${id}/read`)
   }
 
   async markAllAsRead(): Promise<void> {
-    // Mock implementation
-    return Promise.resolve()
+    await apiClient.post(`${this.baseUrl}/read-all`)
   }
 
   async deleteNotification(id: number): Promise<void> {
-    // Mock implementation
-    return Promise.resolve()
+    await apiClient.delete(`${this.baseUrl}/${id}`)
   }
 }
 

@@ -5,6 +5,9 @@ from sqlalchemy import or_, func
 from fastapi import HTTPException, status
 from models.inventory import InventoryItem
 from models.maintenance import MaintenanceReport, MaintenanceCatalogueItem, MaintenanceCatalogueItemType
+from models.work_order import WorkOrder
+from models.equipment import Equipment
+from models.craftsman import Craftsman
 from schemas.maintenance import (
     MaintenanceReportCreate, MaintenanceReportUpdate,
     MaintenanceCatalogueItemCreate, MaintenanceCatalogueItemUpdate
@@ -110,6 +113,22 @@ def get_maintenance_report_by_number(db: Session, report_number: str) -> Optiona
 
 def create_maintenance_report(db: Session, report: MaintenanceReportCreate) -> MaintenanceReport:
     """Create new maintenance report."""
+    if not db.query(WorkOrder).filter(WorkOrder.id == report.work_order_id).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Work order {report.work_order_id} was not found. Select an existing work order."
+        )
+    if not db.query(Equipment).filter(Equipment.id == report.equipment_id).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Equipment {report.equipment_id} was not found."
+        )
+    if not db.query(Craftsman).filter(Craftsman.id == report.craftsman_id).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Craftsman {report.craftsman_id} was not found."
+        )
+
     # Generate report number
     report_number = generate_report_number(db)
     

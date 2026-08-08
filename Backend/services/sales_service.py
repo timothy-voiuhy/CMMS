@@ -1,16 +1,19 @@
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
+import re
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, func
 from fastapi import HTTPException, status
 from models.inventory import InventoryItem, InventoryTransaction, TransactionType
 from models.sales import (
     Customer, SalesOrder, SalesOrderItem, SalesOrderStatus,
-    SalesOrderLineStatus, SalesOrderPriority
+    SalesOrderLineStatus, SalesOrderPriority, SalesInvoice, SalesInvoiceItem,
+    SalesReceipt, SalesInvoiceStatus
 )
 from schemas.sales import (
     CustomerCreate, CustomerUpdate, SalesOrderCreate, SalesOrderUpdate,
-    SalesOrderFulfillmentRequest, SalesOrderCancelRequest
+    SalesOrderFulfillmentRequest, SalesOrderCancelRequest,
+    SalesInvoiceReceiptCreate
 )
 
 
@@ -519,3 +522,178 @@ def cancel_sales_order(
     db.commit()
     db.refresh(db_order)
     return get_sales_order(db, db_order.id)
+
+
+# ==================== INVOICE & RECEIPT SERVICES ====================
+
+def generate_invoice_number(db: Session) -> str:
+    prefix = f"INV-{datetime.utcnow().strftime('%Y%m')}"
+    count = db.query(func.count(SalesInvoice.id)).filter(
+        SalesInvoice.invoice_number.ilike(f"{prefix}-%")
+    ).scalar()
+    return f"{prefix}-{(count or 0) + 1:04d}"
+
+
+def generate_receipt_number(db: Session) -> str:
+    prefix = f"RCT-{datetime.utcnow().strftime('%Y%m')}"
+    count = db.query(func.count(SalesReceipt.id)).filter(
+        SalesReceipt.receipt_number.ilike(f"{prefix}-%")
+    ).scalar()
+    return f"{prefix}-{(count or 0) + 1:04d}"
+
+
+def _get_invoice_query(db: Session):
+    return db.query(SalesInvoice).options(
+        joinedload(SalesInvoice.customer),
+        joinedload(SalesInvoice.sales_order).joinedload(SalesOrder.customer),
+        joinedload(SalesInvoice.sales_order).joinedload(SalesOrder.items),
+        joinedload(SalesInvoice.items),
+        joinedload(SalesInvoice.receipts),
+    )
+
+
+def get_invoice(db: Session, invoice_id: int) -> Optional[SalesInvoice]:
+    return _get_invoice_query(db).filter(SalesInvoice.id == invoice_id).first()
+
+
+def get_invoice_by_order(db: Session, order_id: int) -> Optional[SalesInvoice]:
+    return _get_invoice_query(db).filter(SalesInvoice.sales_order_id == order_id).first()
+
+
+def get_invoices(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None, status_filter=None, customer_id: Optional[int] = None) -> List[SalesInvoice]:
+    query = _get_invoice_query(db).outerjoin(Customer).outerjoin(SalesOrder)
+    if search:
+        query = query.filter(or_(
+            SalesInvoice.invoice_number.ilike(f"%{search}%"),
+            SalesOrder.order_number.ilike(f"%{search}%"),
+            Customer.name.ilike(f"%{search}%"),
+            Customer.customer_code.ilike(f"%{search}%"),
+        ))
+    if status_filter:
+        query = query.filter(SalesInvoice.status == status_filter)
+    if customer_id:
+        query = query.filter(SalesInvoice.customer_id == customer_id)
+    return query.order_by(SalesInvoice.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def get_invoices_count(db: Session, search: Optional[str] = None, status_filter=None, customer_id: Optional[int] = None) -> int:
+    query = db.query(func.count(SalesInvoice.id)).outerjoin(Customer).outerjoin(SalesOrder)
+    if search:
+        query = query.filter(or_(
+            SalesInvoice.invoice_number.ilike(f"%{search}%"),
+            SalesOrder.order_number.ilike(f"%{search}%"),
+            Customer.name.ilike(f"%{search}%"),
+            Customer.customer_code.ilike(f"%{search}%"),
+        ))
+    if status_filter:
+        query = query.filter(SalesInvoice.status == status_filter)
+    if customer_id:
+        query = query.filter(SalesInvoice.customer_id == customer_id)
+    return query.scalar() or 0
+
+
+def _invoice_due_date(customer: Customer, invoice_date: datetime) -> Optional[datetime]:
+    terms = (customer.payment_terms or "").lower()
+    match = re.search(r"(\d+)\s*day", terms)
+    if match:
+        return invoice_date + timedelta(days=int(match.group(1)))
+    if "receipt" in terms or "cash" in terms or "immediate" in terms:
+        return invoice_date
+    return None
+
+
+def create_invoice(db: Session, order_id: int, issued_by: int) -> Optional[SalesInvoice]:
+    order = get_sales_order(db, order_id)
+    if not order:
+        return None
+    existing = get_invoice_by_order(db, order_id)
+    if existing:
+        return existing
+    if order.status in [SalesOrderStatus.DRAFT, SalesOrderStatus.CANCELLED]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invoices can only be issued for confirmed or fulfilled sales orders",
+        )
+
+    invoice_date = datetime.utcnow()
+    invoice = SalesInvoice(
+        invoice_number=generate_invoice_number(db),
+        sales_order_id=order.id,
+        customer_id=order.customer_id,
+        status=SalesInvoiceStatus.ISSUED,
+        invoice_date=invoice_date,
+        due_date=_invoice_due_date(order.customer, invoice_date),
+        currency=order.currency,
+        subtotal=order.subtotal,
+        tax_amount=order.tax_amount,
+        discount_amount=order.discount_amount,
+        total_amount=order.total_amount,
+        amount_paid=0.0,
+        balance_due=order.total_amount,
+        issued_by=issued_by,
+        issued_at=invoice_date,
+    )
+    db.add(invoice)
+    db.flush()
+    for line in order.items:
+        invoice.items.append(SalesInvoiceItem(
+            sales_order_item_id=line.id,
+            item_code=line.item_code,
+            item_name=line.item_name,
+            quantity=line.ordered_quantity,
+            unit_of_measure=line.unit_of_measure,
+            unit_price=line.unit_price,
+            tax_rate=line.tax_rate,
+            discount_amount=line.discount_amount,
+            line_total=line.line_total,
+            notes=line.notes,
+        ))
+    db.commit()
+    return get_invoice(db, invoice.id)
+
+
+def create_receipt(db: Session, invoice_id: int, receipt: SalesInvoiceReceiptCreate, received_by: int) -> Optional[SalesInvoice]:
+    invoice = get_invoice(db, invoice_id)
+    if not invoice:
+        return None
+    if invoice.status == SalesInvoiceStatus.VOIDED:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Voided invoices cannot receive payments")
+
+    amount = round(float(receipt.amount), 2)
+    if amount > round(invoice.balance_due, 2) + 0.005:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Receipt amount cannot exceed the invoice balance of {invoice.balance_due:.2f}",
+        )
+
+    db.add(SalesReceipt(
+        receipt_number=generate_receipt_number(db),
+        invoice_id=invoice.id,
+        receipt_date=receipt.receipt_date or datetime.utcnow(),
+        amount=amount,
+        payment_method=receipt.payment_method,
+        reference=receipt.reference,
+        received_by=received_by,
+        notes=receipt.notes,
+    ))
+    invoice.amount_paid = round(invoice.amount_paid + amount, 2)
+    invoice.balance_due = round(max(0.0, invoice.total_amount - invoice.amount_paid), 2)
+    invoice.status = SalesInvoiceStatus.PAID if invoice.balance_due <= 0.005 else SalesInvoiceStatus.PARTIALLY_PAID
+    db.commit()
+    return get_invoice(db, invoice.id)
+
+
+def void_invoice(db: Session, invoice_id: int, voided_by: int, reason: Optional[str] = None) -> Optional[SalesInvoice]:
+    invoice = get_invoice(db, invoice_id)
+    if not invoice:
+        return None
+    if invoice.amount_paid > 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invoices with receipts cannot be voided")
+    if invoice.status == SalesInvoiceStatus.VOIDED:
+        return invoice
+    invoice.status = SalesInvoiceStatus.VOIDED
+    invoice.voided_by = voided_by
+    invoice.voided_at = datetime.utcnow()
+    invoice.notes = reason or invoice.notes
+    db.commit()
+    return get_invoice(db, invoice.id)

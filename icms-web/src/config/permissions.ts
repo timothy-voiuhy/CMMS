@@ -56,6 +56,11 @@ export const PERMISSION_REGISTRY: Record<string, Omit<PermissionDefinition, 'key
   'sales.orders.confirm': { name: 'Confirm Sales Orders', description: 'Confirm draft sales orders for fulfillment', category: 'Sales', implies: ['sales.orders.view'] },
   'sales.orders.fulfill': { name: 'Fulfill Sales Orders', description: 'Dispatch sales orders and issue inventory stock', category: 'Sales', implies: ['sales.orders.view', 'inventory.view', 'inventory.transaction'] },
   'sales.orders.cancel': { name: 'Cancel Sales Orders', description: 'Cancel sales orders before fulfillment', category: 'Sales', implies: ['sales.orders.view'] },
+  'sales.invoices.view': { name: 'View Sales Invoices', description: 'View issued sales invoices and balances', category: 'Sales', implies: ['sales.view'] },
+  'sales.invoices.create': { name: 'Issue Sales Invoices', description: 'Issue an invoice for an eligible sales order', category: 'Sales', implies: ['sales.invoices.view', 'sales.orders.view'] },
+  'sales.invoices.void': { name: 'Void Sales Invoices', description: 'Void unpaid sales invoices', category: 'Sales', implies: ['sales.invoices.view'] },
+  'sales.receipts.view': { name: 'View Payment Receipts', description: 'View receipts recorded against sales invoices', category: 'Sales', implies: ['sales.invoices.view'] },
+  'sales.receipts.create': { name: 'Record Payment Receipts', description: 'Record customer payments against sales invoices', category: 'Sales', implies: ['sales.receipts.view', 'sales.invoices.view'] },
 
   // Quality
   'quality.view': { name: 'View Quality Records', description: 'View quality inspections and NCRs', category: 'Quality', implies: [] },

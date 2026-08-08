@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from core.config import settings
-from api.v1 import auth, users, craftsmen, equipment, inventory, work_orders, maintenance, production, company, quality, reports, sales
+from api.v1 import auth, users, craftsmen, equipment, inventory, work_orders, maintenance, production, company, quality, reports, sales, notifications
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -39,6 +39,7 @@ app.include_router(quality.router, prefix="/api/v1/quality", tags=["Quality"])
 app.include_router(sales.router, prefix="/api/v1/sales", tags=["Sales"])
 app.include_router(company.router, prefix="/api/v1/company", tags=["Company"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
+app.include_router(notifications.router, prefix="/api/v1/notifications", tags=["Notifications"])
 
 
 @app.get("/")
